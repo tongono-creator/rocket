@@ -148,21 +148,31 @@ def post_facebook(img_path, caption):
         print(f"FB Error: {result}")
         raise SystemExit(1)
 
-# ─── 4. Auto-comment ลิงก์เว็บ ──────────────────────────────────
+# ─── 4. Auto-comment ลิงก์เว็บ (3 comments แยกกัน) ─────────────
 def add_comment(post_id):
-    comment = (
-        f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\n"
-        f"ดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}"
-    )
-    resp = requests.post(
-        f"https://graph.facebook.com/v25.0/{post_id}/comments",
-        data={"access_token": PAGE_ACCESS_TOKEN, "message": comment}
-    )
-    result = resp.json()
-    if "id" in result:
-        print(f"Comment added! ID: {result['id']}")
-    else:
-        print(f"Comment error: {result}")
+    comments = [
+        (
+            f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\n"
+            f"ดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}"
+        ),
+        (
+            f"🛒 ช้อปบน Shopee คลิกเลย → https://s.shopee.co.th/7VDLdM5w8I"
+        ),
+        (
+            f"🛍️ ช้อปบน Lazada คลิกเลย → https://s.lazada.co.th/s.Z69ao3?c=b"
+        ),
+    ]
+    for i, msg in enumerate(comments, 1):
+        resp = requests.post(
+            f"https://graph.facebook.com/v25.0/{post_id}/comments",
+            data={"access_token": PAGE_ACCESS_TOKEN, "message": msg}
+        )
+        result = resp.json()
+        if "id" in result:
+            print(f"Comment {i} added! ID: {result['id']}")
+        else:
+            print(f"Comment {i} error: {result}")
+        time.sleep(2)
 
 # ─── Main ────────────────────────────────────────────────────────
 if __name__ == "__main__":
