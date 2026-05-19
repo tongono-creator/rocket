@@ -127,6 +127,8 @@ def generate_image(quote):
                 time.sleep(15)
     raise RuntimeError("Image generation failed after 3 attempts")
 
+WEBSITE_URL = "https://shopee-ranking.vercel.app/"
+
 # ─── 3. โพส Facebook ────────────────────────────────────────────
 def post_facebook(img_path, caption):
     print("Posting to Facebook...")
@@ -138,10 +140,29 @@ def post_facebook(img_path, caption):
         )
     result = resp.json()
     if "id" in result:
-        print(f"FB Posted! ID: {result['id']}")
+        post_id = result.get("post_id") or result["id"]
+        print(f"FB Posted! ID: {post_id}")
+        add_comment(post_id)
+        return post_id
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
+
+# ─── 4. Auto-comment ลิงก์เว็บ ──────────────────────────────────
+def add_comment(post_id):
+    comment = (
+        f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\n"
+        f"ดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}"
+    )
+    resp = requests.post(
+        f"https://graph.facebook.com/v25.0/{post_id}/comments",
+        data={"access_token": PAGE_ACCESS_TOKEN, "message": comment}
+    )
+    result = resp.json()
+    if "id" in result:
+        print(f"Comment added! ID: {result['id']}")
+    else:
+        print(f"Comment error: {result}")
 
 # ─── Main ────────────────────────────────────────────────────────
 if __name__ == "__main__":

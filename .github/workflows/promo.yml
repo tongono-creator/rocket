@@ -1,0 +1,30 @@
+name: Promo Post (Shopee Ranking)
+
+on:
+  schedule:
+    # จันทร์ / พุธ / ศุกร์ เวลา 19:00 Bangkok (12:00 UTC)
+    - cron: '0 12 * * 1'   # Monday
+    - cron: '0 12 * * 3'   # Wednesday
+    - cron: '0 12 * * 5'   # Friday
+  workflow_dispatch:
+
+jobs:
+  promo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run promo script
+        env:
+          GOOGLE_API_KEY:    ${{ secrets.GOOGLE_API_KEY }}
+          PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+          PAGE_ID:           ${{ secrets.PAGE_ID }}
+        run: python promo.py
