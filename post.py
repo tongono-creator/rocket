@@ -79,17 +79,24 @@ def get_topic():
 # ─── 1. สร้างคำคม ──────────────────────────────────────────────
 def generate_quote(topic):
     print(f"Topic: {topic}")
-    resp = client.models.generate_content(
-        model=TEXT_MODEL,
-        contents=(
-            f"สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\n"
-            "สำหรับคนอายุ 30-45 ปี สั้น กระชับ 4-6 บรรทัด ให้รู้สึก relatable มาก\n"
-            "ท้ายสุดใส่ hashtag 2-3 อัน ตอบแค่คำคมเท่านั้น ไม่ต้องมีคำอธิบาย"
-        )
-    )
-    quote = resp.text.strip()
-    print(f"Quote:\n{quote}\n")
-    return quote
+    for attempt in range(3):
+        try:
+            resp = client.models.generate_content(
+                model=TEXT_MODEL,
+                contents=(
+                    f"สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\n"
+                    "สำหรับคนอายุ 30-45 ปี สั้น กระชับ 4-6 บรรทัด ให้รู้สึก relatable มาก\n"
+                    "ท้ายสุดใส่ hashtag 2-3 อัน ตอบแค่คำคมเท่านั้น ไม่ต้องมีคำอธิบาย"
+                )
+            )
+            quote = resp.text.strip()
+            print(f"Quote:\n{quote}\n")
+            return quote
+        except Exception as e:
+            print(f"Quote attempt {attempt+1} failed: {str(e)[:100]}")
+            if attempt < 2:
+                time.sleep(15)
+    raise RuntimeError("Quote generation failed after 3 attempts")
 
 # ─── 2. สร้างรูป ────────────────────────────────────────────────
 def generate_image(quote):
