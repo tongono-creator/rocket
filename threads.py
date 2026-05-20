@@ -177,7 +177,6 @@ def _create_and_publish(text, reply_to_id=None):
     return result.get("id")
 
 def post_threads(image_url, caption):
-    from affiliate_utils import get_standard_comments, get_product_comment
     print("Posting to Threads...")
     # Step 1: Create image container
     resp = requests.post(
@@ -210,17 +209,13 @@ def post_threads(image_url, caption):
     print(f"Threads Posted! ID: {post_id}")
 
     # Step 3: Add reply comments
+    from affiliate_utils import get_standard_comments, get_product_comments
     time.sleep(5)
-    for i, msg in enumerate(get_standard_comments(), 1):
+    all_comments = get_standard_comments() + get_product_comments()
+    for i, msg in enumerate(all_comments, 1):
         reply_id = _create_and_publish(msg, reply_to_id=post_id)
         print(f"Reply {i} added! ID: {reply_id}")
         time.sleep(3)
-
-    # Step 4: Product rotation comment (ถ้ามีสินค้าใน Excel)
-    product_msg = get_product_comment()
-    if product_msg:
-        reply_id = _create_and_publish(product_msg, reply_to_id=post_id)
-        print(f"Product reply added! ID: {reply_id}")
 
 if __name__ == "__main__":
     topic    = get_topic()

@@ -42,14 +42,15 @@ def get_standard_comments():
         comments.append(f"🍜 สั่งอาหาร Shopee Food ลดเพิ่ม → {SHOPEE_FOOD_URL}")
     return comments
 
-def get_product_comment():
-    """comment สินค้าหมุนเวียน (ถ้ามีใน Excel)"""
+def get_product_comments():
+    """comments สินค้าหมุนเวียน แยก Shopee / Lazada คนละ comment"""
     p = get_rotating_product()
     if not p:
-        return None
+        return []
     desc_line = f"\n✨ {p['desc']}" if p.get("desc") else ""
-    return (
-        f"🎯 สินค้าแนะนำวันนี้: {p['name']}{desc_line}\n"
-        f"Shopee → {p['shopee']}\n"
-        f"Lazada → {p['lazada']}"
-    )
+    comments = []
+    if p.get("shopee") and "xxx" not in str(p["shopee"]):
+        comments.append(f"🎯 {p['name']}{desc_line}\n🛒 Shopee → {p['shopee']}")
+    if p.get("lazada") and "xxx" not in str(p["lazada"]):
+        comments.append(f"🎯 {p['name']}{desc_line}\n🛍️ Lazada → {p['lazada']}")
+    return comments

@@ -155,11 +155,8 @@ def post_facebook(img_path, caption):
 
 # ─── 4. Auto-comment ลิงก์เว็บ + product rotation ──────────────
 def add_comment(post_id):
-    from affiliate_utils import get_standard_comments, get_product_comment
-    comments = get_standard_comments()
-    product_msg = get_product_comment()
-    if product_msg:
-        comments.append(product_msg)
+    from affiliate_utils import get_standard_comments, get_product_comments
+    comments = get_standard_comments() + get_product_comments()
     for i, msg in enumerate(comments, 1):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
