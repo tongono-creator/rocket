@@ -1,82 +1,138 @@
-# affiliate_utils.py — อ่าน product links จาก affiliate_products.xlsx
-import os
+# affiliate_utils.py — อ่าน product/food links จาก affiliate_products.xlsx
+import os, re
 from datetime import datetime, timezone, timedelta
 
-WEBSITE_URL      = "https://shopee-ranking.vercel.app/"
-SHOPEE_FOOD_URL  = "วางลิงก์ Shopee Food ที่นี่"  # TODO: ใส่ลิงก์จริง
+WEBSITE_URL = "https://shopee-ranking.vercel.app/"
+EXCEL_PATH  = os.path.join(os.path.dirname(__file__), "affiliate_products.xlsx")
 
-EXCEL_PATH = os.path.join(os.path.dirname(__file__), "affiliate_products.xlsx")
+BKK = timezone(timedelta(hours=7))
 
-def get_active_products():
-    """โหลด product links ที่ Active=yes จาก Excel"""
+def _now_bkk():
+    return datetime.now(BKK)
+
+def _rotate(items, extra_salt=0):
+    """หมุนเวียน list ตาม day + hour + extra_salt"""
+    if not items:
+        return None
+    now = _now_bkk()
+    idx = (now.timetuple().tm_yday * 7 + now.hour + extra_salt) % len(items)
+    return items[idx]
+
+# ─── อ่าน Excel ──────────────────────────────────────────────────
+def _load_excel():
     try:
         import openpyxl
         wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
         ws = wb.active
-        products = []
+        products, food_entries = [], []
         for row in ws.iter_rows(min_row=2, values_only=True):
+            if len(row) < 5:
+                continue
             no, name, shopee, lazada, active = row[0], row[1], row[2], row[3], row[4]
-            desc = row[5] if len(row) > 5 else None
-            if str(active).strip().lower() == "yes" and shopee and "xxx" not in str(shopee):
-                products.append({"name": name, "shopee": shopee, "lazada": lazada, "desc": desc or ""})
-        return products
+            desc = row[5] if len(row) > 5 else ""
+            food_raw = row[6] if len(row) > 6 else None
+
+            # product rows (ต้องมี active=yes)
+            if str(active).strip().lower() == "yes":
+                products.append({
+                    "name": str(name or "").strip(),
+                    "shopee": str(shopee or "").strip(),
+                    "lazada": str(lazada or "").strip(),
+                    "desc": str(desc or "").strip(),
+                })
+
+            # food links — เก็บทุก row ที่มีค่า column G
+            if food_raw:
+                food_entries.append(str(food_raw).strip())
+
+        return products, food_entries
     except Exception as e:
-        print(f"Excel read failed: {e}")
-        return []
+        print(f"Excel read error: {e}")
+        return [], []
 
-def get_rotating_product():
-    """หยิบ product วันนี้ตาม day rotation"""
-    products = get_active_products()
-    if not products:
-        return None
-    bkk = timezone(timedelta(hours=7))
-    day_idx = datetime.now(bkk).timetuple().tm_yday % len(products)
-    return products[day_idx]
+def _parse_food(raw):
+    """แยก shop_name + url จาก 'ลองเข้ามาดู ShopName ที่ Shopee! https://...'"""
+    url_match = re.search(r'https://\S+', raw)
+    url = url_match.group(0) if url_match else raw
+    name_match = re.search(r'ลองเข้ามาดู\s+(.+?)\s+ที่ Shopee', raw)
+    name = name_match.group(1).strip() if name_match else "ร้านอาหาร"
+    return name, url
 
-WEBSITE_VARIATIONS = [
-    f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\nดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}",
-    f"📊 เช็คอันดับสินค้าขายดีก่อนซื้อ ประหยัดได้เยอะมาก\n→ {WEBSITE_URL}",
-    f"🛒 ของขายดีอันดับ 1 บน Shopee วันนี้คืออะไร?\nเช็คได้เลย → {WEBSITE_URL}",
-    f"💡 ก่อนซื้อของออนไลน์ ดูอันดับก่อนนะ\n→ {WEBSITE_URL}",
-    f"🏆 คนไทยกำลังซื้ออะไรกันเยอะที่สุด?\nดูได้ที่นี่ → {WEBSITE_URL}",
+# ─── Website comment variations ──────────────────────────────────
+WEBSITE_VARS = [
+    f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee?\nดูอันดับได้เลย → {WEBSITE_URL}",
+    f"📊 เช็คของขายดีก่อนซื้อ ประหยัดได้เยอะ → {WEBSITE_URL}",
+    f"🏆 ของขายดีอันดับ 1 บน Shopee วันนี้คืออะไร? → {WEBSITE_URL}",
+    f"💡 ก่อนซื้อของออนไลน์ดูอันดับก่อนนะ → {WEBSITE_URL}",
+    f"🛒 คนไทยกำลังซื้ออะไรกันเยอะที่สุด? → {WEBSITE_URL}",
+    f"✅ เปรียบเทียบราคา เช็คอันดับขายดีก่อนตัดสินใจ → {WEBSITE_URL}",
 ]
 
-FOOD_VARIATIONS = [
-    f"🍜 หิวแล้วสั่ง Shopee Food เลย มีโปรลดทุกวัน → {SHOPEE_FOOD_URL}",
-    f"🍱 สั่งข้าวง่ายๆ ส่งถึงบ้าน Shopee Food → {SHOPEE_FOOD_URL}",
-    f"🔖 Shopee Food มีคูปองลดให้ทุกวัน สั่งเลย → {SHOPEE_FOOD_URL}",
-    f"🛵 อยากกินอะไร สั่งได้เลย Shopee Food → {SHOPEE_FOOD_URL}",
-    f"🍔 ประหยัดค่าอาหารด้วย Shopee Food โปรเด็ดทุกมื้อ → {SHOPEE_FOOD_URL}",
+# ─── Food comment variations ─────────────────────────────────────
+FOOD_INTROS = [
+    "🍜 หิวแล้วสั่งเลย! {name}\nส่งถึงบ้าน → {url}",
+    "🍱 แนะนำร้านนี้เลย {name}\nสั่งผ่าน Shopee Food → {url}",
+    "🔖 โปรเด็ดวันนี้! {name}\nคลิกสั่งได้เลย → {url}",
+    "🛵 อยากกิน {name} ไหม?\nสั่งง่ายๆ → {url}",
+    "🍔 มื้อนี้ลอง {name} ดูไหม?\nส่งถึงที่ → {url}",
+    "⭐ {name} ร้านนี้ดีมาก\nสั่งผ่าน Shopee Food → {url}",
 ]
 
-def _get_variation(variations):
-    bkk = timezone(timedelta(hours=7))
-    now = datetime.now(bkk)
-    idx = (now.timetuple().tm_yday * 3 + now.hour) % len(variations)
-    return variations[idx]
+# ─── Shopee product comment variations ───────────────────────────
+SHOPEE_INTROS = [
+    "🛒 แนะนำบน Shopee: {name}{desc}\n→ {url}",
+    "🔥 Deal เด็ดบน Shopee: {name}{desc}\n→ {url}",
+    "💥 ราคาดีที่สุด Shopee: {name}{desc}\n→ {url}",
+    "🎯 น่าซื้อมากบน Shopee: {name}{desc}\n→ {url}",
+    "⚡ Flash sale Shopee: {name}{desc}\n→ {url}",
+]
 
+LAZADA_INTROS = [
+    "🛍️ แนะนำบน Lazada: {name}{desc}\n→ {url}",
+    "🔥 Deal เด็ดบน Lazada: {name}{desc}\n→ {url}",
+    "💥 ราคาดีที่สุด Lazada: {name}{desc}\n→ {url}",
+    "🎯 น่าซื้อมากบน Lazada: {name}{desc}\n→ {url}",
+    "⚡ Flash sale Lazada: {name}{desc}\n→ {url}",
+]
+
+# ─── Public API ───────────────────────────────────────────────────
 def get_standard_comments():
-    """standard comments (website + Shopee Food) — หมุน variations"""
-    comments = [_get_variation(WEBSITE_VARIATIONS)]
-    if "วางลิงก์" not in SHOPEE_FOOD_URL:
-        comments.append(_get_variation(FOOD_VARIATIONS))
-    return comments
+    """comment เว็บ shopee-ranking (หมุน variations)"""
+    return [_rotate(WEBSITE_VARS)]
 
-SHOPEE_INTROS = ["🛒 ช้อปได้บน Shopee", "🔥 ราคาดีที่สุดบน Shopee", "🎯 แนะนำบน Shopee", "💥 Deal เด็ดบน Shopee"]
-LAZADA_INTROS = ["🛍️ ช้อปได้บน Lazada", "🔥 ราคาดีที่สุดบน Lazada", "🎯 แนะนำบน Lazada", "💥 Deal เด็ดบน Lazada"]
+def get_food_comment():
+    """comment Shopee Food หมุนเวียนทุกร้าน"""
+    _, food_entries = _load_excel()
+    raw = _rotate(food_entries, extra_salt=3)
+    if not raw:
+        return None
+    name, url = _parse_food(raw)
+    template = _rotate(FOOD_INTROS, extra_salt=5)
+    return template.format(name=name, url=url)
 
 def get_product_comments():
-    """comments สินค้าหมุนเวียน แยก Shopee / Lazada คนละ comment + หมุน intro"""
-    p = get_rotating_product()
-    if not p:
+    """comments สินค้าหมุนเวียน แยก Shopee / Lazada"""
+    products, _ = _load_excel()
+    # หมุนเวียน product ตาม day
+    active = [p for p in products if p["shopee"] and "xxx" not in p["shopee"]]
+    if not active:
         return []
-    bkk = timezone(timedelta(hours=7))
-    now = datetime.now(bkk)
+    p = _rotate(active, extra_salt=1)
+    desc_line = f" — {p['desc']}" if p.get("desc") and "ลด 20%" not in p["desc"] else ""
+    now = _now_bkk()
     vi = (now.timetuple().tm_yday + now.hour) % len(SHOPEE_INTROS)
-    desc_line = f"\n✨ {p['desc']}" if p.get("desc") else ""
     comments = []
-    if p.get("shopee") and "xxx" not in str(p["shopee"]):
-        comments.append(f"{SHOPEE_INTROS[vi]}: {p['name']}{desc_line}\n→ {p['shopee']}")
-    if p.get("lazada") and "xxx" not in str(p["lazada"]):
-        comments.append(f"{LAZADA_INTROS[vi]}: {p['name']}{desc_line}\n→ {p['lazada']}")
+    if p.get("shopee") and "xxx" not in p["shopee"]:
+        comments.append(SHOPEE_INTROS[vi].format(name=p["name"] or "สินค้าแนะนำ", desc=desc_line, url=p["shopee"]))
+    if p.get("lazada") and "xxx" not in p["lazada"]:
+        comments.append(LAZADA_INTROS[vi].format(name=p["name"] or "สินค้าแนะนำ", desc=desc_line, url=p["lazada"]))
+    return comments
+
+def get_all_comments():
+    """รวม comments ทั้งหมดตามลำดับ"""
+    comments = get_standard_comments()
+    food = get_food_comment()
+    if food:
+        comments.append(food)
+    comments.extend(get_product_comments())
     return comments

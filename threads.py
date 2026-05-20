@@ -209,9 +209,9 @@ def post_threads(image_url, caption):
     print(f"Threads Posted! ID: {post_id}")
 
     # Step 3: Add reply comments
-    from affiliate_utils import get_standard_comments, get_product_comments
+    from affiliate_utils import get_all_comments
     time.sleep(5)
-    all_comments = get_standard_comments() + get_product_comments()
+    all_comments = get_all_comments()
     for i, msg in enumerate(all_comments, 1):
         reply_id = _create_and_publish(msg, reply_to_id=post_id)
         print(f"Reply {i} added! ID: {reply_id}")
