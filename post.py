@@ -134,8 +134,6 @@ def generate_image(quote):
                 time.sleep(15)
     raise RuntimeError("Image generation failed after 3 attempts")
 
-WEBSITE_URL = "https://shopee-ranking.vercel.app/"
-
 # ─── 3. โพส Facebook ────────────────────────────────────────────
 def post_facebook(img_path, caption):
     print("Posting to Facebook...")
@@ -155,20 +153,13 @@ def post_facebook(img_path, caption):
         print(f"FB Error: {result}")
         raise SystemExit(1)
 
-# ─── 4. Auto-comment ลิงก์เว็บ (3 comments แยกกัน) ─────────────
+# ─── 4. Auto-comment ลิงก์เว็บ + product rotation ──────────────
 def add_comment(post_id):
-    comments = [
-        (
-            f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\n"
-            f"ดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}"
-        ),
-        (
-            f"🛒 ช้อปบน Shopee คลิกเลย → https://s.shopee.co.th/7VDLdM5w8I"
-        ),
-        (
-            f"🛍️ ช้อปบน Lazada คลิกเลย → https://s.lazada.co.th/s.Z69ao3?c=b"
-        ),
-    ]
+    from affiliate_utils import get_standard_comments, get_product_comment
+    comments = get_standard_comments()
+    product_msg = get_product_comment()
+    if product_msg:
+        comments.append(product_msg)
     for i, msg in enumerate(comments, 1):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",

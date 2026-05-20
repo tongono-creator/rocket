@@ -151,9 +151,35 @@ def upload_image_to_imgur(img_path):
         return url
     raise RuntimeError(f"ImgBB upload failed: {result}")
 
+def _create_and_publish(text, reply_to_id=None):
+    """สร้าง text container แล้ว publish — ใช้สำหรับ reply comment"""
+    data = {
+        "media_type": "TEXT",
+        "text": text,
+        "access_token": THREADS_ACCESS_TOKEN,
+    }
+    if reply_to_id:
+        data["reply_to_id"] = reply_to_id
+    resp = requests.post(
+        f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
+        data=data
+    )
+    container_id = resp.json().get("id")
+    if not container_id:
+        print(f"Reply container error: {resp.json()}")
+        return None
+    time.sleep(3)
+    resp2 = requests.post(
+        f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
+        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN}
+    )
+    result = resp2.json()
+    return result.get("id")
+
 def post_threads(image_url, caption):
+    from affiliate_utils import get_standard_comments, get_product_comment
     print("Posting to Threads...")
-    # Step 1: Create media container
+    # Step 1: Create image container
     resp = requests.post(
         f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
         data={
@@ -169,22 +195,32 @@ def post_threads(image_url, caption):
         raise SystemExit(1)
     container_id = result["id"]
     print(f"Container created: {container_id}")
-    time.sleep(5)  # รอ container พร้อม
+    time.sleep(5)
 
     # Step 2: Publish
     resp2 = requests.post(
         f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
-        data={
-            "creation_id": container_id,
-            "access_token": THREADS_ACCESS_TOKEN,
-        }
+        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN}
     )
     result2 = resp2.json()
-    if "id" in result2:
-        print(f"Threads Posted! ID: {result2['id']}")
-    else:
+    if "id" not in result2:
         print(f"Threads Error (publish): {result2}")
         raise SystemExit(1)
+    post_id = result2["id"]
+    print(f"Threads Posted! ID: {post_id}")
+
+    # Step 3: Add reply comments
+    time.sleep(5)
+    for i, msg in enumerate(get_standard_comments(), 1):
+        reply_id = _create_and_publish(msg, reply_to_id=post_id)
+        print(f"Reply {i} added! ID: {reply_id}")
+        time.sleep(3)
+
+    # Step 4: Product rotation comment (ถ้ามีสินค้าใน Excel)
+    product_msg = get_product_comment()
+    if product_msg:
+        reply_id = _create_and_publish(product_msg, reply_to_id=post_id)
+        print(f"Product reply added! ID: {reply_id}")
 
 if __name__ == "__main__":
     topic    = get_topic()
