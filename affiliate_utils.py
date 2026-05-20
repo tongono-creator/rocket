@@ -80,19 +80,19 @@ FOOD_INTROS = [
 
 # ─── Shopee product comment variations ───────────────────────────
 SHOPEE_INTROS = [
-    "🛒 แนะนำบน Shopee: {name}{desc}\n→ {url}",
-    "🔥 Deal เด็ดบน Shopee: {name}{desc}\n→ {url}",
-    "💥 ราคาดีที่สุด Shopee: {name}{desc}\n→ {url}",
-    "🎯 น่าซื้อมากบน Shopee: {name}{desc}\n→ {url}",
-    "⚡ Flash sale Shopee: {name}{desc}\n→ {url}",
+    "🛒 {name}{desc}\nซื้อได้บน Shopee → {url}",
+    "🔥 ถ้ากำลังมองหา {name} อยู่{desc}\nที่นี่เลย → {url}",
+    "💡 {name}{desc}\nราคาดีบน Shopee → {url}",
+    "✅ {name}{desc}\nลองดูก่อนตัดสินใจ Shopee → {url}",
+    "👀 {name}{desc}\nน่าสนใจมาก Shopee → {url}",
 ]
 
 LAZADA_INTROS = [
-    "🛍️ แนะนำบน Lazada: {name}{desc}\n→ {url}",
-    "🔥 Deal เด็ดบน Lazada: {name}{desc}\n→ {url}",
-    "💥 ราคาดีที่สุด Lazada: {name}{desc}\n→ {url}",
-    "🎯 น่าซื้อมากบน Lazada: {name}{desc}\n→ {url}",
-    "⚡ Flash sale Lazada: {name}{desc}\n→ {url}",
+    "🛍️ {name}{desc}\nซื้อได้บน Lazada → {url}",
+    "🔥 ถ้ากำลังมองหา {name} อยู่{desc}\nที่นี่เลย → {url}",
+    "💡 {name}{desc}\nราคาดีบน Lazada → {url}",
+    "✅ {name}{desc}\nลองดูก่อนตัดสินใจ Lazada → {url}",
+    "👀 {name}{desc}\nน่าสนใจมาก Lazada → {url}",
 ]
 
 # ─── Public API ───────────────────────────────────────────────────
@@ -110,17 +110,29 @@ def get_food_comment():
     template = _rotate(FOOD_INTROS, extra_salt=5)
     return template.format(name=name, url=url)
 
+PRODUCT_HOOKS = [
+    "ของดีราคาคุ้ม หมดแล้วหมดเลย",
+    "คนซื้อเยอะมาก รีวิวดีทุกอัน",
+    "ตัวนี้ใช้แล้วติดใจเลย",
+    "ราคานี้หาที่ไหนไม่ได้แล้ว",
+    "bestseller ขายดีอันดับต้นๆ",
+    "ลูกค้าให้คะแนน 4.9/5",
+    "ของแท้ 100% ส่งไวมาก",
+    "คุ้มมากถ้าตอนนี้",
+]
+
 def get_product_comments():
     """comments สินค้าหมุนเวียน แยก Shopee / Lazada"""
     products, _ = _load_excel()
-    # หมุนเวียน product ตาม day
     active = [p for p in products if p["shopee"] and "xxx" not in p["shopee"]]
     if not active:
         return []
     p = _rotate(active, extra_salt=1)
-    desc_line = f" — {p['desc']}" if p.get("desc") and "ลด 20%" not in p["desc"] else ""
     now = _now_bkk()
     vi = (now.timetuple().tm_yday + now.hour) % len(SHOPEE_INTROS)
+    hi = (now.timetuple().tm_yday + now.hour + 2) % len(PRODUCT_HOOKS)
+    hook = PRODUCT_HOOKS[hi]
+    desc_line = f"\n✨ {hook}"
     comments = []
     if p.get("shopee") and "xxx" not in p["shopee"]:
         comments.append(SHOPEE_INTROS[vi].format(name=p["name"] or "สินค้าแนะนำ", desc=desc_line, url=p["shopee"]))
