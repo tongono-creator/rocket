@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """meme.py — สร้าง comic strip มุกตลก 3 panel โพส Facebook วันละ 1 ครั้ง"""
 
-import sys, io, os, base64, requests, time
+import sys, io, os, base64, requests, time, random
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -11,8 +11,8 @@ from google.genai import types
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-3.1-flash-image-preview"
-TEXT_MODEL        = "gemini-2.5-flash"
+IMAGE_MODEL       = "gemini-3-pro-image-preview"
+TEXT_MODEL        = "gemini-3.5-flash"
 OUTPUT_DIR        = "output"
 
 if not GOOGLE_API_KEY:
@@ -63,8 +63,8 @@ MEME_STYLES = [
     {
         "name": "3-panel comic",
         "image_prompt": (
-            "Create a horizontal 3-panel comic strip (wide format, white background). "
-            "Simple cartoon style with a Thai office worker or family character. "
+            "Create a vertical 3-panel comic strip in 4:5 portrait ratio (tall format, white background). "
+            "Stack panels top to bottom. Simple cartoon style with a Thai office worker or family character. "
             "Silent comic, story told through expressions. Panel borders visible. "
             "Story: {scenario}. Clean funny cartoon, relatable Thai everyday life humor."
         ),
@@ -72,15 +72,17 @@ MEME_STYLES = [
     {
         "name": "Khaby Lame style",
         "image_prompt": (
-            "Create a 2-panel meme image. Left panel: complicated/stressful way someone does something "
-            "related to: {scenario}. Right panel: a calm confident person showing the obvious simple solution "
+            "Create a 2-panel meme image in 4:5 portrait ratio (tall format). "
+            "Stack panels top and bottom. Top panel: complicated/stressful way someone does something "
+            "related to: {scenario}. Bottom panel: a calm confident person showing the obvious simple solution "
             "with open hands gesture (Khaby Lame style). Clean cartoon illustration, white background, funny."
         ),
     },
     {
         "name": "Cat reaction meme",
         "image_prompt": (
-            "Create a funny cat meme image. Show an annoyed or unimpressed cartoon cat in an office or home setting "
+            "Create a funny cat meme image in 4:5 portrait ratio (tall format). "
+            "Show an annoyed or unimpressed cartoon cat in an office or home setting "
             "reacting to: {scenario}. Cat has expressive face showing relatable emotion. "
             "Clean cartoon style, white or simple background, no text needed."
         ),
@@ -88,7 +90,8 @@ MEME_STYLES = [
     {
         "name": "Distracted choice meme",
         "image_prompt": (
-            "Create a 'distracted boyfriend' style meme cartoon. A cartoon Thai office worker is walking with "
+            "Create a 'distracted boyfriend' style meme cartoon in 4:5 portrait ratio (tall format). "
+            "A cartoon Thai office worker is walking with "
             "'responsible choice' but turning head to look at 'tempting bad choice' related to: {scenario}. "
             "Label each person/object clearly in Thai. Clean cartoon style, funny and relatable."
         ),
@@ -96,8 +99,9 @@ MEME_STYLES = [
     {
         "name": "Expectation vs Reality",
         "image_prompt": (
-            "Create a split image meme. Left side labeled 'ที่คิดไว้' (expectation) with a happy idealistic scene. "
-            "Right side labeled 'ความเป็นจริง' (reality) with a funny contrasting scene. "
+            "Create a split image meme in 4:5 portrait ratio (tall format). "
+            "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic scene. "
+            "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting scene. "
             "Topic: {scenario}. Clean cartoon illustration style, white background, very funny."
         ),
     },
@@ -180,7 +184,11 @@ def post_facebook(img_path, caption):
 
 def add_comment(post_id):
     from affiliate_utils import get_all_comments
-    for i, msg in enumerate(get_all_comments(), 1):
+    comments = get_all_comments()
+    delay0 = random.uniform(60, 180)
+    print(f"Waiting {delay0:.0f}s before first comment...")
+    time.sleep(delay0)
+    for i, msg in enumerate(comments, 1):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
             data={"access_token": PAGE_ACCESS_TOKEN, "message": msg}
@@ -190,7 +198,10 @@ def add_comment(post_id):
             print(f"Comment {i} added! ID: {result['id']}")
         else:
             print(f"Comment {i} error: {result}")
-        time.sleep(2)
+        if i < len(comments):
+            delay = random.uniform(30, 90)
+            print(f"Waiting {delay:.0f}s before next comment...")
+            time.sleep(delay)
 
 if __name__ == "__main__":
     scenario, style = get_scenario()

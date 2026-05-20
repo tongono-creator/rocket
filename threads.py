@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """threads.py — โพสรูปคำคม + caption ลง Threads อัตโนมัติ"""
 
-import sys, io, os, base64, requests, time
+import sys, io, os, base64, requests, time, random
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -11,8 +11,8 @@ from google.genai import types
 GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
-IMAGE_MODEL          = "gemini-3.1-flash-image-preview"
-TEXT_MODEL           = "gemini-2.5-flash"
+IMAGE_MODEL          = "gemini-3-pro-image-preview"
+TEXT_MODEL           = "gemini-3.5-flash"
 OUTPUT_DIR           = "output"
 
 if not GOOGLE_API_KEY:
@@ -215,12 +215,17 @@ def post_threads(image_url, caption):
 
     # Step 3: Add reply comments
     from affiliate_utils import get_all_comments
-    time.sleep(5)
     all_comments = get_all_comments()
+    delay0 = random.uniform(60, 180)
+    print(f"Waiting {delay0:.0f}s before first reply...")
+    time.sleep(delay0)
     for i, msg in enumerate(all_comments, 1):
         reply_id = _create_and_publish(msg, reply_to_id=post_id)
         print(f"Reply {i} added! ID: {reply_id}")
-        time.sleep(3)
+        if i < len(all_comments):
+            delay = random.uniform(30, 90)
+            print(f"Waiting {delay:.0f}s before next reply...")
+            time.sleep(delay)
 
 if __name__ == "__main__":
     topic    = get_topic()

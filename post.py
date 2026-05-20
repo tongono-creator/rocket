@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, base64, json, requests, time
+import sys, io, os, base64, json, requests, time, random
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -12,8 +12,8 @@ from google.genai import types
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-3.1-flash-image-preview"
-TEXT_MODEL        = "gemini-2.5-flash"
+IMAGE_MODEL       = "gemini-3-pro-image-preview"
+TEXT_MODEL        = "gemini-3.5-flash"
 OUTPUT_DIR        = "output"
 
 # fallback รันบน local ใช้ config.py
@@ -191,6 +191,10 @@ def post_facebook(img_path, caption):
 def add_comment(post_id):
     from affiliate_utils import get_all_comments
     comments = get_all_comments()
+    # หน่วงก่อน comment แรก — ดูเหมือนคนมาเห็นโพสแล้วคอมเม้น
+    delay0 = random.uniform(60, 180)
+    print(f"Waiting {delay0:.0f}s before first comment...")
+    time.sleep(delay0)
     for i, msg in enumerate(comments, 1):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
@@ -201,7 +205,10 @@ def add_comment(post_id):
             print(f"Comment {i} added! ID: {result['id']}")
         else:
             print(f"Comment {i} error: {result}")
-        time.sleep(2)
+        if i < len(comments):
+            delay = random.uniform(30, 90)
+            print(f"Waiting {delay:.0f}s before next comment...")
+            time.sleep(delay)
 
 # ─── Main ────────────────────────────────────────────────────────
 if __name__ == "__main__":
