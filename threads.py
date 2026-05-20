@@ -74,18 +74,23 @@ def get_topic():
     else:
         return EVENING_TOPICS[day_idx]
 
+CONTENT_STYLES = [
+    "สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\nสั้น กระชับ 4-5 บรรทัด จุดใจคนอายุ 30-45 ปี\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยแบบเล่าเรื่องชีวิตจริงเกี่ยวกับ: {topic}\nให้รู้สึกเหมือนเพื่อนเล่าให้ฟัง relatable สำหรับคนอายุ 30-45 ปี 5-7 บรรทัด\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยแบบตั้งคำถามกระตุ้นความคิดเกี่ยวกับ: {topic}\nให้คนอยากคอมเม้น อยากแชร์ สำหรับคนอายุ 30-45 ปี 4-6 บรรทัด\nเริ่มด้วยคำถาม ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยแบบ tips ประยุกต์ใช้ได้ทันทีเกี่ยวกับ: {topic}\nให้เป็นรายการ 3-4 ข้อ สั้นกระชับ สำหรับคนอายุ 30-45 ปี\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยแบบเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\nให้เห็นภาพชัด สำหรับคนอายุ 30-45 ปี 5-6 บรรทัด\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+]
+
 def generate_quote(topic):
-    print(f"Topic: {topic}")
+    bkk = timezone(timedelta(hours=7))
+    now = datetime.now(bkk)
+    style_idx = (now.timetuple().tm_yday * 3 + now.hour) % len(CONTENT_STYLES)
+    prompt = CONTENT_STYLES[style_idx].format(topic=topic)
+    print(f"Topic: {topic} | Style: {style_idx}")
     for attempt in range(3):
         try:
-            resp = client.models.generate_content(
-                model=TEXT_MODEL,
-                contents=(
-                    f"สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\n"
-                    "สำหรับคนอายุ 30-45 ปี สั้น กระชับ 4-6 บรรทัด ให้รู้สึก relatable มาก\n"
-                    "ท้ายสุดใส่ hashtag 2-3 อัน ตอบแค่คำคมเท่านั้น ไม่ต้องมีคำอธิบาย"
-                )
-            )
+            resp = client.models.generate_content(model=TEXT_MODEL, contents=prompt)
             quote = resp.text.strip()
             print(f"Quote:\n{quote}\n")
             return quote
