@@ -1,0 +1,28 @@
+name: Meme Post (Daily Comic)
+
+on:
+  schedule:
+    # 14:00 BKK (07:00 UTC) ทุกวัน
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  meme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run meme script
+        env:
+          GOOGLE_API_KEY:    ${{ secrets.GOOGLE_API_KEY }}
+          PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+          PAGE_ID:           ${{ secrets.PAGE_ID }}
+        run: python meme.py
