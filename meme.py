@@ -58,43 +58,82 @@ MEME_SCENARIOS = [
     "คิดว่าจะไม่ซื้อ vs Flash Sale — panel 1: ตั้งใจแน่วแน่ panel 2: Flash sale 5 นาที panel 3: ซื้อหมด",
 ]
 
+# ─── Meme styles ──────────────────────────────────────────────
+MEME_STYLES = [
+    {
+        "name": "3-panel comic",
+        "image_prompt": (
+            "Create a horizontal 3-panel comic strip (wide format, white background). "
+            "Simple cartoon style with a Thai office worker or family character. "
+            "Silent comic, story told through expressions. Panel borders visible. "
+            "Story: {scenario}. Clean funny cartoon, relatable Thai everyday life humor."
+        ),
+    },
+    {
+        "name": "Khaby Lame style",
+        "image_prompt": (
+            "Create a 2-panel meme image. Left panel: complicated/stressful way someone does something "
+            "related to: {scenario}. Right panel: a calm confident person showing the obvious simple solution "
+            "with open hands gesture (Khaby Lame style). Clean cartoon illustration, white background, funny."
+        ),
+    },
+    {
+        "name": "Cat reaction meme",
+        "image_prompt": (
+            "Create a funny cat meme image. Show an annoyed or unimpressed cartoon cat in an office or home setting "
+            "reacting to: {scenario}. Cat has expressive face showing relatable emotion. "
+            "Clean cartoon style, white or simple background, no text needed."
+        ),
+    },
+    {
+        "name": "Distracted choice meme",
+        "image_prompt": (
+            "Create a 'distracted boyfriend' style meme cartoon. A cartoon Thai office worker is walking with "
+            "'responsible choice' but turning head to look at 'tempting bad choice' related to: {scenario}. "
+            "Label each person/object clearly in Thai. Clean cartoon style, funny and relatable."
+        ),
+    },
+    {
+        "name": "Expectation vs Reality",
+        "image_prompt": (
+            "Create a split image meme. Left side labeled 'ที่คิดไว้' (expectation) with a happy idealistic scene. "
+            "Right side labeled 'ความเป็นจริง' (reality) with a funny contrasting scene. "
+            "Topic: {scenario}. Clean cartoon illustration style, white background, very funny."
+        ),
+    },
+]
+
 def get_scenario():
     bkk = timezone(timedelta(hours=7))
-    day_idx = (datetime.now(bkk).timetuple().tm_yday - 1) % len(MEME_SCENARIOS)
-    return MEME_SCENARIOS[day_idx]
+    now = datetime.now(bkk)
+    day_idx = (now.timetuple().tm_yday - 1) % len(MEME_SCENARIOS)
+    style_idx = (now.timetuple().tm_yday - 1) % len(MEME_STYLES)
+    return MEME_SCENARIOS[day_idx], MEME_STYLES[style_idx]
 
-def generate_meme_caption(scenario):
-    print(f"Scenario: {scenario}")
-    resp_text = None
+def generate_meme_caption(scenario, style):
+    print(f"Scenario: {scenario} | Style: {style['name']}")
     for attempt in range(3):
         try:
             resp = client.models.generate_content(
                 model=TEXT_MODEL,
                 contents=(
-                    f"เขียน Facebook caption ภาษาไทยสำหรับมุกตลก: {scenario}\n"
+                    f"เขียน Facebook caption ภาษาไทยสำหรับมุก style '{style['name']}' เรื่อง: {scenario}\n"
                     "สั้นกระชับ 1-3 บรรทัด ขำขัน relatable สำหรับคนอายุ 30-45 ปี\n"
                     "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ caption เท่านั้น"
                 )
             )
-            resp_text = resp.text.strip()
-            print(f"Caption:\n{resp_text}\n")
-            return resp_text
+            text = resp.text.strip()
+            print(f"Caption:\n{text}\n")
+            return text
         except Exception as e:
             print(f"Caption attempt {attempt+1} failed: {str(e)[:100]}")
             if attempt < 2:
                 time.sleep(15)
     raise RuntimeError("Caption generation failed")
 
-def generate_meme_image(scenario):
-    print("Generating meme comic strip...")
-    prompt = (
-        "Create a horizontal 3-panel comic strip (wide format, white background). "
-        "Each panel has a simple cartoon style with a Thai office worker or family character. "
-        "Silent comic — minimal text, story told through expressions and visuals. "
-        f"Story: {scenario}. "
-        "Panel borders visible, clean and funny cartoon style, "
-        "relatable Thai everyday life humor. No offensive content."
-    )
+def generate_meme_image(scenario, style):
+    print(f"Generating meme [{style['name']}]...")
+    prompt = style["image_prompt"].format(scenario=scenario)
     for attempt in range(3):
         try:
             resp = client.models.generate_content(
@@ -154,7 +193,7 @@ def add_comment(post_id):
         time.sleep(2)
 
 if __name__ == "__main__":
-    scenario = get_scenario()
-    caption  = generate_meme_caption(scenario)
-    img_path = generate_meme_image(scenario)
+    scenario, style = get_scenario()
+    caption  = generate_meme_caption(scenario, style)
+    img_path = generate_meme_image(scenario, style)
     post_facebook(img_path, caption)
