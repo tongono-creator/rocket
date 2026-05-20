@@ -77,35 +77,40 @@ def get_topic():
         return EVENING_TOPICS[day_idx], "evening"
 
 CONTENT_STYLES = [
-    # style 0: คำคมสั้น
+    # style 0: คำคมกระแทกใจ
     (
         "สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\n"
-        "สั้น กระชับ 4-5 บรรทัด จุดใจคนอายุ 30-45 ปี\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น"
+        "สั้นมาก 1-2 ประโยคเท่านั้น กระแทกใจ หยุดนิ้วเลื่อนได้ทันที\n"
+        "ใช้ภาษาพูดธรรมดา ไม่วิจิตร คนอายุ 30-45 อ่านแล้วรู้สึกเลย\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น"
     ),
-    # style 1: เรื่องเล่าชีวิตจริง
+    # style 1: เรื่องเล่าสั้น relatable
     (
-        "เขียน Facebook post ภาษาไทยแบบเล่าเรื่องชีวิตจริงเกี่ยวกับ: {topic}\n"
-        "ให้รู้สึกเหมือนเพื่อนเล่าให้ฟัง relatable สำหรับคนอายุ 30-45 ปี 5-7 บรรทัด\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น"
+        "เขียน Facebook post ภาษาไทยเล่าเรื่องชีวิตจริงเกี่ยวกับ: {topic}\n"
+        "สั้น 3-4 บรรทัด เหมือนเพื่อนโพส เข้าใจง่าย คนอ่านแล้วพยักหน้า\n"
+        "ลงท้ายด้วยประโยคที่ให้คนอยากคอมเม้น\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น"
     ),
-    # style 2: คำถามกระตุ้น
+    # style 2: คำถามสั้นกระตุ้น
     (
-        "เขียน Facebook post ภาษาไทยแบบตั้งคำถามกระตุ้นความคิดเกี่ยวกับ: {topic}\n"
-        "ให้คนอยากคอมเม้น อยากแชร์ สำหรับคนอายุ 30-45 ปี 4-6 บรรทัด\n"
-        "เริ่มด้วยคำถาม ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น"
+        "เขียน Facebook post ภาษาไทยตั้งคำถามเกี่ยวกับ: {topic}\n"
+        "1 คำถามสั้นๆ ที่คนอ่านแล้วต้องคิด อยากตอบ อยากแชร์\n"
+        "ไม่เกิน 2 บรรทัด ภาษาง่าย พูดตรงๆ\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น"
     ),
-    # style 3: Tips การเงิน
+    # style 3: Tips กระชับ
     (
-        "เขียน Facebook post ภาษาไทยแบบ tips ประยุกต์ใช้ได้ทันทีเกี่ยวกับ: {topic}\n"
-        "ให้เป็นรายการ 3-4 ข้อ สั้นกระชับ สำหรับคนอายุ 30-45 ปี\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น"
+        "เขียน Facebook post ภาษาไทย tips เกี่ยวกับ: {topic}\n"
+        "3 ข้อสั้นๆ ข้อละ 1 บรรทัด ใช้ได้ทันที ไม่อ้อมค้อม\n"
+        "เริ่มด้วยหัวข้อดึงดูด 1 บรรทัด\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น"
     ),
-    # style 4: ก่อน/หลัง เปรียบเทียบ
+    # style 4: ก่อน vs หลัง
     (
-        "เขียน Facebook post ภาษาไทยแบบเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\n"
-        "ให้เห็นภาพชัด สำหรับคนอายุ 30-45 ปี 5-6 บรรทัด\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น"
+        "เขียน Facebook post ภาษาไทยเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\n"
+        "สั้น 2-3 บรรทัด เห็นภาพชัด ขำหรือจริงใจ คนแชร์ได้เลย\n"
+        "ภาษาพูด ไม่เป็นทางการ\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น"
     ),
 ]
 
@@ -136,10 +141,10 @@ def generate_quote(topic):
 def generate_image(quote):
     print("Generating image...")
     prompt = (
-        f"Square social media quote card. Pure black background. "
-        f"White Thai text centered, large bold readable font. "
+        f"Square social media quote card. Pure solid black background, NO border, NO white frame, NO padding, image fills edge to edge. "
+        f"White Thai text centered, large bold readable font, maximum 2-3 lines only. "
         f"Thai text: {quote}. "
-        f"Minimalist, no decorations, viral Facebook post style."
+        f"Minimalist, no decorations, no frame, no border, bleed to edges, viral Thai Facebook scroll-stopping style."
     )
     for attempt in range(3):
         try:

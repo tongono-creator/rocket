@@ -75,11 +75,11 @@ def get_topic():
         return EVENING_TOPICS[day_idx]
 
 CONTENT_STYLES = [
-    "สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\nสั้น กระชับ 4-5 บรรทัด จุดใจคนอายุ 30-45 ปี\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
-    "เขียน Facebook post ภาษาไทยแบบเล่าเรื่องชีวิตจริงเกี่ยวกับ: {topic}\nให้รู้สึกเหมือนเพื่อนเล่าให้ฟัง relatable สำหรับคนอายุ 30-45 ปี 5-7 บรรทัด\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
-    "เขียน Facebook post ภาษาไทยแบบตั้งคำถามกระตุ้นความคิดเกี่ยวกับ: {topic}\nให้คนอยากคอมเม้น อยากแชร์ สำหรับคนอายุ 30-45 ปี 4-6 บรรทัด\nเริ่มด้วยคำถาม ท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
-    "เขียน Facebook post ภาษาไทยแบบ tips ประยุกต์ใช้ได้ทันทีเกี่ยวกับ: {topic}\nให้เป็นรายการ 3-4 ข้อ สั้นกระชับ สำหรับคนอายุ 30-45 ปี\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
-    "เขียน Facebook post ภาษาไทยแบบเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\nให้เห็นภาพชัด สำหรับคนอายุ 30-45 ปี 5-6 บรรทัด\nท้ายใส่ hashtag 2-3 อัน ตอบแค่ content เท่านั้น",
+    "สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\nสั้นมาก 1-2 ประโยคเท่านั้น กระแทกใจ หยุดนิ้วเลื่อนได้ทันที ภาษาพูดธรรมดา คนอายุ 30-45 อ่านแล้วรู้สึกเลย\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยเล่าเรื่องชีวิตจริงเกี่ยวกับ: {topic}\nสั้น 3-4 บรรทัด เหมือนเพื่อนโพส เข้าใจง่าย คนอ่านแล้วพยักหน้า ลงท้ายด้วยประโยคที่ให้คนอยากคอมเม้น\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยตั้งคำถามเกี่ยวกับ: {topic}\n1 คำถามสั้นๆ ที่คนอ่านแล้วต้องคิด อยากตอบ อยากแชร์ ไม่เกิน 2 บรรทัด ภาษาง่าย พูดตรงๆ\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทย tips เกี่ยวกับ: {topic}\n3 ข้อสั้นๆ ข้อละ 1 บรรทัด ใช้ได้ทันที ไม่อ้อมค้อม เริ่มด้วยหัวข้อดึงดูด 1 บรรทัด\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
+    "เขียน Facebook post ภาษาไทยเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\nสั้น 2-3 บรรทัด เห็นภาพชัด ขำหรือจริงใจ คนแชร์ได้เลย ภาษาพูด ไม่เป็นทางการ\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
 ]
 
 def generate_quote(topic):
@@ -103,10 +103,10 @@ def generate_quote(topic):
 def generate_image(quote):
     print("Generating image...")
     prompt = (
-        f"Square social media quote card. Pure black background. "
-        f"White Thai text centered, large bold readable font. "
+        f"Square social media quote card. Pure solid black background, NO border, NO white frame, NO padding, image fills edge to edge. "
+        f"White Thai text centered, large bold readable font, maximum 2-3 lines only. "
         f"Thai text: {quote}. "
-        f"Minimalist, no decorations, viral Facebook post style."
+        f"Minimalist, no decorations, no frame, no border, bleed to edges, viral Thai Facebook scroll-stopping style."
     )
     for attempt in range(3):
         try:
