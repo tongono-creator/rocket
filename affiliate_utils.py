@@ -2,9 +2,8 @@
 import os
 from datetime import datetime, timezone, timedelta
 
-WEBSITE_URL = "https://shopee-ranking.vercel.app/"
-SHOPEE_URL  = "https://s.shopee.co.th/7VDLdM5w8I"
-LAZADA_URL  = "https://s.lazada.co.th/s.Z69ao3?c=b"
+WEBSITE_URL      = "https://shopee-ranking.vercel.app/"
+SHOPEE_FOOD_URL  = "วางลิงก์ Shopee Food ที่นี่"  # TODO: ใส่ลิงก์จริง
 
 EXCEL_PATH = os.path.join(os.path.dirname(__file__), "affiliate_products.xlsx")
 
@@ -17,8 +16,9 @@ def get_active_products():
         products = []
         for row in ws.iter_rows(min_row=2, values_only=True):
             no, name, shopee, lazada, active = row[0], row[1], row[2], row[3], row[4]
+            desc = row[5] if len(row) > 5 else None
             if str(active).strip().lower() == "yes" and shopee and "xxx" not in str(shopee):
-                products.append({"name": name, "shopee": shopee, "lazada": lazada})
+                products.append({"name": name, "shopee": shopee, "lazada": lazada, "desc": desc or ""})
         return products
     except Exception as e:
         print(f"Excel read failed: {e}")
@@ -34,20 +34,22 @@ def get_rotating_product():
     return products[day_idx]
 
 def get_standard_comments():
-    """3 comments มาตรฐาน (website / Shopee / Lazada)"""
-    return [
+    """standard comments (website + Shopee Food)"""
+    comments = [
         f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\nดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}",
-        f"🛒 ช้อปบน Shopee คลิกเลย → {SHOPEE_URL}",
-        f"🛍️ ช้อปบน Lazada คลิกเลย → {LAZADA_URL}",
     ]
+    if "วางลิงก์" not in SHOPEE_FOOD_URL:
+        comments.append(f"🍜 สั่งอาหาร Shopee Food ลดเพิ่ม → {SHOPEE_FOOD_URL}")
+    return comments
 
 def get_product_comment():
     """comment สินค้าหมุนเวียน (ถ้ามีใน Excel)"""
     p = get_rotating_product()
     if not p:
         return None
+    desc_line = f"\n✨ {p['desc']}" if p.get("desc") else ""
     return (
-        f"🎯 สินค้าแนะนำวันนี้: {p['name']}\n"
+        f"🎯 สินค้าแนะนำวันนี้: {p['name']}{desc_line}\n"
         f"Shopee → {p['shopee']}\n"
         f"Lazada → {p['lazada']}"
     )
