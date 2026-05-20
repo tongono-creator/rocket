@@ -33,24 +33,50 @@ def get_rotating_product():
     day_idx = datetime.now(bkk).timetuple().tm_yday % len(products)
     return products[day_idx]
 
+WEBSITE_VARIATIONS = [
+    f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\nดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}",
+    f"📊 เช็คอันดับสินค้าขายดีก่อนซื้อ ประหยัดได้เยอะมาก\n→ {WEBSITE_URL}",
+    f"🛒 ของขายดีอันดับ 1 บน Shopee วันนี้คืออะไร?\nเช็คได้เลย → {WEBSITE_URL}",
+    f"💡 ก่อนซื้อของออนไลน์ ดูอันดับก่อนนะ\n→ {WEBSITE_URL}",
+    f"🏆 คนไทยกำลังซื้ออะไรกันเยอะที่สุด?\nดูได้ที่นี่ → {WEBSITE_URL}",
+]
+
+FOOD_VARIATIONS = [
+    f"🍜 หิวแล้วสั่ง Shopee Food เลย มีโปรลดทุกวัน → {SHOPEE_FOOD_URL}",
+    f"🍱 สั่งข้าวง่ายๆ ส่งถึงบ้าน Shopee Food → {SHOPEE_FOOD_URL}",
+    f"🔖 Shopee Food มีคูปองลดให้ทุกวัน สั่งเลย → {SHOPEE_FOOD_URL}",
+    f"🛵 อยากกินอะไร สั่งได้เลย Shopee Food → {SHOPEE_FOOD_URL}",
+    f"🍔 ประหยัดค่าอาหารด้วย Shopee Food โปรเด็ดทุกมื้อ → {SHOPEE_FOOD_URL}",
+]
+
+def _get_variation(variations):
+    bkk = timezone(timedelta(hours=7))
+    now = datetime.now(bkk)
+    idx = (now.timetuple().tm_yday * 3 + now.hour) % len(variations)
+    return variations[idx]
+
 def get_standard_comments():
-    """standard comments (website + Shopee Food)"""
-    comments = [
-        f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee ตอนนี้?\nดูอันดับสินค้าขายดีได้เลยที่ → {WEBSITE_URL}",
-    ]
+    """standard comments (website + Shopee Food) — หมุน variations"""
+    comments = [_get_variation(WEBSITE_VARIATIONS)]
     if "วางลิงก์" not in SHOPEE_FOOD_URL:
-        comments.append(f"🍜 สั่งอาหาร Shopee Food ลดเพิ่ม → {SHOPEE_FOOD_URL}")
+        comments.append(_get_variation(FOOD_VARIATIONS))
     return comments
 
+SHOPEE_INTROS = ["🛒 ช้อปได้บน Shopee", "🔥 ราคาดีที่สุดบน Shopee", "🎯 แนะนำบน Shopee", "💥 Deal เด็ดบน Shopee"]
+LAZADA_INTROS = ["🛍️ ช้อปได้บน Lazada", "🔥 ราคาดีที่สุดบน Lazada", "🎯 แนะนำบน Lazada", "💥 Deal เด็ดบน Lazada"]
+
 def get_product_comments():
-    """comments สินค้าหมุนเวียน แยก Shopee / Lazada คนละ comment"""
+    """comments สินค้าหมุนเวียน แยก Shopee / Lazada คนละ comment + หมุน intro"""
     p = get_rotating_product()
     if not p:
         return []
+    bkk = timezone(timedelta(hours=7))
+    now = datetime.now(bkk)
+    vi = (now.timetuple().tm_yday + now.hour) % len(SHOPEE_INTROS)
     desc_line = f"\n✨ {p['desc']}" if p.get("desc") else ""
     comments = []
     if p.get("shopee") and "xxx" not in str(p["shopee"]):
-        comments.append(f"🎯 {p['name']}{desc_line}\n🛒 Shopee → {p['shopee']}")
+        comments.append(f"{SHOPEE_INTROS[vi]}: {p['name']}{desc_line}\n→ {p['shopee']}")
     if p.get("lazada") and "xxx" not in str(p["lazada"]):
-        comments.append(f"🎯 {p['name']}{desc_line}\n🛍️ Lazada → {p['lazada']}")
+        comments.append(f"{LAZADA_INTROS[vi]}: {p['name']}{desc_line}\n→ {p['lazada']}")
     return comments
