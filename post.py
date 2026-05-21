@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, base64, json, requests, time, random
+import sys, io, os, base64, json, requests, time, random, textwrap
+from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -136,41 +137,84 @@ def generate_quote(topic):
         print(f"[{model}] unavailable, trying next model...")
     raise RuntimeError("Quote generation failed on all models")
 
-# ─── 2. สร้างรูป ────────────────────────────────────────────────
+# ─── 2. สร้างรูป (PIL + Kanit-Bold — ข้อความถูกต้อง 100%) ────────
+FONT_PATH      = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+FONT_HASH_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+IMG_SIZE = 1080
+
+def wrap_thai(text, font, draw, max_width):
+    """ตัดบรรทัดให้พอดีความกว้าง"""
+    words = text.split()
+    lines, current = [], ""
+    for word in words:
+        test = (current + " " + word).strip()
+        w = draw.textbbox((0, 0), test, font=font)[2]
+        if w <= max_width:
+            current = test
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
+
 def generate_image(quote):
-    print("Generating image...")
-    prompt = (
-        f"Square social media quote card. Pure solid black background, NO border, NO white frame, NO padding, image fills edge to edge. "
-        f"White Thai text centered, large bold readable font, maximum 2-3 lines only. "
-        f"Thai text: {quote}. "
-        f"Minimalist, no decorations, no frame, no border, bleed to edges, viral Thai Facebook scroll-stopping style."
-    )
-    for attempt in range(3):
-        try:
-            resp = client.models.generate_content(
-                model=IMAGE_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE", "TEXT"]
-                )
-            )
-            for part in resp.candidates[0].content.parts:
-                if part.inline_data:
-                    data = part.inline_data.data
-                    if isinstance(data, str):
-                        data = base64.b64decode(data)
-                    bkk = timezone(timedelta(hours=7))
-                    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-                    path = os.path.join(OUTPUT_DIR, f"quote_{ts}.png")
-                    with open(path, "wb") as f:
-                        f.write(data)
-                    print(f"Image saved: {path}")
-                    return path
-        except Exception as e:
-            print(f"Attempt {attempt+1} failed: {str(e)[:100]}")
-            if attempt < 2:
-                time.sleep(15)
-    raise RuntimeError("Image generation failed after 3 attempts")
+    print("Generating image (PIL)...")
+    bkk = timezone(timedelta(hours=7))
+    ts  = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(OUTPUT_DIR, f"quote_{ts}.png")
+
+    img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    font_main = ImageFont.truetype(FONT_PATH, 78)
+    font_hash = ImageFont.truetype(FONT_HASH_PATH, 50)
+
+    PAD = 80
+    max_w = IMG_SIZE - PAD * 2
+
+    # แยก hashtag ออก
+    raw_lines = quote.strip().split("\n")
+    content_lines, hash_lines = [], []
+    for l in raw_lines:
+        (hash_lines if l.strip().startswith("#") else content_lines).append(l.strip())
+
+    # wrap content
+    all_lines = []
+    for l in content_lines:
+        if not l:
+            all_lines.append(("", font_main))
+            continue
+        for wrapped in wrap_thai(l, font_main, draw, max_w):
+            all_lines.append((wrapped, font_main))
+
+    all_lines.append(("", font_main))  # spacer
+    for l in hash_lines:
+        if l:
+            all_lines.append((l, font_hash))
+
+    # calc total height
+    line_gap = 18
+    total_h = sum(draw.textbbox((0,0), t, font=f)[3] + line_gap for t, f in all_lines)
+    y = (IMG_SIZE - total_h) // 2
+
+    for text, font in all_lines:
+        if not text:
+            y += draw.textbbox((0,0), "ก", font=font)[3] // 2
+            continue
+        bbox = draw.textbbox((0, 0), text, font=font)
+        w = bbox[2] - bbox[0]
+        x = (IMG_SIZE - w) // 2
+        color = (150, 150, 150) if font == font_hash else (255, 255, 255)
+        # subtle shadow
+        draw.text((x+2, y+2), text, font=font, fill=(30, 30, 30))
+        draw.text((x, y), text, font=font, fill=color)
+        y += bbox[3] + line_gap
+
+    img.save(path)
+    print(f"Image saved: {path}")
+    return path
 
 # ─── 3. โพส Facebook ────────────────────────────────────────────
 def post_facebook(img_path, caption):
