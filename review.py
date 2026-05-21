@@ -13,7 +13,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID", "111830598532037")
 IMAGE_MODEL       = "gemini-3-pro-image-preview"
-TEXT_MODEL        = "gemini-3.5-flash"
+TEXT_MODEL        = "gemini-2.5-flash"
 OUTPUT_DIR        = "output"
 EXCEL_PATH        = os.path.join(os.path.dirname(__file__), "review_products.xlsx")
 
