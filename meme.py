@@ -56,65 +56,119 @@ MEME_SCENARIOS = [
     "สัมภาษณ์งาน vs ความเป็นจริง — panel 1: บอกว่าเก่ง panel 2: ได้งาน panel 3: งานจริงต่างมาก",
     "ออมเงินไว้ฉุกเฉิน vs เงินฉุกเฉิน — panel 1: เก็บเงิน panel 2: รถเสีย panel 3: เงินหาย",
     "คิดว่าจะไม่ซื้อ vs Flash Sale — panel 1: ตั้งใจแน่วแน่ panel 2: Flash sale 5 นาที panel 3: ซื้อหมด",
+    # สำหรับ Generation comparison style
+    "การเก็บเงิน — รุ่นปู่: เก็บในไห รุ่นพ่อ: ฝากธนาคาร รุ่นลูก: ลงทุนหุ้น รุ่นหลาน: กู้ซื้อ iPhone",
+    "การทำงาน — รุ่นปู่: ทำนาตากแดด รุ่นพ่อ: รับราชการ รุ่นลูก: พนักงานบริษัท รุ่นหลาน: Influencer นอนถ่ายคลิป",
+    "การเดินทางไปทำงาน — รุ่นปู่: เดินเท้า รุ่นพ่อ: ขี่จักรยาน รุ่นลูก: ขับรถติด รุ่นหลาน: WFH ใส่ชุดนอน",
+    "การซื้อบ้าน — รุ่นปู่: ปลูกเองด้วยมือ รุ่นพ่อ: ผ่อนธนาคาร 30 ปี รุ่นลูก: เช่าคอนโด รุ่นหลาน: อยู่บ้านพ่อแม่ไปก่อน",
+    "การออมเงินเกษียณ — รุ่นปู่: มีที่ดินไว้ รุ่นพ่อ: บำนาญราชการ รุ่นลูก: ประกันชีวิต รุ่นหลาน: หวังว่าลูกจะเลี้ยง",
 ]
 
 # ─── Meme styles ──────────────────────────────────────────────
 NO_BORDER = "NO white outer border, NO white frame, image fills edge to edge, bleed to edges. "
+SIGNATURE_STYLE = (
+    "ART STYLE: Thai retro 90s comic with chibi characters — big round heads, tiny bodies, "
+    "exaggerated cute expressions. Thick heavy black outlines. "
+    "Warm retro color palette: earthy browns, muted oranges, warm yellows, soft reds, faded greens. "
+    "Flat color fills with simple cel-shading shadows. Slightly aged paper texture feel. "
+    "Characters look like classic Thai cartoon from 1990s but with chibi proportions. "
+)
 
 MEME_STYLES = [
     {
         "name": "3-panel comic",
         "image_prompt": (
             "Create a vertical 3-panel comic strip in 4:5 portrait ratio (tall format). "
-            "Stack panels top to bottom. Simple cartoon style with a Thai office worker or family character. "
+            + SIGNATURE_STYLE +
+            "Stack panels top to bottom. Thai office worker or family chibi character. "
             "Silent comic, story told through expressions. Panel borders visible between panels only. "
-            "Story: {scenario}. Clean funny cartoon, relatable Thai everyday life humor. " + NO_BORDER
+            "Story: {scenario}. Funny, relatable Thai everyday life humor. " + NO_BORDER
         ),
     },
     {
         "name": "Khaby Lame style",
         "image_prompt": (
             "Create a 2-panel meme image in 4:5 portrait ratio (tall format). "
+            + SIGNATURE_STYLE +
             "Stack panels top and bottom. Top panel: complicated/stressful way someone does something "
-            "related to: {scenario}. Bottom panel: a calm confident person showing the obvious simple solution "
-            "with open hands gesture (Khaby Lame style). Clean cartoon illustration, funny. " + NO_BORDER
+            "related to: {scenario}. Bottom panel: a calm confident chibi person showing the obvious simple solution "
+            "with open hands gesture (Khaby Lame style). Funny. " + NO_BORDER
         ),
     },
     {
         "name": "Cat reaction meme",
         "image_prompt": (
             "Create a funny cat meme image in 4:5 portrait ratio (tall format). "
-            "Show an annoyed or unimpressed cartoon cat in an office or home setting "
-            "reacting to: {scenario}. Cat has expressive face showing relatable emotion. "
-            "Clean cartoon style, simple background, no text needed. " + NO_BORDER
+            + SIGNATURE_STYLE +
+            "Show an annoyed or unimpressed chibi cat in an office or home setting "
+            "reacting to: {scenario}. Cat has huge expressive eyes showing relatable emotion. "
+            "No text needed. " + NO_BORDER
         ),
     },
     {
         "name": "Distracted choice meme",
         "image_prompt": (
             "Create a 'distracted boyfriend' style meme cartoon in 4:5 portrait ratio (tall format). "
-            "A cartoon Thai office worker is walking with "
-            "'responsible choice' but turning head to look at 'tempting bad choice' related to: {scenario}. "
-            "Label each person/object clearly in Thai. Clean cartoon style, funny and relatable. " + NO_BORDER
+            + SIGNATURE_STYLE +
+            "A chibi Thai office worker walking with 'responsible choice' "
+            "but turning head to look at 'tempting bad choice' related to: {scenario}. "
+            "Label each person/object clearly in Thai. Funny and relatable. " + NO_BORDER
         ),
     },
     {
         "name": "Expectation vs Reality",
         "image_prompt": (
             "Create a split image meme in 4:5 portrait ratio (tall format). "
-            "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic scene. "
-            "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting scene. "
-            "Topic: {scenario}. Clean cartoon illustration style, very funny. " + NO_BORDER
+            + SIGNATURE_STYLE +
+            "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic chibi scene. "
+            "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting chibi scene. "
+            "Topic: {scenario}. Very funny. " + NO_BORDER
+        ),
+    },
+    {
+        "name": "Generation comparison",
+        "image_prompt": (
+            "Create a 2x2 four-panel comic grid in 4:5 portrait ratio (tall format). "
+            + SIGNATURE_STYLE +
+            "Each panel shows the same topic across Thai generations with a funny ironic twist. "
+            "Panel top-left: รุ่นปู่ (grandfather's era, old-fashioned hard way). "
+            "Panel top-right: รุ่นพ่อ (father's era, slightly improved). "
+            "Panel bottom-left: รุ่นลูก (our generation, modern approach). "
+            "Panel bottom-right: รุ่นหลาน (grandchild's era, ironic/lazy/unexpected punchline). "
+            "Each panel has a bold Thai label badge at bottom: รุ่นปู่ / รุ่นพ่อ / รุ่นลูก / รุ่นหลาน. "
+            "Topic: {scenario}. Thin panel dividers only. " + NO_BORDER
         ),
     },
 ]
 
+GENERATION_SCENARIOS = [s for s in MEME_SCENARIOS if "รุ่นปู่" in s]
+REGULAR_SCENARIOS    = [s for s in MEME_SCENARIOS if "รุ่นปู่" not in s]
+
+def get_slot():
+    """คืนค่า slot 0/1/2 ตามเวลา BKK: 07:30=0, 11:30=1, 16:30=2"""
+    bkk = timezone(timedelta(hours=7))
+    hour = datetime.now(bkk).hour
+    if hour < 10:
+        return 0
+    elif hour < 14:
+        return 1
+    else:
+        return 2
+
 def get_scenario():
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
-    day_idx = (now.timetuple().tm_yday - 1) % len(MEME_SCENARIOS)
-    style_idx = (now.timetuple().tm_yday - 1) % len(MEME_STYLES)
-    return MEME_SCENARIOS[day_idx], MEME_STYLES[style_idx]
+    day  = now.timetuple().tm_yday
+    slot = get_slot()
+    # แต่ละ slot ใช้ offset ต่างกัน → scenario ไม่ซ้ำกัน 3 ครั้ง/วัน
+    seed = (day - 1) * 3 + slot
+    style_idx = seed % len(MEME_STYLES)
+    style = MEME_STYLES[style_idx]
+    if style["name"] == "Generation comparison":
+        scenario = GENERATION_SCENARIOS[seed % len(GENERATION_SCENARIOS)]
+    else:
+        scenario = REGULAR_SCENARIOS[seed % len(REGULAR_SCENARIOS)]
+    return scenario, style
 
 def generate_meme_caption(scenario, style):
     print(f"Scenario: {scenario} | Style: {style['name']}")
