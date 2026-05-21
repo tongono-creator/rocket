@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, base64, json, requests, time, random, textwrap
+import sys, io, os, requests, time, random
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
-from google.genai import types
 
 # === CONFIG (รับจาก env vars — GitHub Actions ใส่ใน Secrets) ===
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-3-pro-image-preview"
-TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]  # fallback order
+IMAGE_MODEL       = "gemini-2.0-flash-preview-image-generation"  # unused in post.py (PIL renders text)
+TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]  # fallback order
 OUTPUT_DIR        = "output"
 
 # fallback รันบน local ใช้ config.py
