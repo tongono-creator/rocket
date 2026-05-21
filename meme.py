@@ -59,14 +59,16 @@ MEME_SCENARIOS = [
 ]
 
 # ─── Meme styles ──────────────────────────────────────────────
+NO_BORDER = "NO white outer border, NO white frame, image fills edge to edge, bleed to edges. "
+
 MEME_STYLES = [
     {
         "name": "3-panel comic",
         "image_prompt": (
-            "Create a vertical 3-panel comic strip in 4:5 portrait ratio (tall format, white background). "
+            "Create a vertical 3-panel comic strip in 4:5 portrait ratio (tall format). "
             "Stack panels top to bottom. Simple cartoon style with a Thai office worker or family character. "
-            "Silent comic, story told through expressions. Panel borders visible. "
-            "Story: {scenario}. Clean funny cartoon, relatable Thai everyday life humor."
+            "Silent comic, story told through expressions. Panel borders visible between panels only. "
+            "Story: {scenario}. Clean funny cartoon, relatable Thai everyday life humor. " + NO_BORDER
         ),
     },
     {
@@ -75,7 +77,7 @@ MEME_STYLES = [
             "Create a 2-panel meme image in 4:5 portrait ratio (tall format). "
             "Stack panels top and bottom. Top panel: complicated/stressful way someone does something "
             "related to: {scenario}. Bottom panel: a calm confident person showing the obvious simple solution "
-            "with open hands gesture (Khaby Lame style). Clean cartoon illustration, white background, funny."
+            "with open hands gesture (Khaby Lame style). Clean cartoon illustration, funny. " + NO_BORDER
         ),
     },
     {
@@ -84,7 +86,7 @@ MEME_STYLES = [
             "Create a funny cat meme image in 4:5 portrait ratio (tall format). "
             "Show an annoyed or unimpressed cartoon cat in an office or home setting "
             "reacting to: {scenario}. Cat has expressive face showing relatable emotion. "
-            "Clean cartoon style, white or simple background, no text needed."
+            "Clean cartoon style, simple background, no text needed. " + NO_BORDER
         ),
     },
     {
@@ -93,7 +95,7 @@ MEME_STYLES = [
             "Create a 'distracted boyfriend' style meme cartoon in 4:5 portrait ratio (tall format). "
             "A cartoon Thai office worker is walking with "
             "'responsible choice' but turning head to look at 'tempting bad choice' related to: {scenario}. "
-            "Label each person/object clearly in Thai. Clean cartoon style, funny and relatable."
+            "Label each person/object clearly in Thai. Clean cartoon style, funny and relatable. " + NO_BORDER
         ),
     },
     {
@@ -102,7 +104,7 @@ MEME_STYLES = [
             "Create a split image meme in 4:5 portrait ratio (tall format). "
             "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic scene. "
             "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting scene. "
-            "Topic: {scenario}. Clean cartoon illustration style, white background, very funny."
+            "Topic: {scenario}. Clean cartoon illustration style, very funny. " + NO_BORDER
         ),
     },
 ]
@@ -118,8 +120,9 @@ def generate_meme_caption(scenario, style):
     print(f"Scenario: {scenario} | Style: {style['name']}")
     prompt = (
         f"เขียน Facebook caption ภาษาไทยสำหรับมุก style '{style['name']}' เรื่อง: {scenario}\n"
-        "สั้นกระชับ 1-3 บรรทัด ขำขัน relatable สำหรับคนอายุ 30-45 ปี\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ caption เท่านั้น"
+        "สั้น 1-2 บรรทัด ขำขัน relatable คนอายุ 30-45 อ่านแล้วขำได้เลย\n"
+        "ห้ามบรรยายว่า 'ช่อง 1' 'ช่อง 2' ห้ามอธิบายรูป — caption ต้องสมบูรณ์ในตัวเอง\n"
+        "ท้ายใส่ hashtag 2 อัน ตอบแค่ caption เท่านั้น"
     )
     for model in TEXT_MODELS:
         for attempt in range(2):
