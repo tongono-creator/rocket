@@ -1,5 +1,5 @@
 # affiliate_utils.py — อ่าน product/food links จาก affiliate_products.xlsx
-import os, re
+import os, re, random
 from datetime import datetime, timezone, timedelta
 
 WEBSITE_URL = "https://shopee-ranking.vercel.app/"
@@ -11,12 +11,10 @@ def _now_bkk():
     return datetime.now(BKK)
 
 def _rotate(items, extra_salt=0):
-    """หมุนเวียน list ตาม day + hour + extra_salt"""
+    """สุ่มเลือกจาก list — ไม่ซ้ำกันระหว่างโพส"""
     if not items:
         return None
-    now = _now_bkk()
-    idx = (now.timetuple().tm_yday * 7 + now.hour + extra_salt) % len(items)
-    return items[idx]
+    return random.choice(items)
 
 # ─── อ่าน Excel ──────────────────────────────────────────────────
 def _load_excel():
@@ -127,11 +125,9 @@ def get_product_comments():
     active = [p for p in products if p["shopee"] and "xxx" not in p["shopee"]]
     if not active:
         return []
-    p = _rotate(active, extra_salt=1)
-    now = _now_bkk()
-    vi = (now.timetuple().tm_yday + now.hour) % len(SHOPEE_INTROS)
-    hi = (now.timetuple().tm_yday + now.hour + 2) % len(PRODUCT_HOOKS)
-    hook = PRODUCT_HOOKS[hi]
+    p = random.choice(active)
+    hook = random.choice(PRODUCT_HOOKS)
+    vi = random.randrange(len(SHOPEE_INTROS))
     desc_line = f"\n✨ {hook}"
     comments = []
     if p.get("shopee") and "xxx" not in p["shopee"]:
