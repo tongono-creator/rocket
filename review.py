@@ -13,7 +13,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID", "111830598532037")
 IMAGE_MODEL       = "gemini-3-pro-image-preview"
-TEXT_MODEL        = "gemini-2.5-flash"
+TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]
 OUTPUT_DIR        = "output"
 EXCEL_PATH        = os.path.join(os.path.dirname(__file__), "review_products.xlsx")
 
@@ -131,8 +131,15 @@ def extract_highlights(detail, promo):
         f"เน้นประโยชน์ที่คนซื้อสนใจ ห้ามใส่ข้อมูลราคาหรือโปรโมชั่น "
         f"ตอบแค่ bullet points เท่านั้น"
     )
-    resp = client.models.generate_content(model=TEXT_MODEL, contents=prompt)
-    highlights = resp.text.strip()
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            highlights = resp.text.strip()
+            break
+        except Exception as e:
+            print(f"[{model}] highlights failed: {str(e)[:80]}")
+    else:
+        raise RuntimeError("Highlights generation failed on all models")
     if promo:
         highlights += f"\n🔥 โปรตอนนี้: {promo}"
     return highlights
@@ -208,8 +215,16 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
         f"ท้าย post ใส่ hashtag 2-3 อัน\n"
         f"ตอบแค่ content เท่านั้น"
     )
-    resp = client.models.generate_content(model=TEXT_MODEL, contents=prompt)
-    caption = resp.text.strip()
+    caption = ""
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            caption = resp.text.strip()
+            break
+        except Exception as e:
+            print(f"[{model}] caption failed: {str(e)[:80]}")
+    if not caption:
+        raise RuntimeError("Caption generation failed on all models")
     # ตัด AI prefix เช่น "ได้เลย...", "นี่คือ...", "---" ออก
     lines = caption.splitlines()
     while lines and (

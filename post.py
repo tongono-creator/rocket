@@ -13,7 +13,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODEL       = "gemini-3-pro-image-preview"
-TEXT_MODEL        = "gemini-2.5-flash"
+TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]  # fallback order
 OUTPUT_DIR        = "output"
 
 # fallback รันบน local ใช้ config.py
@@ -122,20 +122,19 @@ def generate_quote(topic):
     style = CONTENT_STYLES[style_idx]
     prompt = style.format(topic=topic)
     print(f"Topic: {topic} | Style: {style_idx}")
-    for attempt in range(3):
-        try:
-            resp = client.models.generate_content(
-                model=TEXT_MODEL,
-                contents=prompt
-            )
-            quote = resp.text.strip()
-            print(f"Quote:\n{quote}\n")
-            return quote
-        except Exception as e:
-            print(f"Quote attempt {attempt+1} failed: {str(e)[:100]}")
-            if attempt < 2:
-                time.sleep(15)
-    raise RuntimeError("Quote generation failed after 3 attempts")
+    for model in TEXT_MODELS:
+        for attempt in range(2):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                quote = resp.text.strip()
+                print(f"Quote [{model}]:\n{quote}\n")
+                return quote
+            except Exception as e:
+                print(f"[{model}] attempt {attempt+1} failed: {str(e)[:100]}")
+                if attempt < 1:
+                    time.sleep(10)
+        print(f"[{model}] unavailable, trying next model...")
+    raise RuntimeError("Quote generation failed on all models")
 
 # ─── 2. สร้างรูป ────────────────────────────────────────────────
 def generate_image(quote):

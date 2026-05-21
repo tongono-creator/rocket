@@ -12,7 +12,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODEL       = "gemini-3-pro-image-preview"
-TEXT_MODEL        = "gemini-2.5-flash"
+TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]
 OUTPUT_DIR        = "output"
 
 if not GOOGLE_API_KEY:
@@ -116,24 +116,24 @@ def get_scenario():
 
 def generate_meme_caption(scenario, style):
     print(f"Scenario: {scenario} | Style: {style['name']}")
-    for attempt in range(3):
-        try:
-            resp = client.models.generate_content(
-                model=TEXT_MODEL,
-                contents=(
-                    f"เขียน Facebook caption ภาษาไทยสำหรับมุก style '{style['name']}' เรื่อง: {scenario}\n"
-                    "สั้นกระชับ 1-3 บรรทัด ขำขัน relatable สำหรับคนอายุ 30-45 ปี\n"
-                    "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ caption เท่านั้น"
-                )
-            )
-            text = resp.text.strip()
-            print(f"Caption:\n{text}\n")
-            return text
-        except Exception as e:
-            print(f"Caption attempt {attempt+1} failed: {str(e)[:100]}")
-            if attempt < 2:
-                time.sleep(15)
-    raise RuntimeError("Caption generation failed")
+    prompt = (
+        f"เขียน Facebook caption ภาษาไทยสำหรับมุก style '{style['name']}' เรื่อง: {scenario}\n"
+        "สั้นกระชับ 1-3 บรรทัด ขำขัน relatable สำหรับคนอายุ 30-45 ปี\n"
+        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ caption เท่านั้น"
+    )
+    for model in TEXT_MODELS:
+        for attempt in range(2):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                text = resp.text.strip()
+                print(f"Caption [{model}]:\n{text}\n")
+                return text
+            except Exception as e:
+                print(f"[{model}] attempt {attempt+1} failed: {str(e)[:100]}")
+                if attempt < 1:
+                    time.sleep(10)
+        print(f"[{model}] unavailable, trying next model...")
+    raise RuntimeError("Caption generation failed on all models")
 
 def generate_meme_image(scenario, style):
     print(f"Generating meme [{style['name']}]...")
