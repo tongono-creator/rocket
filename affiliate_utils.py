@@ -137,10 +137,37 @@ def get_product_comments():
     return comments
 
 def get_all_comments():
-    """รวม comments ทั้งหมดตามลำดับ"""
-    comments = get_standard_comments()
-    food = get_food_comment()
-    if food:
-        comments.append(food)
-    comments.extend(get_product_comments())
-    return comments
+    """รวม comments — สุ่มลำดับ + สุ่มว่าจะโพสแต่ละ type ไหม (ดูเหมือนคนโพสเอง)"""
+    pool = []
+
+    # website comment — โอกาส 85% (บางทีข้ามเพื่อไม่ให้ดู bot)
+    if random.random() < 0.85:
+        web = _rotate(WEBSITE_VARS)
+        if web:
+            pool.append(web)
+
+    # food comment — โอกาส 60%
+    if random.random() < 0.60:
+        food = get_food_comment()
+        if food:
+            pool.append(food)
+
+    # product comments — โอกาส 70%, ถ้ามีทั้ง shopee+lazada สุ่มว่าจะเอาแค่อันเดียวหรือทั้งคู่
+    if random.random() < 0.70:
+        products = get_product_comments()
+        if len(products) == 2 and random.random() < 0.40:
+            # 40% เอาแค่อันเดียว (สุ่มว่า shopee หรือ lazada)
+            pool.append(random.choice(products))
+        else:
+            pool.extend(products)
+
+    # สุ่มลำดับทั้งหมด
+    random.shuffle(pool)
+
+    # ถ้าสุ่มออกมาว่างเปล่า (ซวยทุกโอกาส) ใส่ website backup
+    if not pool:
+        web = _rotate(WEBSITE_VARS)
+        if web:
+            pool.append(web)
+
+    return pool
