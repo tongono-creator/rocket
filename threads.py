@@ -114,11 +114,36 @@ def generate_quote(topic):
 FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE  = 1080
 
+_SOFT_BREAK = set('…—–-/!?ๆฯ')
+
+def _break_long_word(word, font, draw, max_width):
+    """แตก word ที่ยาวเกิน — ลอง break ที่ punctuation ก่อน แล้วค่อยแตก char"""
+    result, buf = [], ""
+    for ch in word:
+        if draw.textbbox((0, 0), buf + ch, font=font)[2] <= max_width:
+            buf += ch
+        else:
+            back = -1
+            for j in range(len(buf) - 1, max(len(buf) - 9, -1), -1):
+                if buf[j] in _SOFT_BREAK:
+                    back = j + 1
+                    break
+            dot3 = buf.rfind('...')
+            if dot3 >= 0 and dot3 + 3 > back:
+                back = dot3 + 3
+            if back > 0:
+                result.append(buf[:back])
+                buf = buf[back:] + ch
+            else:
+                if buf:
+                    result.append(buf)
+                buf = ch
+    if buf:
+        result.append(buf)
+    return result
+
 def wrap_thai(text, font, draw, max_width):
-    """แตก text เป็น lines ที่พอดี max_width
-    - ลอง break ที่ space ก่อน
-    - ถ้า word เดี่ยวยาวเกิน → แตก char
-    """
+    """ตัดบรรทัดให้พอดีความกว้าง — break ที่ punctuation ก่อน แล้วค่อย char"""
     words = text.split()
     lines, current = [], ""
     for word in words:
@@ -128,19 +153,13 @@ def wrap_thai(text, font, draw, max_width):
         else:
             if current:
                 lines.append(current)
-            # word เดี่ยวยาวเกิน → แตก char
             if draw.textbbox((0, 0), word, font=font)[2] > max_width:
-                buf = ""
-                for ch in word:
-                    if draw.textbbox((0, 0), buf + ch, font=font)[2] <= max_width:
-                        buf += ch
-                    else:
-                        if buf:
-                            lines.append(buf)
-                        buf = ch
-                current = buf
+                parts = _break_long_word(word, font, draw, max_width)
+                lines.extend(parts[:-1])
+                current = parts[-1] if parts else ""
             else:
                 current = word
+            continue
     if current:
         lines.append(current)
     return lines
