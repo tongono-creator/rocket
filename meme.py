@@ -11,7 +11,7 @@ from google.genai import types
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-2.0-flash-exp"
+IMAGE_MODEL       = "gemini-3.1-flash-image-preview"
 TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]
 OUTPUT_DIR        = "output"
 
