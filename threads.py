@@ -134,23 +134,11 @@ def wrap_thai(text, font, draw, max_width):
         lines.append(current)
     return lines
 
-def generate_image(quote):
-    print("Generating image (PIL)...")
-    bkk = timezone(timedelta(hours=7))
-    ts  = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-    path = os.path.join(OUTPUT_DIR, f"threads_{ts}.png")
-
-    img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    font_main = ImageFont.truetype(FONT_PATH, 72)
-    font_hash = ImageFont.truetype(FONT_PATH, 48)
-    PAD, max_w = 100, IMG_SIZE - 200
-
+def _build_lines(quote, font_main, font_hash, draw, max_w):
     raw_lines = quote.strip().split("\n")
     content_lines, hash_lines = [], []
     for l in raw_lines:
         (hash_lines if l.strip().startswith("#") else content_lines).append(l.strip())
-
     all_lines = []
     for l in content_lines:
         if not l:
@@ -162,9 +150,34 @@ def generate_image(quote):
     for l in hash_lines:
         if l:
             all_lines.append((l, font_hash))
+    return all_lines
 
-    line_gap = 18
-    total_h = sum(draw.textbbox((0,0), t, font=f)[3] + line_gap for t, f in all_lines)
+def generate_image(quote):
+    print("Generating image (PIL)...")
+    bkk = timezone(timedelta(hours=7))
+    ts  = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+    path = os.path.join(OUTPUT_DIR, f"threads_{ts}.png")
+
+    img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    PAD      = 100
+    max_w    = IMG_SIZE - PAD * 2
+    max_h    = IMG_SIZE - PAD * 2
+    LINE_GAP = 18
+
+    # auto-fit: หา font size ใหญ่ที่สุดที่พอดีกรอบ
+    font_size = 82
+    while font_size >= 36:
+        font_main = ImageFont.truetype(FONT_PATH, font_size)
+        font_hash = ImageFont.truetype(FONT_PATH, int(font_size * 0.65))
+        all_lines = _build_lines(quote, font_main, font_hash, draw, max_w)
+        total_h = sum(draw.textbbox((0,0), t, font=f)[3] + LINE_GAP for t, f in all_lines)
+        if total_h <= max_h:
+            break
+        font_size -= 2
+
+    print(f"Font size: {font_size}")
     y = (IMG_SIZE - total_h) // 2
 
     for text, font in all_lines:
@@ -177,7 +190,7 @@ def generate_image(quote):
         color = (150, 150, 150) if font == font_hash else (255, 255, 255)
         draw.text((x+2, y+2), text, font=font, fill=(30, 30, 30))
         draw.text((x, y), text, font=font, fill=color)
-        y += bbox[3] + line_gap
+        y += bbox[3] + LINE_GAP
 
     img.save(path)
     print(f"Image saved: {path}")

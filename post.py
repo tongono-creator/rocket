@@ -199,6 +199,25 @@ def wrap_thai(text, font, draw, max_width):
         lines.append(current)
     return lines
 
+def _build_lines(quote, font_main, font_hash, draw, max_w):
+    """แยก hashtag + wrap content → คืน list of (text, font)"""
+    raw_lines = quote.strip().split("\n")
+    content_lines, hash_lines = [], []
+    for l in raw_lines:
+        (hash_lines if l.strip().startswith("#") else content_lines).append(l.strip())
+    all_lines = []
+    for l in content_lines:
+        if not l:
+            all_lines.append(("", font_main))
+            continue
+        for w in wrap_thai(l, font_main, draw, max_w):
+            all_lines.append((w, font_main))
+    all_lines.append(("", font_main))
+    for l in hash_lines:
+        if l:
+            all_lines.append((l, font_hash))
+    return all_lines
+
 def generate_image(quote):
     print("Generating image (PIL)...")
     bkk = timezone(timedelta(hours=7))
@@ -208,35 +227,25 @@ def generate_image(quote):
     img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    font_main = ImageFont.truetype(FONT_PATH, 72)
-    font_hash = ImageFont.truetype(FONT_HASH_PATH, 48)
+    PAD    = 100
+    max_w  = IMG_SIZE - PAD * 2
+    max_h  = IMG_SIZE - PAD * 2   # พื้นที่สูงสุดที่ text ใช้ได้
+    LINE_GAP = 18
 
-    PAD = 100
-    max_w = IMG_SIZE - PAD * 2
+    # auto-fit: หา font size ใหญ่ที่สุดที่ยังพอดีกรอบ
+    font_size = 82
+    while font_size >= 36:
+        font_main = ImageFont.truetype(FONT_PATH,      font_size)
+        font_hash = ImageFont.truetype(FONT_HASH_PATH, int(font_size * 0.65))
+        all_lines = _build_lines(quote, font_main, font_hash, draw, max_w)
+        total_h = sum(draw.textbbox((0,0), t, font=f)[3] + LINE_GAP for t, f in all_lines)
+        if total_h <= max_h:
+            break
+        font_size -= 2
 
-    # แยก hashtag ออก
-    raw_lines = quote.strip().split("\n")
-    content_lines, hash_lines = [], []
-    for l in raw_lines:
-        (hash_lines if l.strip().startswith("#") else content_lines).append(l.strip())
-
-    # wrap content
-    all_lines = []
-    for l in content_lines:
-        if not l:
-            all_lines.append(("", font_main))
-            continue
-        for wrapped in wrap_thai(l, font_main, draw, max_w):
-            all_lines.append((wrapped, font_main))
-
-    all_lines.append(("", font_main))  # spacer
-    for l in hash_lines:
-        if l:
-            all_lines.append((l, font_hash))
-
-    # calc total height
-    line_gap = 18
-    total_h = sum(draw.textbbox((0,0), t, font=f)[3] + line_gap for t, f in all_lines)
+    print(f"Font size: {font_size}")
+    # all_lines พร้อมแล้วจาก loop สุดท้าย
+    total_h = sum(draw.textbbox((0,0), t, font=f)[3] + LINE_GAP for t, f in all_lines)
     y = (IMG_SIZE - total_h) // 2
 
     for text, font in all_lines:
@@ -247,10 +256,9 @@ def generate_image(quote):
         w = bbox[2] - bbox[0]
         x = (IMG_SIZE - w) // 2
         color = (150, 150, 150) if font == font_hash else (255, 255, 255)
-        # subtle shadow
         draw.text((x+2, y+2), text, font=font, fill=(30, 30, 30))
         draw.text((x, y), text, font=font, fill=color)
-        y += bbox[3] + line_gap
+        y += bbox[3] + LINE_GAP
 
     img.save(path)
     print(f"Image saved: {path}")
