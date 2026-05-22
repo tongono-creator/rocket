@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """threads.py — โพสรูปคำคม + caption ลง Threads อัตโนมัติ"""
 
-import sys, io, os, base64, requests, time, random
+import sys, io, os, re, base64, requests, time, random, tempfile
+import xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -311,16 +312,155 @@ def post_threads(image_url, caption):
     print(f"Waiting {delay0:.0f}s before first reply...")
     time.sleep(delay0)
     for i, msg in enumerate(all_comments, 1):
-        reply_id = _create_and_publish(msg, reply_to_id=post_id)
+        text = msg["message"] if isinstance(msg, dict) else msg
+        reply_id = _create_and_publish(text, reply_to_id=post_id)
         print(f"Reply {i} added! ID: {reply_id}")
         if i < len(all_comments):
             delay = random.uniform(30, 90)
             print(f"Waiting {delay:.0f}s before next reply...")
             time.sleep(delay)
 
-if __name__ == "__main__":
+# ─── Meme mode ────────────────────────────────────────────────────────
+MEME_SUBREDDITS = [
+    "funny", "memes", "dankmemes", "me_irl",
+    "Unexpected", "therewasanattempt", "facepalm",
+    "AnimalsBeingDerps", "WhatsWrongWithYourCat", "oddlyterrifying",
+    "AbruptChaos", "Whatcouldgowrong",
+]
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
+HEADERS_RSS = {"User-Agent": "Mozilla/5.0 (compatible; ThreadsBot/1.0; +github)"}
+
+
+def get_meme_image():
+    subreddit = random.choice(MEME_SUBREDDITS)
+    url = f"https://www.reddit.com/r/{subreddit}/hot.rss"
+    try:
+        resp = requests.get(url, headers=HEADERS_RSS, timeout=10)
+        resp.raise_for_status()
+        root    = ET.fromstring(resp.content)
+        ns      = {"atom": "http://www.w3.org/2005/Atom"}
+        entries = root.findall("atom:entry", ns)
+        posts = []
+        for entry in entries:
+            content   = entry.findtext("atom:content", "", ns)
+            img_urls  = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content or "")
+            good_imgs = [u for u in img_urls if "i.redd.it" in u or "imgur.com" in u]
+            if good_imgs:
+                posts.append({"url": good_imgs[0], "subreddit": subreddit})
+        if not posts:
+            return None, None
+        post = random.choice(posts[:10])
+        print(f"Meme: r/{subreddit} | {post['url'][:60]}")
+        return post["url"], subreddit
+    except Exception as e:
+        print(f"Reddit error: {e}")
+        return None, None
+
+
+def download_image(url):
+    MAX_BYTES = 4 * 1024 * 1024
+    try:
+        resp = requests.get(url, headers=HEADERS_RSS, timeout=15, stream=True)
+        resp.raise_for_status()
+        data = b""
+        for chunk in resp.iter_content(chunk_size=65536):
+            data += chunk
+            if len(data) > MAX_BYTES:
+                return None
+        suffix = ".jpg"
+        for ext in IMAGE_EXTS:
+            if url.lower().split("?")[0].endswith(ext):
+                suffix = ext
+                break
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp.write(data)
+        tmp.close()
+        return tmp.name
+    except Exception as e:
+        print(f"Download failed: {e}")
+        return None
+
+
+def analyze_meme(img_path):
+    """Vision ดูรูปว่าตลกยังไง"""
+    with open(img_path, "rb") as f:
+        img_data = f.read()
+    prompt = (
+        "ดูรูปนี้แล้วอธิบายสั้นๆ ภาษาไทยว่าเห็นอะไร หรือสถานการณ์ตลกอะไรในรูป 1-2 ประโยค "
+        "ถ้าไม่มีอะไรน่าสนใจเลย ตอบว่า 'ไม่น่าสนใจ'"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(
+                model=model,
+                contents=[
+                    types.Part.from_bytes(data=img_data, mime_type="image/jpeg"),
+                    types.Part.from_text(text=prompt),
+                ],
+            )
+            result = resp.text.strip()
+            print(f"Vision: {result}")
+            return result
+        except Exception as e:
+            print(f"[{model}] vision failed: {e}")
+    return None
+
+
+def generate_funny_caption(image_desc, subreddit):
+    prompt = (
+        f"รูปจาก r/{subreddit}: {image_desc}\n\n"
+        "เขียน caption ภาษาไทย ตลกๆ เหมือนโพส meme ของคนไทย\n"
+        "1-2 ประโยคสั้นมาก ขำ เข้าใจง่าย ภาษาพูด ใส่ emoji ได้\n"
+        "ท้ายใส่ hashtag 2-3 อัน\n"
+        "ห้ามใช้ ** ตอบแค่ caption เลย"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            return clean_text(resp.text.strip())
+        except Exception as e:
+            print(f"[{model}] funny caption failed: {e}")
+    return "555 😂\n#meme #ตลก"
+
+
+def run_meme_mode():
+    """โหมดมีมตลก — Reddit → Vision → funny caption → Threads"""
+    for attempt in range(4):
+        img_url, subreddit = get_meme_image()
+        if not img_url:
+            continue
+        img_path = download_image(img_url)
+        if not img_path:
+            continue
+        desc = analyze_meme(img_path)
+        if not desc or "ไม่น่าสนใจ" in desc:
+            os.unlink(img_path)
+            continue
+        caption = generate_funny_caption(desc, subreddit)
+        caption += f"\n📷 via r/{subreddit}"
+        print(f"Funny caption:\n{caption}\n")
+        # upload ผ่าน ImgBB
+        hosted_url = upload_image_to_imgur(img_path)
+        os.unlink(img_path)
+        post_threads(hosted_url, caption)
+        return
+    print("Meme mode failed after 4 attempts, fallback to quote mode")
+    run_quote_mode()
+
+
+def run_quote_mode():
+    """โหมดคำคม — PIL image + quote"""
     topic    = get_topic()
     quote    = generate_quote(topic)
     img_path = generate_image(quote)
     img_url  = upload_image_to_imgur(img_path)
     post_threads(img_url, quote)
+
+
+if __name__ == "__main__":
+    if random.random() < 0.5:
+        print("Mode: MEME")
+        run_meme_mode()
+    else:
+        print("Mode: QUOTE")
+        run_quote_mode()
