@@ -156,18 +156,11 @@ def get_slot():
         return 2
 
 def get_scenario():
-    bkk = timezone(timedelta(hours=7))
-    now = datetime.now(bkk)
-    day  = now.timetuple().tm_yday
-    slot = get_slot()
-    # แต่ละ slot ใช้ offset ต่างกัน → scenario ไม่ซ้ำกัน 3 ครั้ง/วัน
-    seed = (day - 1) * 3 + slot
-    style_idx = seed % len(MEME_STYLES)
-    style = MEME_STYLES[style_idx]
+    style = random.choice(MEME_STYLES)
     if style["name"] == "Generation comparison":
-        scenario = GENERATION_SCENARIOS[seed % len(GENERATION_SCENARIOS)]
+        scenario = random.choice(GENERATION_SCENARIOS)
     else:
-        scenario = REGULAR_SCENARIOS[seed % len(REGULAR_SCENARIOS)]
+        scenario = random.choice(REGULAR_SCENARIOS)
     return scenario, style
 
 def generate_meme_caption(scenario, style):
