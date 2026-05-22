@@ -142,8 +142,8 @@ def generate_image(quote):
 
     img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
     draw = ImageDraw.Draw(img)
-    font_main = ImageFont.truetype(FONT_PATH, 64)
-    font_hash = ImageFont.truetype(FONT_PATH, 44)
+    font_main = ImageFont.truetype(FONT_PATH, 72)
+    font_hash = ImageFont.truetype(FONT_PATH, 48)
     PAD, max_w = 100, IMG_SIZE - 200
 
     raw_lines = quote.strip().split("\n")
