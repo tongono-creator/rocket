@@ -11,7 +11,7 @@ from google.genai import types
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "imagen-3.0-generate-002"
+IMAGE_MODEL       = "gemini-2.0-flash-exp"
 TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]
 OUTPUT_DIR        = "output"
 
@@ -197,23 +197,25 @@ def generate_meme_image(scenario, style):
     prompt = style["image_prompt"].format(scenario=scenario)
     for attempt in range(3):
         try:
-            resp = client.models.generate_images(
+            resp = client.models.generate_content(
                 model=IMAGE_MODEL,
-                prompt=prompt,
-                config=types.GenerateImagesConfig(
-                    number_of_images=1,
-                    aspect_ratio="4:5",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_modalities=["IMAGE", "TEXT"]
                 )
             )
-            for generated_image in resp.generated_images:
-                data = generated_image.image.image_bytes
-                bkk = timezone(timedelta(hours=7))
-                ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-                path = os.path.join(OUTPUT_DIR, f"meme_{ts}.png")
-                with open(path, "wb") as f:
-                    f.write(data)
-                print(f"Meme saved: {path}")
-                return path
+            for part in resp.candidates[0].content.parts:
+                if part.inline_data:
+                    data = part.inline_data.data
+                    if isinstance(data, str):
+                        data = base64.b64decode(data)
+                    bkk = timezone(timedelta(hours=7))
+                    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+                    path = os.path.join(OUTPUT_DIR, f"meme_{ts}.png")
+                    with open(path, "wb") as f:
+                        f.write(data)
+                    print(f"Meme saved: {path}")
+                    return path
         except Exception as e:
             print(f"Image attempt {attempt+1} failed: {str(e)[:100]}")
             if attempt < 2:
