@@ -107,6 +107,7 @@ FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE  = 1080
 
 def wrap_thai(text, font, draw, max_width):
+    """แตก text เป็น lines ที่พอดี max_width — รองรับ word ยาวด้วยการแตก char"""
     words = text.split()
     lines, current = [], ""
     for word in words:
@@ -116,7 +117,19 @@ def wrap_thai(text, font, draw, max_width):
         else:
             if current:
                 lines.append(current)
-            current = word
+            # ถ้า word เดี่ยวก็ยังกว้างเกิน → แตก char ทีละตัว
+            if draw.textbbox((0, 0), word, font=font)[2] > max_width:
+                buf = ""
+                for ch in word:
+                    if draw.textbbox((0, 0), buf + ch, font=font)[2] <= max_width:
+                        buf += ch
+                    else:
+                        if buf:
+                            lines.append(buf)
+                        buf = ch
+                current = buf
+            else:
+                current = word
     if current:
         lines.append(current)
     return lines
@@ -129,9 +142,9 @@ def generate_image(quote):
 
     img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
     draw = ImageDraw.Draw(img)
-    font_main = ImageFont.truetype(FONT_PATH, 78)
-    font_hash = ImageFont.truetype(FONT_PATH, 50)
-    PAD, max_w = 80, IMG_SIZE - 160
+    font_main = ImageFont.truetype(FONT_PATH, 64)
+    font_hash = ImageFont.truetype(FONT_PATH, 44)
+    PAD, max_w = 100, IMG_SIZE - 200
 
     raw_lines = quote.strip().split("\n")
     content_lines, hash_lines = [], []

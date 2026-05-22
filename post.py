@@ -172,7 +172,7 @@ FONT_HASH_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.tt
 IMG_SIZE = 1080
 
 def wrap_thai(text, font, draw, max_width):
-    """ตัดบรรทัดให้พอดีความกว้าง"""
+    """ตัดบรรทัดให้พอดีความกว้าง — รองรับ word ยาวด้วยการแตก char"""
     words = text.split()
     lines, current = [], ""
     for word in words:
@@ -183,7 +183,18 @@ def wrap_thai(text, font, draw, max_width):
         else:
             if current:
                 lines.append(current)
-            current = word
+            if draw.textbbox((0, 0), word, font=font)[2] > max_width:
+                buf = ""
+                for ch in word:
+                    if draw.textbbox((0, 0), buf + ch, font=font)[2] <= max_width:
+                        buf += ch
+                    else:
+                        if buf:
+                            lines.append(buf)
+                        buf = ch
+                current = buf
+            else:
+                current = word
     if current:
         lines.append(current)
     return lines
@@ -197,10 +208,10 @@ def generate_image(quote):
     img  = Image.new("RGB", (IMG_SIZE, IMG_SIZE), (0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    font_main = ImageFont.truetype(FONT_PATH, 78)
-    font_hash = ImageFont.truetype(FONT_HASH_PATH, 50)
+    font_main = ImageFont.truetype(FONT_PATH, 64)
+    font_hash = ImageFont.truetype(FONT_HASH_PATH, 44)
 
-    PAD = 80
+    PAD = 100
     max_w = IMG_SIZE - PAD * 2
 
     # แยก hashtag ออก
