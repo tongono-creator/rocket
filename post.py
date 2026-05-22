@@ -143,8 +143,9 @@ CONTENT_STYLES = [
 
 # ─── 1. สร้างคำคม ──────────────────────────────────────────────
 def clean_text(text):
-    """ลบ markdown formatting ที่ AI ส่งมาโดยไม่ตั้งใจ"""
+    """ลบ markdown formatting + แปลง literal \\n → newline จริง"""
     import re
+    text = text.replace('\\n', '\n')                # literal \n → newline จริง
     text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)   # **bold**
     text = re.sub(r'\*(.+?)\*',     r'\1', text)   # *italic*
     text = re.sub(r'__(.+?)__',     r'\1', text)   # __bold__
