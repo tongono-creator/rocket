@@ -83,6 +83,16 @@ CONTENT_STYLES = [
     "เขียน post ภาษาไทยเปรียบเทียบ ก่อน vs หลัง เกี่ยวกับ: {topic}\n2 บรรทัด เห็นภาพชัด ขำหรือจริงใจ คนแชร์ได้เลย ภาษาพูด ไม่เป็นทางการ\nข้อความรวม (ไม่นับ hashtag) ห้ามเกิน 70 ตัวอักษร ใส่ \\n ตัดบรรทัดตามธรรมชาติ\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
 ]
 
+def clean_text(text):
+    """ลบ markdown formatting ที่ AI ส่งมาโดยไม่ตั้งใจ"""
+    import re
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)   # **bold**
+    text = re.sub(r'\*(.+?)\*',     r'\1', text)   # *italic*
+    text = re.sub(r'__(.+?)__',     r'\1', text)   # __bold__
+    text = re.sub(r'_(.+?)_',       r'\1', text)   # _italic_
+    text = re.sub(r'^#+\s*',        '',    text, flags=re.MULTILINE)  # ## heading
+    return text.strip()
+
 def generate_quote(topic):
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
@@ -93,7 +103,7 @@ def generate_quote(topic):
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
-                quote = resp.text.strip()
+                quote = clean_text(resp.text)
                 print(f"Quote [{model}]:\n{quote}\n")
                 return quote
             except Exception as e:

@@ -142,6 +142,16 @@ CONTENT_STYLES = [
 ]
 
 # ─── 1. สร้างคำคม ──────────────────────────────────────────────
+def clean_text(text):
+    """ลบ markdown formatting ที่ AI ส่งมาโดยไม่ตั้งใจ"""
+    import re
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text)   # **bold**
+    text = re.sub(r'\*(.+?)\*',     r'\1', text)   # *italic*
+    text = re.sub(r'__(.+?)__',     r'\1', text)   # __bold__
+    text = re.sub(r'_(.+?)_',       r'\1', text)   # _italic_
+    text = re.sub(r'^#+\s*',        '',    text, flags=re.MULTILINE)  # ## heading
+    return text.strip()
+
 def generate_quote(topic, slot="morning"):
     # noon สลับ style 3 / 4 ตามวัน เพื่อความหลากหลาย
     if slot == "noon":
@@ -156,7 +166,7 @@ def generate_quote(topic, slot="morning"):
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
-                quote = resp.text.strip()
+                quote = clean_text(resp.text)
                 print(f"Quote [{model}]:\n{quote}\n")
                 return quote
             except Exception as e:
