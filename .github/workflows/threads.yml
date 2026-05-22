@@ -2,12 +2,11 @@ name: Threads Post
 
 on:
   schedule:
-    # 08:00 BKK (01:00 UTC)
-    - cron: '0 1 * * *'
-    # 12:00 BKK (05:00 UTC)
-    - cron: '0 5 * * *'
-    # 20:00 BKK (13:00 UTC)
-    - cron: '0 13 * * *'
+    - cron: '0 1 * * *'   # 08:00 BKK
+    - cron: '0 4 * * *'   # 11:00 BKK
+    - cron: '0 7 * * *'   # 14:00 BKK
+    - cron: '0 11 * * *'  # 18:00 BKK
+    - cron: '0 14 * * *'  # 21:00 BKK
   workflow_dispatch:
 
 jobs:
