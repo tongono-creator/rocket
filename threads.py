@@ -66,14 +66,13 @@ EVENING_TOPICS = [
 def get_topic():
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
-    day_idx = (now.timetuple().tm_yday - 1) % 10
     hour = now.hour
     if hour < 10:
-        return MORNING_TOPICS[day_idx]
+        return random.choice(MORNING_TOPICS)
     elif hour < 16:
-        return NOON_TOPICS[day_idx]
+        return random.choice(NOON_TOPICS)
     else:
-        return EVENING_TOPICS[day_idx]
+        return random.choice(EVENING_TOPICS)
 
 CONTENT_STYLES = [
     "สร้างคำคมภาษาไทยแบบไวรัลเกี่ยวกับ: {topic}\n1-2 ประโยคสั้นๆ กระแทกใจ หยุดนิ้วเลื่อนได้ทันที ภาษาพูดธรรมดา คนอายุ 30-45 อ่านแล้วรู้สึกเลย\nข้อความรวม (ไม่นับ hashtag) ห้ามเกิน 60 ตัวอักษร ขึ้นบรรทัดใหม่จริงๆ ตรงจุดหยุดตามธรรมชาติ\nท้ายใส่ hashtag 2 อัน ตอบแค่ content เท่านั้น",
@@ -95,9 +94,7 @@ def clean_text(text):
     return text.strip()
 
 def generate_quote(topic):
-    bkk = timezone(timedelta(hours=7))
-    now = datetime.now(bkk)
-    style_idx = (now.timetuple().tm_yday * 3 + now.hour) % len(CONTENT_STYLES)
+    style_idx = random.randint(0, len(CONTENT_STYLES) - 1)
     prompt = CONTENT_STYLES[style_idx].format(topic=topic)
     print(f"Topic: {topic} | Style: {style_idx}")
     for model in TEXT_MODELS:

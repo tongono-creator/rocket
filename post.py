@@ -83,16 +83,15 @@ LATE_TOPICS = [
 def get_topic():
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
-    day_idx = (now.timetuple().tm_yday - 1) % 10
     hour = now.hour
     if hour < 10:
-        return MORNING_TOPICS[day_idx], "morning"
+        return random.choice(MORNING_TOPICS), "morning"
     elif hour < 16:
-        return NOON_TOPICS[day_idx], "noon"
+        return random.choice(NOON_TOPICS), "noon"
     elif hour < 21:
-        return EVENING_TOPICS[day_idx], "evening"
+        return random.choice(EVENING_TOPICS), "evening"
     else:
-        return LATE_TOPICS[day_idx], "late"
+        return random.choice(LATE_TOPICS), "late"
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
@@ -154,12 +153,7 @@ def clean_text(text):
     return text.strip()
 
 def generate_quote(topic, slot="morning"):
-    # noon สลับ style 3 / 4 ตามวัน เพื่อความหลากหลาย
-    if slot == "noon":
-        bkk = timezone(timedelta(hours=7))
-        style_idx = 3 if (datetime.now(bkk).timetuple().tm_yday % 2 == 0) else 4
-    else:
-        style_idx = SLOT_STYLE.get(slot, 0)
+    style_idx = random.randint(0, len(CONTENT_STYLES) - 1)
     style = CONTENT_STYLES[style_idx]
     prompt = style.format(topic=topic)
     print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
