@@ -2,12 +2,12 @@ name: Meme Post (Daily Comic)
 
 on:
   schedule:
-    # 07:30 BKK = 00:30 UTC
-    - cron: '30 0 * * *'
-    # 11:30 BKK = 04:30 UTC
-    - cron: '30 4 * * *'
-    # 16:30 BKK = 09:30 UTC
-    - cron: '30 9 * * *'
+    # 08:00 BKK = 01:00 UTC
+    - cron: '0 1 * * *'
+    # 12:00 BKK = 05:00 UTC
+    - cron: '0 5 * * *'
+    # 17:00 BKK = 10:00 UTC
+    - cron: '0 10 * * *'
   workflow_dispatch:
 
 jobs:
