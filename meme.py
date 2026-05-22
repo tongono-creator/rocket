@@ -157,10 +157,32 @@ def get_slot():
 
 def get_scenario():
     style = random.choice(MEME_STYLES)
+    # ให้ AI คิดมุกใหม่ทุกครั้ง — viral relatable สำหรับคนไทยวัย 30-45
     if style["name"] == "Generation comparison":
-        scenario = random.choice(GENERATION_SCENARIOS)
+        extra = "เป็นการเปรียบเทียบรุ่นปู่/พ่อแม่ vs คนรุ่นนี้ เรื่องเงิน งาน หรือชีวิตประจำวัน"
     else:
-        scenario = random.choice(REGULAR_SCENARIOS)
+        extra = "เรื่องเงิน งาน ครอบครัว หรือชีวิตประจำวันที่คนไทยวัย 30-45 เจอจริงๆ"
+    prompt = (
+        f"คิดมุก 3-panel comic 1 เรื่อง สำหรับคนไทยวัย 30-45 {extra}\n"
+        "มุกต้องขำ relatable กำลัง viral ตอนนี้ ไม่ซ้ำเดิม ไม่คาดเดาได้\n"
+        "ตอบแค่ 1 บรรทัด รูปแบบ: [สถานการณ์] — panel 1: [อธิบาย] panel 2: [อธิบาย] panel 3: [อธิบาย]\n"
+        "ห้ามใส่คำอธิบายเพิ่ม ตอบแค่บรรทัดเดียว"
+    )
+    scenario = None
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            scenario = resp.text.strip().split("\n")[0]
+            print(f"Generated scenario: {scenario}")
+            break
+        except Exception as e:
+            print(f"[{model}] scenario gen failed: {str(e)[:80]}")
+    if not scenario:
+        # fallback → list เดิม
+        if style["name"] == "Generation comparison":
+            scenario = random.choice(GENERATION_SCENARIOS)
+        else:
+            scenario = random.choice(REGULAR_SCENARIOS)
     return scenario, style
 
 def generate_meme_caption(scenario, style):
