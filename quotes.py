@@ -2,7 +2,6 @@ import os
 import re
 import random
 import time
-import textwrap
 import requests
 import tempfile
 from PIL import Image, ImageDraw, ImageFont
@@ -18,6 +17,7 @@ client      = genai.Client(api_key=GEMINI_API_KEY)
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
 GOLD        = (255, 215, 0)
 WHITE       = (255, 255, 255)
+SILVER      = (200, 200, 200)
 FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
@@ -26,17 +26,13 @@ HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 def get_quote():
     for _ in range(5):
         try:
-            resp = requests.get(
-                "https://zenquotes.io/api/random",
-                timeout=10,
-            )
+            resp = requests.get("https://zenquotes.io/api/random", timeout=10)
             resp.raise_for_status()
             data = resp.json()
             if data:
-                item = data[0]
+                item   = data[0]
                 quote  = item.get("q", "").strip()
                 author = item.get("a", "").strip()
-                # skip generic/unknown authors
                 if not quote or not author or author.lower() in ("unknown", "anonymous", ""):
                     continue
                 print(f"Quote: {author} — {quote[:60]}")
@@ -47,13 +43,23 @@ def get_quote():
     return None, None
 
 
-# -- Gemini --
+# -- Gemini helpers --
+def clean_text(text):
+    text = text.replace("\\n", "\n")
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    text = re.sub(r"\*(.+?)\*",     r"\1", text)
+    text = re.sub(r"__(.+?)__",     r"\1", text)
+    text = re.sub(r"_(.+?)_",       r"\1", text)
+    text = re.sub(r"^#+\s*",        "",    text, flags=re.MULTILINE)
+    return text.strip()
+
+
 def translate_quote(content, author):
     prompt = (
         f'Translate this English quote to natural Thai language.\n'
         f'Quote: "{content}"\n'
         f'Author: {author}\n'
-        f'Return ONLY the Thai translation of the quote. Keep it natural and inspiring. No markdown.'
+        f'Return ONLY the Thai translation. No markdown, no quotes around it.'
     )
     for model in TEXT_MODELS:
         try:
@@ -66,16 +72,62 @@ def translate_quote(content, author):
     return content
 
 
+def split_quote_lines(quote_thai):
+    """ให้ Gemini ตัดคำคมเป็นวลีสั้นๆ ทีละบรรทัด สไตล์โปสเตอร์ดราม่า"""
+    prompt = (
+        f'ตัดประโยคนี้เป็นวลีสั้นๆ สำหรับโปสเตอร์คำคม\n'
+        f'ประโยค: {quote_thai}\n'
+        f'กฎ: แต่ละบรรทัดสั้น 3-8 คำ ตัดที่จุดหยุดธรรมชาติ ได้ 2-5 บรรทัด\n'
+        f'ตอบแค่วลีที่ตัดแล้ว แต่ละบรรทัดคั่นด้วย newline ไม่มีเลข ไม่มี -'
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            lines = [l.strip() for l in clean_text(resp.text).split("\n") if l.strip()]
+            if lines:
+                print(f"Split: {lines}")
+                return lines
+        except Exception as e:
+            print(f"[{model}] split failed: {e}")
+    # fallback: split at ~10 chars
+    words = quote_thai.split()
+    lines, cur = [], ""
+    for w in words:
+        if len(cur) + len(w) > 10 and cur:
+            lines.append(cur.strip())
+            cur = w + " "
+        else:
+            cur += w + " "
+    if cur.strip():
+        lines.append(cur.strip())
+    return lines
+
+
+def transliterate_author(author):
+    """แปลชื่อภาษาอังกฤษเป็นการออกเสียงภาษาไทย"""
+    prompt = (
+        f'เขียนชื่อนี้เป็นภาษาไทยตามการออกเสียง: {author}\n'
+        f'ตอบแค่ชื่อภาษาไทย ไม่มีอะไรอื่น'
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            result = clean_text(resp.text.strip())
+            print(f"Thai name: {result}")
+            return result
+        except Exception as e:
+            print(f"[{model}] transliterate failed: {e}")
+    return author
+
+
 def make_caption(quote_thai, author):
     prompt = (
-        f'Write a short Facebook caption in Thai for an inspirational quote post.\n'
-        f'Quote (Thai): {quote_thai}\n'
-        f'Author: {author}\n'
-        f'Format:\n'
-        f'Line 1: engaging hook sentence (Thai)\n'
-        f'Line 2: short context about the author or quote (Thai)\n'
-        f'Line 3: 2-3 relevant hashtags in Thai\n'
-        f'No markdown, no **bold**.'
+        f'เขียน Facebook caption ภาษาไทยสำหรับโพสคำคมของ {author}\n'
+        f'คำคม: {quote_thai}\n'
+        f'บรรทัด 1: hook ชวนอ่าน\n'
+        f'บรรทัด 2: บริบทของคนพูด 1 ประโยค\n'
+        f'บรรทัด 3: hashtag 2-3 อัน\n'
+        f'ห้าม ** ตอบแค่ caption'
     )
     for model in TEXT_MODELS:
         try:
@@ -83,39 +135,30 @@ def make_caption(quote_thai, author):
             return clean_text(resp.text.strip())
         except Exception as e:
             print(f"[{model}] caption failed: {e}")
-    return f'"{quote_thai}"\n— {author}\n#คำคม #แรงบันดาลใจ #Rocket21'
-
-
-def clean_text(text):
-    text = text.replace("\\n", "\n")
-    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
-    text = re.sub(r"\*(.+?)\*",     r"\1", text)
-    text = re.sub(r"__(.+?)__",     r"\1", text)
-    text = re.sub(r"_(.+?)_",       r"\1", text)
-    text = re.sub(r"^#+\s*",        "",    text, flags=re.MULTILINE)
-    return text.strip()
+    return f'"{quote_thai}"\n— {author}\n#คำคม #แรงบันดาลใจ'
 
 
 # -- Pexels --
 def get_author_photo(author_name):
-    try:
-        resp = requests.get(
-            "https://api.pexels.com/v1/search",
-            headers={"Authorization": PEXELS_API_KEY},
-            params={"query": author_name, "per_page": 5, "orientation": "portrait"},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        photos = resp.json().get("photos", [])
-        if not photos:
-            print(f"Pexels: no photo for '{author_name}'")
-            return None
-        url = photos[0]["src"]["large"]
-        print(f"Pexels photo: {url[:60]}")
-        return url
-    except Exception as e:
-        print(f"Pexels error: {e}")
-        return None
+    # ค้นหาด้วย "portrait" เพื่อให้ได้รูปคนจริงๆ ไม่ใช่สินค้า
+    for query in [f"{author_name} portrait", f"{author_name} speaker", author_name]:
+        try:
+            resp = requests.get(
+                "https://api.pexels.com/v1/search",
+                headers={"Authorization": PEXELS_API_KEY},
+                params={"query": query, "per_page": 5, "orientation": "portrait"},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            photos = resp.json().get("photos", [])
+            if photos:
+                url = photos[0]["src"]["large"]
+                print(f"Pexels [{query}]: {url[:60]}")
+                return url
+        except Exception as e:
+            print(f"Pexels error: {e}")
+    print(f"No photo for '{author_name}', using black bg")
+    return None
 
 
 def download_image(url):
@@ -127,7 +170,6 @@ def download_image(url):
         for chunk in resp.iter_content(65536):
             data += chunk
             if len(data) > MAX_BYTES:
-                print("Image too large")
                 return None
         tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
         tmp.write(data)
@@ -138,11 +180,11 @@ def download_image(url):
         return None
 
 
-# -- PIL Quote Image --
-def make_quote_image(quote_thai, author, img_path=None):
+# -- PIL Quote Image (สไตล์โปสเตอร์ดราม่า) --
+def make_quote_image(lines, author_en, author_thai, img_path=None):
     size = 1080
 
-    # Background: photo or black
+    # Background: photo (square crop) หรือ black
     if img_path:
         try:
             bg = Image.open(img_path).convert("RGB")
@@ -152,59 +194,79 @@ def make_quote_image(quote_thai, author, img_path=None):
                           (w + side) // 2, (h + side) // 2))
             bg = bg.resize((size, size), Image.LANCZOS)
         except Exception as e:
-            print(f"Photo load failed: {e}, using black")
-            bg = Image.new("RGB", (size, size), (0, 0, 0))
+            print(f"Photo failed: {e}")
+            bg = Image.new("RGB", (size, size), (15, 15, 20))
     else:
-        bg = Image.new("RGB", (size, size), (0, 0, 0))
+        bg = Image.new("RGB", (size, size), (15, 15, 20))
 
-    draw = ImageDraw.Draw(bg, "RGBA")
+    # Gradient overlay ซ้ายจาง → ขวาเข้ม (ให้อ่านข้อความได้)
+    overlay = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    ov_draw = ImageDraw.Draw(overlay)
+    split_x = size // 3  # เริ่ม gradient ที่ 1/3
+    for x in range(split_x, size):
+        alpha = int(180 * (x - split_x) / (size - split_x))
+        ov_draw.line([(x, 0), (x, size)], fill=(0, 0, 0, alpha))
+    bg = Image.alpha_composite(bg.convert("RGBA"), overlay).convert("RGB")
 
-    # Dark overlay — full image for photo, lighter for black bg
-    if img_path:
-        draw.rectangle([(0, 0), (size, size)], fill=(0, 0, 0, 140))
+    draw = ImageDraw.Draw(bg)
 
     # Fonts
     try:
-        font_quote  = ImageFont.truetype(FONT_PATH, 52)
-        font_author = ImageFont.truetype(FONT_PATH, 40)
-        font_mark   = ImageFont.truetype(FONT_PATH, 140)
-    except Exception as e:
-        print(f"Font error: {e}")
-        font_quote = font_author = font_mark = ImageFont.load_default()
+        font_big    = ImageFont.truetype(FONT_PATH, 88)
+        font_author = ImageFont.truetype(FONT_PATH, 48)
+        font_sub    = ImageFont.truetype(FONT_PATH, 32)
+        font_quote  = ImageFont.truetype(FONT_PATH, 100)  # สำหรับ " mark
+    except Exception:
+        font_big = font_author = font_sub = font_quote = ImageFont.load_default()
 
-    # Decorative quote mark top-left
-    draw.text((50, 30), "“", font=font_mark, fill=(255, 215, 0, 100))
+    # Layout: text zone ขวา (x: 480 - 1050)
+    x_left  = 480
+    x_right = 1050
+    zone_w  = x_right - x_left
 
-    # Wrap quote text
-    max_chars = 22
-    lines = textwrap.wrap(quote_thai, width=max_chars)
+    # คำนวณ y_start ให้ข้อความอยู่ตรงกลางแนวตั้ง
+    line_h    = 105
+    author_h  = 60
+    sub_h     = 40
+    gap       = 35
+    total_h   = len(lines) * line_h + gap + author_h + sub_h + 30
+    y_start   = (size - total_h) // 2
 
-    # Calculate total text block height
-    line_h   = 65
-    author_h = 55
-    gap      = 30
-    total_h  = len(lines) * line_h + gap + author_h
-    y_start  = (size - total_h) // 2 + 60  # slight center-bias toward bottom
+    # เครื่องหมาย " เปิด (บนซ้ายของ text zone)
+    draw.text((x_left - 10, y_start - 50), "“", font=font_quote, fill=(*GOLD, 220))
 
-    # Draw quote lines (white, centered)
-    for line in lines:
-        bbox = draw.textbbox((0, 0), line, font=font_quote)
+    # บรรทัดคำคม (ขวาชิดขวา text zone)
+    for i, line in enumerate(lines):
+        y = y_start + i * line_h
+        # วัดความกว้างข้อความ
+        bbox   = draw.textbbox((0, 0), line, font=font_big)
         w_text = bbox[2] - bbox[0]
-        x = (size - w_text) // 2
-        # Shadow
-        draw.text((x + 2, y_start + 2), line, font=font_quote, fill=(0, 0, 0, 180))
-        draw.text((x, y_start), line, font=font_quote, fill=WHITE)
-        y_start += line_h
+        x      = x_right - w_text  # right-align
+        # shadow
+        draw.text((x + 3, y + 3), line, font=font_big, fill=(0, 0, 0, 160))
+        draw.text((x, y), line, font=font_big, fill=WHITE)
 
-    y_start += gap
+    # เครื่องหมาย " ปิด ท้ายบรรทัดสุดท้าย
+    last_y    = y_start + (len(lines) - 1) * line_h
+    last_line = lines[-1]
+    bbox      = draw.textbbox((0, 0), last_line, font=font_big)
+    draw.text((x_right + 5, last_y + 30), "”", font=font_sub, fill=(*GOLD, 200))
 
-    # Author line (gold, centered)
-    author_text = f"— {author}"
-    bbox = draw.textbbox((0, 0), author_text, font=font_author)
-    w_text = bbox[2] - bbox[0]
-    x = (size - w_text) // 2
-    draw.text((x + 2, y_start + 2), author_text, font=font_author, fill=(0, 0, 0, 180))
-    draw.text((x, y_start), author_text, font=font_author, fill=GOLD)
+    y_author = y_start + len(lines) * line_h + gap
+
+    # ชื่อผู้พูด (ภาษาไทย) right-align + "..." คั่น
+    author_text = f"...  {author_thai}  ..."
+    bbox        = draw.textbbox((0, 0), author_text, font=font_author)
+    w_text      = bbox[2] - bbox[0]
+    x_a         = x_right - w_text
+    draw.text((x_a + 2, y_author + 2), author_text, font=font_author, fill=(0, 0, 0, 160))
+    draw.text((x_a, y_author), author_text, font=font_author, fill=GOLD)
+
+    # sub-label
+    sub_text = "วาทะคนดัง"
+    bbox     = draw.textbbox((0, 0), sub_text, font=font_sub)
+    w_sub    = bbox[2] - bbox[0]
+    draw.text((x_right - w_sub, y_author + author_h + 10), sub_text, font=font_sub, fill=SILVER)
 
     # Save
     tmp = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
@@ -245,7 +307,7 @@ def post_photo(caption, img_path):
 def add_comment(post_id):
     from affiliate_utils import get_all_comments
     comments = get_all_comments()
-    delay0 = random.uniform(60, 180)
+    delay0   = random.uniform(60, 180)
     print(f"Waiting {delay0:.0f}s before first comment...")
     time.sleep(delay0)
     for i, msg in enumerate(comments, 1):
@@ -275,29 +337,25 @@ def main():
     for attempt in range(5):
         print(f"Attempt {attempt + 1}/5")
 
-        quote_en, author = get_quote()
+        quote_en, author_en = get_quote()
         if not quote_en:
             continue
 
-        quote_thai = translate_quote(quote_en, author)
+        quote_thai  = translate_quote(quote_en, author_en)
+        author_thai = transliterate_author(author_en)
+        lines       = split_quote_lines(quote_thai)
 
-        # Try to get author photo from Pexels
-        img_path = None
-        photo_url = get_author_photo(author)
+        # หารูปผู้พูด
+        img_path  = None
+        photo_url = get_author_photo(author_en)
         if photo_url:
             img_path = download_image(photo_url)
-            if img_path:
-                print(f"Using photo of {author}")
-            else:
-                print("Photo download failed, using black background")
-        else:
-            print("No photo found, using black background")
 
-        final_path = make_quote_image(quote_thai, author, img_path)
+        final_path = make_quote_image(lines, author_en, author_thai, img_path)
         if img_path and os.path.exists(img_path):
             os.unlink(img_path)
 
-        caption = make_caption(quote_thai, author)
+        caption = make_caption(quote_thai, author_en)
         print(f"Caption:\n{caption}\n")
 
         success = post_photo(caption, final_path)
