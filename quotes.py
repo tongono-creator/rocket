@@ -22,23 +22,27 @@ FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
 
-# -- Quotable API --
+# -- ZenQuotes API --
 def get_quote():
     for _ in range(5):
         try:
             resp = requests.get(
-                "https://api.quotable.io/quotes/random",
-                params={"tags": "inspirational", "limit": 1},
+                "https://zenquotes.io/api/random",
                 timeout=10,
             )
             resp.raise_for_status()
             data = resp.json()
             if data:
                 item = data[0]
-                print(f"Quote: {item['author']} — {item['content'][:60]}")
-                return item["content"], item["author"]
+                quote  = item.get("q", "").strip()
+                author = item.get("a", "").strip()
+                # skip generic/unknown authors
+                if not quote or not author or author.lower() in ("unknown", "anonymous", ""):
+                    continue
+                print(f"Quote: {author} — {quote[:60]}")
+                return quote, author
         except Exception as e:
-            print(f"Quotable error: {e}")
+            print(f"ZenQuotes error: {e}")
             time.sleep(2)
     return None, None
 
