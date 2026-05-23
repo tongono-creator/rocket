@@ -225,10 +225,12 @@ def translate_scenario_to_en(scenario):
 
 
 NO_TEXT_IN_IMAGE = (
-    "IMPORTANT: Do NOT render any readable text, letters, words, speech bubbles with text, "
-    "signs, labels, or writing anywhere in the image. "
-    "Story told entirely through character expressions, body language, and visual cues only. "
-    "Any speech bubbles must be EMPTY (no words inside). "
+    "TEXT RULES: If the template requires labels (like 'Expectation'/'Reality' badges or panel titles), "
+    "keep them to MAX 3-4 words, short and punchy — never full sentences. "
+    "Do NOT add any descriptive captions, subtitles, or explanatory text below panels. "
+    "No speech bubbles with text. No signs with readable words. "
+    "Story told through character expressions and visual cues. "
+    "If you must include text, it must be under 4 words total per label. "
 )
 
 
