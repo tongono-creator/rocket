@@ -213,9 +213,9 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
     # Fonts
     try:
         font_big    = ImageFont.truetype(FONT_PATH, 88)
-        font_author = ImageFont.truetype(FONT_PATH, 48)
-        font_sub    = ImageFont.truetype(FONT_PATH, 32)
-        font_quote  = ImageFont.truetype(FONT_PATH, 100)  # สำหรับ " mark
+        font_author = ImageFont.truetype(FONT_PATH, 52)
+        font_sub    = ImageFont.truetype(FONT_PATH, 42)
+        font_quote  = ImageFont.truetype(FONT_PATH, 100)  # unused but keep
     except Exception:
         font_big = font_author = font_sub = font_quote = ImageFont.load_default()
 
@@ -232,25 +232,20 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
     total_h   = len(lines) * line_h + gap + author_h + sub_h + 30
     y_start   = (size - total_h) // 2
 
-    # เครื่องหมาย " เปิด (บนซ้ายของ text zone)
-    draw.text((x_left - 10, y_start - 50), "“", font=font_quote, fill=(*GOLD, 220))
+    # รวม " เข้าไปใน text บรรทัดแรกและสุดท้าย
+    render_lines = lines[:]
+    render_lines[0]  = "“" + render_lines[0]
+    render_lines[-1] = render_lines[-1] + "”"
 
     # บรรทัดคำคม (ขวาชิดขวา text zone)
-    for i, line in enumerate(lines):
+    for i, line in enumerate(render_lines):
         y = y_start + i * line_h
-        # วัดความกว้างข้อความ
         bbox   = draw.textbbox((0, 0), line, font=font_big)
         w_text = bbox[2] - bbox[0]
         x      = x_right - w_text  # right-align
         # shadow
         draw.text((x + 3, y + 3), line, font=font_big, fill=(0, 0, 0, 160))
         draw.text((x, y), line, font=font_big, fill=WHITE)
-
-    # เครื่องหมาย " ปิด ท้ายบรรทัดสุดท้าย
-    last_y    = y_start + (len(lines) - 1) * line_h
-    last_line = lines[-1]
-    bbox      = draw.textbbox((0, 0), last_line, font=font_big)
-    draw.text((x_right + 5, last_y + 30), "”", font=font_sub, fill=(*GOLD, 200))
 
     y_author = y_start + len(lines) * line_h + gap
 
