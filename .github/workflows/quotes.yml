@@ -1,0 +1,29 @@
+name: Quotes Bot
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 09:00 BKK
+    - cron: '0 6 * * *'   # 13:00 BKK
+    - cron: '0 12 * * *'  # 19:00 BKK
+  workflow_dispatch:
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install google-genai requests openpyxl Pillow
+
+      - name: Run quotes script
+        env:
+          PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
+          GEMINI_API_KEY:    ${{ secrets.GOOGLE_API_KEY }}
+          PEXELS_API_KEY:    ${{ secrets.PEXELS_API_KEY }}
+        run: python quotes.py
