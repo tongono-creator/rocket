@@ -207,9 +207,35 @@ def generate_meme_caption(scenario, style):
         print(f"[{model}] unavailable, trying next model...")
     raise RuntimeError("Caption generation failed on all models")
 
+def translate_scenario_to_en(scenario):
+    """แปล scenario เป็นภาษาอังกฤษสำหรับ image prompt — image model ไม่รองรับไทย"""
+    prompt = (
+        f"Translate this Thai meme scenario to English in 1 sentence (max 30 words), "
+        f"keep the humor and structure:\n{scenario}"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            en = resp.text.strip().split("\n")[0]
+            print(f"Scenario EN: {en}")
+            return en
+        except Exception:
+            pass
+    return scenario  # fallback ถ้าแปลไม่ได้
+
+
+NO_TEXT_IN_IMAGE = (
+    "IMPORTANT: Do NOT render any readable text, letters, words, speech bubbles with text, "
+    "signs, labels, or writing anywhere in the image. "
+    "Story told entirely through character expressions, body language, and visual cues only. "
+    "Any speech bubbles must be EMPTY (no words inside). "
+)
+
+
 def generate_meme_image(scenario, style):
     print(f"Generating meme [{style['name']}]...")
-    prompt = style["image_prompt"].format(scenario=scenario)
+    scenario_en = translate_scenario_to_en(scenario)
+    prompt = style["image_prompt"].format(scenario=scenario_en) + NO_TEXT_IN_IMAGE
     for attempt in range(3):
         try:
             resp = client.models.generate_content(
@@ -261,9 +287,19 @@ def add_comment(post_id):
     print(f"Waiting {delay0:.0f}s before first comment...")
     time.sleep(delay0)
     for i, msg in enumerate(comments, 1):
+        if isinstance(msg, dict):
+            data = {"access_token": PAGE_ACCESS_TOKEN, "message": msg["message"]}
+            pic = msg.get("picture_url", "")
+            if pic and pic.startswith("http"):
+                data["attachment_url"] = pic
+        else:
+            data = {"access_token": PAGE_ACCESS_TOKEN, "message": msg}
+        if not data.get("message", "").strip():
+            print(f"Comment {i} skipped (empty message)")
+            continue
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
-            data={"access_token": PAGE_ACCESS_TOKEN, "message": msg}
+            data=data,
         )
         result = resp.json()
         if "id" in result:
