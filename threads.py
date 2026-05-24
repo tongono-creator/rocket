@@ -115,55 +115,48 @@ def generate_quote(topic):
 FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE  = 1080
 
-_SOFT_BREAK = set('…—–-/!?ๆฯ')
-
-def _break_long_word(word, font, draw, max_width):
-    """แตก word ที่ยาวเกิน — ลอง break ที่ punctuation ก่อน แล้วค่อยแตก char"""
-    result, buf = [], ""
-    for ch in word:
-        if draw.textbbox((0, 0), buf + ch, font=font)[2] <= max_width:
-            buf += ch
-        else:
-            back = -1
-            for j in range(len(buf) - 1, max(len(buf) - 9, -1), -1):
-                if buf[j] in _SOFT_BREAK:
-                    back = j + 1
-                    break
-            dot3 = buf.rfind('...')
-            if dot3 >= 0 and dot3 + 3 > back:
-                back = dot3 + 3
-            if back > 0:
-                result.append(buf[:back])
-                buf = buf[back:] + ch
-            else:
-                if buf:
-                    result.append(buf)
-                buf = ch
-    if buf:
-        result.append(buf)
-    return result
-
-def wrap_thai(text, font, draw, max_width):
-    """ตัดบรรทัดให้พอดีความกว้าง — break ที่ punctuation ก่อน แล้วค่อย char"""
-    words = text.split()
+def _wrap_char(draw, text, font, max_width):
+    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space"""
     lines, current = [], ""
-    for word in words:
-        test = (current + " " + word).strip()
+    for ch in text:
+        test = current + ch
         if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
             current = test
         else:
             if current:
                 lines.append(current)
-            if draw.textbbox((0, 0), word, font=font)[2] > max_width:
-                parts = _break_long_word(word, font, draw, max_width)
-                lines.extend(parts[:-1])
-                current = parts[-1] if parts else ""
-            else:
-                current = word
-            continue
+            current = ch
     if current:
         lines.append(current)
+    return lines or [text]
+
+
+def _balance_last(draw, lines, font, max_width, min_ratio=0.42, min_chars=4):
+    """ป้องกัน orphan บรรทัดสุดท้ายที่สั้นเกิน"""
+    if len(lines) <= 1:
+        return lines
+    last = lines[-1].strip()
+    prev = lines[-2].strip()
+    if not last or not prev:
+        return lines
+    last_w = draw.textbbox((0, 0), last, font=font)[2]
+    prev_w = draw.textbbox((0, 0), prev, font=font)[2]
+    is_orphan = (last_w < prev_w * min_ratio) or (len(last) <= min_chars)
+    if not is_orphan:
+        return lines
+    merged   = prev + last
+    total_w  = draw.textbbox((0, 0), merged, font=font)[2]
+    target_w = min(max_width, int(total_w * 0.55))
+    rebalanced = _wrap_char(draw, merged, font, target_w)
+    if all(draw.textbbox((0, 0), l, font=font)[2] <= max_width for l in rebalanced):
+        return lines[:-2] + rebalanced
     return lines
+
+
+def wrap_thai(text, font, draw, max_width):
+    """ตัดบรรทัดให้พอดีความกว้าง — char-by-char + balance orphan"""
+    lines = _wrap_char(draw, text, font, max_width)
+    return _balance_last(draw, lines, font, max_width)
 
 def _build_lines(quote, font_main, font_hash, draw, max_w):
     raw_lines = quote.strip().split("\n")
