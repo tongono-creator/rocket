@@ -76,115 +76,91 @@ SIGNATURE_STYLE = (
 
 MEME_STYLES = [
     {
-        "name": "3-panel comic",
+        "name": "office struggle",
         "image_prompt": (
-            "Create a vertical 3-panel comic strip in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration. "
             + SIGNATURE_STYLE +
-            "Stack panels top to bottom. Thai office worker or family chibi character. "
-            "Silent comic, story told through expressions. Panel borders visible between panels only. "
-            "Story: {scenario}. Funny, relatable Thai everyday life humor. " + NO_BORDER
+            "ONE chibi Thai office worker in a funny, relatable moment: {scenario}. "
+            "Strong single emotion — exhausted, shocked, frustrated, or secretly happy. "
+            "Rich background detail (desk, computer, coffee cup, clock on wall). "
+            "Exaggerated expression tells the whole story in one glance. " + NO_BORDER
         ),
     },
     {
-        "name": "Khaby Lame style",
+        "name": "money reaction",
         "image_prompt": (
-            "Create a 2-panel meme image in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration. "
             + SIGNATURE_STYLE +
-            "Stack panels top and bottom. Top panel: complicated/stressful way someone does something "
-            "related to: {scenario}. Bottom panel: a calm confident chibi person showing the obvious simple solution "
-            "with open hands gesture (Khaby Lame style). Funny. " + NO_BORDER
+            "ONE chibi Thai person having a dramatic money/finance reaction: {scenario}. "
+            "Show the character's full-body reaction — hands on face, falling backward, or celebrating. "
+            "Include visual props: wallet, phone screen, receipt, piggy bank. "
+            "Make the emotion immediately readable from across the room. " + NO_BORDER
         ),
     },
     {
-        "name": "Cat reaction meme",
+        "name": "relatable fail",
         "image_prompt": (
-            "Create a funny cat meme image in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration. "
             + SIGNATURE_STYLE +
-            "Show an annoyed or unimpressed chibi cat in an office or home setting "
-            "reacting to: {scenario}. Cat has huge expressive eyes showing relatable emotion. "
-            "No text needed. " + NO_BORDER
+            "ONE chibi Thai person caught in an embarrassing or relatable everyday fail: {scenario}. "
+            "Frozen mid-action like a meme screenshot. Sweat drops, shock lines, or heart eyes. "
+            "Background shows the context clearly. " + NO_BORDER
         ),
     },
     {
-        "name": "Distracted choice meme",
+        "name": "cat judge",
         "image_prompt": (
-            "Create a 'distracted boyfriend' style meme cartoon in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration. "
             + SIGNATURE_STYLE +
-            "A chibi Thai office worker walking past 'responsible choice' (boring, plain) "
-            "but turning head with hearts in eyes to look at 'tempting bad choice' (shiny, attractive) "
-            "related to: {scenario}. "
-            "NO labels — convey 'responsible' vs 'tempting' through visual design contrast only "
-            "(dull gray vs bright colorful). Funny and relatable. " + NO_BORDER
+            "A judgy unimpressed chibi cat sitting like a boss, watching a chibi Thai human "
+            "doing something silly related to: {scenario}. "
+            "Cat has raised eyebrow and half-lidded eyes. Human looks caught red-handed. "
+            "Funny contrast between dignified cat and embarrassed human. " + NO_BORDER
         ),
     },
     {
-        "name": "Expectation vs Reality",
+        "name": "before after contrast",
         "image_prompt": (
-            "Create a split image meme in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration split diagonally or side by side. "
             + SIGNATURE_STYLE +
-            "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic chibi scene. "
-            "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting chibi scene. "
-            "Topic: {scenario}. Very funny. " + NO_BORDER
+            "Left/top side: chibi character confident and prepared. "
+            "Right/bottom side: same character in chaotic funny reality. "
+            "Topic: {scenario}. Strong visual contrast tells the whole joke instantly. "
+            "NO panel borders — seamless split. " + NO_BORDER
         ),
     },
     {
-        "name": "Generation comparison",
+        "name": "family drama",
         "image_prompt": (
-            "Create a 2x2 four-panel comic grid in 1:1 square ratio. "
+            "Create a single-scene 1:1 square illustration. "
             + SIGNATURE_STYLE +
-            "Each panel shows the same topic across Thai generations with a funny ironic twist. "
-            "Panel top-left: รุ่นปู่ (grandfather's era, old-fashioned hard way). "
-            "Panel top-right: รุ่นพ่อ (father's era, slightly improved). "
-            "Panel bottom-left: รุ่นลูก (our generation, modern approach). "
-            "Panel bottom-right: รุ่นหลาน (grandchild's era, ironic/lazy/unexpected punchline). "
-            "Each panel has a bold Thai label badge at bottom: รุ่นปู่ / รุ่นพ่อ / รุ่นลูก / รุ่นหลาน. "
-            "Topic: {scenario}. Thin panel dividers only. " + NO_BORDER
+            "A funny Thai family moment with 2-3 chibi characters: {scenario}. "
+            "Each character has a distinct clear emotion — one happy, one shocked, one resigned. "
+            "Warm home setting. Immediately readable family dynamic. " + NO_BORDER
         ),
     },
 ]
 
-GENERATION_SCENARIOS = [s for s in MEME_SCENARIOS if "รุ่นปู่" in s]
-REGULAR_SCENARIOS    = [s for s in MEME_SCENARIOS if "รุ่นปู่" not in s]
-
-def get_slot():
-    """คืนค่า slot 0/1/2 ตามเวลา BKK: 07:30=0, 11:30=1, 16:30=2"""
-    bkk = timezone(timedelta(hours=7))
-    hour = datetime.now(bkk).hour
-    if hour < 10:
-        return 0
-    elif hour < 14:
-        return 1
-    else:
-        return 2
-
 def get_scenario():
     style = random.choice(MEME_STYLES)
-    # ให้ AI คิดมุกใหม่ทุกครั้ง — viral relatable สำหรับคนไทยวัย 30-45
-    if style["name"] == "Generation comparison":
-        extra = "เป็นการเปรียบเทียบรุ่นปู่/พ่อแม่ vs คนรุ่นนี้ เรื่องเงิน งาน หรือชีวิตประจำวัน"
-    else:
-        extra = "เรื่องเงิน งาน ครอบครัว หรือชีวิตประจำวันที่คนไทยวัย 30-45 เจอจริงๆ"
+    # ให้ AI คิดมุกใหม่ทุกครั้ง — single scene, viral relatable คนไทยวัย 30-45
     prompt = (
-        f"คิดมุก 3-panel comic 1 เรื่อง สำหรับคนไทยวัย 30-45 {extra}\n"
-        "มุกต้องขำ relatable กำลัง viral ตอนนี้ ไม่ซ้ำเดิม ไม่คาดเดาได้\n"
-        "ตอบแค่ 1 บรรทัด รูปแบบ: [สถานการณ์] — panel 1: [อธิบาย] panel 2: [อธิบาย] panel 3: [อธิบาย]\n"
-        "ห้ามใส่คำอธิบายเพิ่ม ตอบแค่บรรทัดเดียว"
+        f"คิดสถานการณ์มุกตลก 1 เรื่อง สำหรับคนไทยวัย 30-45 style '{style['name']}'\n"
+        "เรื่องเงิน งาน ครอบครัว หรือชีวิตประจำวันที่คนเจอจริงๆ\n"
+        "มุกต้องขำ relatable เห็นภาพในหัวได้ทันที ไม่ซ้ำเดิม\n"
+        "ตอบแค่ 1 บรรทัด อธิบายสถานการณ์สั้นๆ ไม่เกิน 30 คำ"
     )
     scenario = None
     for model in TEXT_MODELS:
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             scenario = resp.text.strip().split("\n")[0]
-            print(f"Generated scenario: {scenario}")
+            print(f"Generated scenario [{style['name']}]: {scenario}")
             break
         except Exception as e:
             print(f"[{model}] scenario gen failed: {str(e)[:80]}")
     if not scenario:
-        # fallback → list เดิม
-        if style["name"] == "Generation comparison":
-            scenario = random.choice(GENERATION_SCENARIOS)
-        else:
-            scenario = random.choice(REGULAR_SCENARIOS)
+        scenario = random.choice(MEME_SCENARIOS)
     return scenario, style
 
 def generate_meme_caption(scenario, style):
