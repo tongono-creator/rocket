@@ -110,9 +110,11 @@ MEME_STYLES = [
         "image_prompt": (
             "Create a 'distracted boyfriend' style meme cartoon in 4:5 portrait ratio (tall format). "
             + SIGNATURE_STYLE +
-            "A chibi Thai office worker walking with 'responsible choice' "
-            "but turning head to look at 'tempting bad choice' related to: {scenario}. "
-            "Label each person/object clearly in Thai. Funny and relatable. " + NO_BORDER
+            "A chibi Thai office worker walking past 'responsible choice' (boring, plain) "
+            "but turning head with hearts in eyes to look at 'tempting bad choice' (shiny, attractive) "
+            "related to: {scenario}. "
+            "NO labels — convey 'responsible' vs 'tempting' through visual design contrast only "
+            "(dull gray vs bright colorful). Funny and relatable. " + NO_BORDER
         ),
     },
     {
@@ -225,12 +227,16 @@ def translate_scenario_to_en(scenario):
 
 
 NO_TEXT_IN_IMAGE = (
-    "TEXT RULES: If the template requires labels (like 'Expectation'/'Reality' badges or panel titles), "
-    "keep them to MAX 3-4 words, short and punchy — never full sentences. "
-    "Do NOT add any descriptive captions, subtitles, or explanatory text below panels. "
-    "No speech bubbles with text. No signs with readable words. "
-    "Story told through character expressions and visual cues. "
-    "If you must include text, it must be under 4 words total per label. "
+    "STRICT TEXT RULES: "
+    "ABSOLUTELY NO speech bubbles — not empty, not filled, not partially drawn. "
+    "ABSOLUTELY NO thought bubbles or any balloon shapes. "
+    "NO subtitles, captions, or explanatory text anywhere in the image. "
+    "NO signs, screens, or props with readable words. "
+    "Panel title BADGES are allowed ONLY for template labels "
+    "(ที่คิดไว้, ความเป็นจริง, รุ่นปู่, รุ่นพ่อ, รุ่นลูก, รุ่นหลาน) — "
+    "max 3 words each, bold badge style only. "
+    "ALL story, emotion, and punchline must be conveyed ENTIRELY through "
+    "character expressions, body language, and visual props — zero text needed. "
 )
 
 
