@@ -78,7 +78,7 @@ MEME_STYLES = [
     {
         "name": "3-panel comic",
         "image_prompt": (
-            "Create a vertical 3-panel comic strip in 4:5 portrait ratio (tall format). "
+            "Create a vertical 3-panel comic strip in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "Stack panels top to bottom. Thai office worker or family chibi character. "
             "Silent comic, story told through expressions. Panel borders visible between panels only. "
@@ -88,7 +88,7 @@ MEME_STYLES = [
     {
         "name": "Khaby Lame style",
         "image_prompt": (
-            "Create a 2-panel meme image in 4:5 portrait ratio (tall format). "
+            "Create a 2-panel meme image in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "Stack panels top and bottom. Top panel: complicated/stressful way someone does something "
             "related to: {scenario}. Bottom panel: a calm confident chibi person showing the obvious simple solution "
@@ -98,7 +98,7 @@ MEME_STYLES = [
     {
         "name": "Cat reaction meme",
         "image_prompt": (
-            "Create a funny cat meme image in 4:5 portrait ratio (tall format). "
+            "Create a funny cat meme image in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "Show an annoyed or unimpressed chibi cat in an office or home setting "
             "reacting to: {scenario}. Cat has huge expressive eyes showing relatable emotion. "
@@ -108,7 +108,7 @@ MEME_STYLES = [
     {
         "name": "Distracted choice meme",
         "image_prompt": (
-            "Create a 'distracted boyfriend' style meme cartoon in 4:5 portrait ratio (tall format). "
+            "Create a 'distracted boyfriend' style meme cartoon in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "A chibi Thai office worker walking past 'responsible choice' (boring, plain) "
             "but turning head with hearts in eyes to look at 'tempting bad choice' (shiny, attractive) "
@@ -120,7 +120,7 @@ MEME_STYLES = [
     {
         "name": "Expectation vs Reality",
         "image_prompt": (
-            "Create a split image meme in 4:5 portrait ratio (tall format). "
+            "Create a split image meme in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "Top half labeled 'ที่คิดไว้' (expectation) with a happy idealistic chibi scene. "
             "Bottom half labeled 'ความเป็นจริง' (reality) with a funny contrasting chibi scene. "
@@ -130,7 +130,7 @@ MEME_STYLES = [
     {
         "name": "Generation comparison",
         "image_prompt": (
-            "Create a 2x2 four-panel comic grid in 4:5 portrait ratio (tall format). "
+            "Create a 2x2 four-panel comic grid in 1:1 square ratio. "
             + SIGNATURE_STYLE +
             "Each panel shows the same topic across Thai generations with a funny ironic twist. "
             "Panel top-left: รุ่นปู่ (grandfather's era, old-fashioned hard way). "
@@ -208,6 +208,34 @@ def generate_meme_caption(scenario, style):
                     time.sleep(10)
         print(f"[{model}] unavailable, trying next model...")
     raise RuntimeError("Caption generation failed on all models")
+
+MEME_ACCENT = (255, 215, 0)  # gold — Rocket21 accent color
+
+
+def generate_meme_hook(scenario, style_name):
+    """สร้าง hook text 2 บรรทัดสำหรับ overlay บนรูปมีม"""
+    prompt = (
+        f"มุก: {scenario}\n"
+        f"style: {style_name}\n"
+        "เขียน hook text ภาษาไทยสำหรับพาดหัวบนรูปมีม:\n"
+        "บรรทัด 1: มุกหลัก 3-6 คำ กระแทกใจ ภาษาพูดธรรมดา\n"
+        "บรรทัด 2: คำถาม/ประโยคสรุป สั้น 4-7 คำ ให้คนอยากคอมเม้น\n"
+        "ตอบแค่ 2 บรรทัด ไม่มี hashtag ไม่มี ** ไม่มี label นำหน้า"
+    )
+    ECHO_KW = ["บรรทัด", "hook", "ตอบ", "label", "สำหรับ"]
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            lines = [l.strip() for l in resp.text.strip().split("\n") if l.strip()]
+            lines = [l for l in lines if not any(kw in l for kw in ECHO_KW)]
+            line1 = lines[0] if lines else ""
+            line2 = lines[1] if len(lines) > 1 else ""
+            print(f"Meme hook: {line1} | {line2}")
+            return line1, line2
+        except Exception as e:
+            print(f"[{model}] hook failed: {e}")
+    return "", ""
+
 
 def translate_scenario_to_en(scenario):
     """แปล scenario เป็นภาษาอังกฤษสำหรับ image prompt — image model ไม่รองรับไทย"""
@@ -323,4 +351,17 @@ if __name__ == "__main__":
     scenario, style = get_scenario()
     caption  = generate_meme_caption(scenario, style)
     img_path = generate_meme_image(scenario, style)
+
+    # Add hook text overlay on meme image
+    line1, line2 = generate_meme_hook(scenario, style["name"])
+    if line1:
+        try:
+            from overlay_utils import add_overlay
+            overlaid = add_overlay(img_path, line1, line2, MEME_ACCENT)
+            os.unlink(img_path)
+            img_path = overlaid
+            print(f"Overlay applied: {line1} | {line2}")
+        except Exception as e:
+            print(f"Overlay failed (using original): {e}")
+
     post_facebook(img_path, caption)
