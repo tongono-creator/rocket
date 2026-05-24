@@ -198,31 +198,20 @@ def stitch_panels(img1_path, img2_path, label1, label2):
         img = img.resize((W, panel_h), Image.LANCZOS)
         canvas.paste(img, (0, idx * panel_h))
 
-        # ─── วาด label box ─────────────────────────────────────────
+        # ─── วาด label text โดยตรงบน panel (style Jod 8riew) ────────
         draw = ImageDraw.Draw(canvas)
         try:
-            font = ImageFont.truetype(FONT_PATH, 34)
+            font = ImageFont.truetype(FONT_PATH, 42)
         except Exception:
             font = ImageFont.load_default()
 
-        text = f'"{label}"'
-        bbox = draw.textbbox((0, 0), text, font=font)
-        tw = bbox[2] - bbox[0]
-        th_text = bbox[3] - bbox[1]
-
-        PAD_X, PAD_Y = 16, 10
-        MARGIN = 24
-        bx1 = MARGIN
-        by1 = idx * panel_h + MARGIN
-        bx2 = bx1 + tw + PAD_X * 2
-        by2 = by1 + th_text + PAD_Y * 2
-
-        # Drop shadow
-        draw.rectangle([bx1 + 3, by1 + 3, bx2 + 3, by2 + 3], fill=(80, 80, 80))
-        # White box + border
-        draw.rectangle([bx1, by1, bx2, by2], fill=(255, 255, 255), outline=(20, 20, 20), width=2)
-        # Thai text
-        draw.text((bx1 + PAD_X, by1 + PAD_Y), text, font=font, fill=(15, 15, 15))
+        MARGIN = 28
+        tx = MARGIN
+        ty = idx * panel_h + MARGIN
+        # 8-direction outline → อ่านได้บนทุกพื้นหลัง ไม่ต้องมี box
+        for dx, dy in [(-3,-3),(-3,0),(-3,3),(0,-3),(0,3),(3,-3),(3,0),(3,3)]:
+            draw.text((tx + dx, ty + dy), label, font=font, fill=(0, 0, 0))
+        draw.text((tx, ty), label, font=font, fill=(255, 255, 255))
 
     # Divider ระหว่าง 2 panel
     draw = ImageDraw.Draw(canvas)
