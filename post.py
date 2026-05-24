@@ -170,22 +170,73 @@ def generate_quote(topic, slot="morning"):
         print(f"[{model}] unavailable, trying next model...")
     raise RuntimeError("Quote generation failed on all models")
 
+
+def generate_story(topic, slot="morning"):
+    """สร้าง bullet narrative caption สำหรับ Facebook post description"""
+    time_context = {
+        "morning": "เช้า — เหมาะสำหรับเริ่มวัน ปลุกพลัง",
+        "noon":    "กลางวัน — อ่านระหว่างพักเที่ยง ย่อยง่าย",
+        "evening": "เย็น-ค่ำ — คนเพิ่งเลิกงาน relatable สูง",
+        "late":    "ดึก — ชวนคิดก่อนนอน",
+    }
+    time_line = time_context.get(slot, "")
+    prompt = (
+        f"หัวข้อ: {topic}\n"
+        f"บริบท: {time_line}\n\n"
+        "เขียน Facebook caption แบบ ▪️ bullet narrative สำหรับเพจไลฟ์สไตล์/การเงิน คนวัย 30-45\n"
+        "ใช้ ▪️ นำหน้าทุก bullet — 6-8 จุด เล่าเรื่องมีความต่อเนื่อง\n"
+        "โครงสร้าง:\n"
+        "▪️ 1-2: Setup — ปัญหา/สถานการณ์ relatable ที่คนวัย 30-45 เจอจริง\n"
+        "▪️ 3-4: เนื้อหาหลัก — บทเรียน ข้อมูล หรือตัวอย่างจริงพร้อมตัวเลข\n"
+        "▪️ 5-6: Insight — สิ่งที่ตระหนัก มุมมองใหม่ หรือ turning point\n"
+        "▪️ 7-8: Engage — คำถามชวน comment หรือ call to action\n"
+        "แต่ละ bullet: 1-2 ประโยค ภาษาพูดธรรมดา ไม่ประดิษฐ์ ตรงใจคนวัย 30-45\n"
+        "จบด้วย hashtag 2-3 อัน\n"
+        "ห้ามใช้ ** markdown ตอบแค่ caption"
+    )
+    for model in TEXT_MODELS:
+        for attempt in range(2):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                story = clean_text(resp.text)
+                print(f"Story [{model}]:\n{story[:200]}...\n")
+                return story
+            except Exception as e:
+                print(f"[{model}] story attempt {attempt+1} failed: {str(e)[:100]}")
+    return ""  # fallback: empty → use quote as caption
+
 # ─── 2. สร้างรูป (PIL + Kanit-Bold — ข้อความถูกต้อง 100%) ────────
 FONT_PATH      = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 FONT_HASH_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE = 1080
 
+_LEADING_VOWELS  = set('เแโใไ')
+_COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
+
 def _wrap_char(draw, text, font, max_width):
-    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space"""
+    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space
+    - combining chars (วรรณยุกต์/สระ) ไม่ขึ้นบรรทัดใหม่เด็ดขาด
+    - สระนำหน้า (เแโใไ) ไม่ค้างท้ายบรรทัด — ดึงติดพยัญชนะถัดไป
+    """
     lines, current = [], ""
     for ch in text:
         test = current + ch
-        if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+        fits = draw.textbbox((0, 0), test, font=font)[2] <= max_width
+        if fits or ch in _COMBINING_CHARS:
             current = test
         else:
             if current:
-                lines.append(current)
-            current = ch
+                if current[-1] in _LEADING_VOWELS:
+                    orphan  = current[-1]
+                    current = current[:-1]
+                    if current:
+                        lines.append(current)
+                    current = orphan + ch
+                else:
+                    lines.append(current)
+                    current = ch
+            else:
+                current = ch
     if current:
         lines.append(current)
     return lines or [text]
@@ -336,5 +387,6 @@ def add_comment(post_id):
 if __name__ == "__main__":
     topic, slot = get_topic()
     quote    = generate_quote(topic, slot)
+    story    = generate_story(topic, slot)
     img_path = generate_image(quote)
-    post_facebook(img_path, quote)
+    post_facebook(img_path, story or quote)

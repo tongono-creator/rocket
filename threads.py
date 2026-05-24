@@ -115,17 +115,33 @@ def generate_quote(topic):
 FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE  = 1080
 
+_LEADING_VOWELS  = set('เแโใไ')
+_COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
+
 def _wrap_char(draw, text, font, max_width):
-    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space"""
+    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space
+    - combining chars (วรรณยุกต์/สระ) ไม่ขึ้นบรรทัดใหม่เด็ดขาด
+    - สระนำหน้า (เแโใไ) ไม่ค้างท้ายบรรทัด — ดึงติดพยัญชนะถัดไป
+    """
     lines, current = [], ""
     for ch in text:
         test = current + ch
-        if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+        fits = draw.textbbox((0, 0), test, font=font)[2] <= max_width
+        if fits or ch in _COMBINING_CHARS:
             current = test
         else:
             if current:
-                lines.append(current)
-            current = ch
+                if current[-1] in _LEADING_VOWELS:
+                    orphan  = current[-1]
+                    current = current[:-1]
+                    if current:
+                        lines.append(current)
+                    current = orphan + ch
+                else:
+                    lines.append(current)
+                    current = ch
+            else:
+                current = ch
     if current:
         lines.append(current)
     return lines or [text]
@@ -196,25 +212,38 @@ def generate_image(quote):
         font_main = ImageFont.truetype(FONT_PATH, font_size)
         font_hash = ImageFont.truetype(FONT_PATH, int(font_size * 0.65))
         all_lines = _build_lines(quote, font_main, font_hash, draw, max_w)
-        total_h = sum(draw.textbbox((0,0), t, font=f)[3] + LINE_GAP for t, f in all_lines)
+        total_h = sum(
+            # actual rendered height = bottom - top (bbox[1] is negative for Thai tone marks)
+            ((draw.textbbox((0, 0), t, font=f)[3] - draw.textbbox((0, 0), t, font=f)[1]) + LINE_GAP)
+            if t else
+            ((draw.textbbox((0, 0), "ก", font=f)[3] - draw.textbbox((0, 0), "ก", font=f)[1]) // 2 + LINE_GAP)
+            for t, f in all_lines
+        )
         if total_h <= max_h:
             break
         font_size -= 2
 
     print(f"Font size: {font_size}")
+    # y = actual top pixel of text block (accounting for negative bbox[1])
     y = (IMG_SIZE - total_h) // 2
 
     for text, font in all_lines:
         if not text:
-            y += draw.textbbox((0,0), "ก", font=font)[3] // 2
+            # empty line spacer — use full actual height of reference char
+            ref = draw.textbbox((0, 0), "ก", font=font)
+            y += (ref[3] - ref[1]) // 2
             continue
         bbox = draw.textbbox((0, 0), text, font=font)
-        w = bbox[2] - bbox[0]
-        x = (IMG_SIZE - w) // 2
-        color = (150, 150, 150) if font == font_hash else (255, 255, 255)
-        draw.text((x+2, y+2), text, font=font, fill=(30, 30, 30))
-        draw.text((x, y), text, font=font, fill=color)
-        y += bbox[3] + LINE_GAP
+        w    = bbox[2] - bbox[0]
+        x    = (IMG_SIZE - w) // 2
+        # draw_y: shift down by -bbox[1] so actual top pixel = y
+        # (bbox[1] is negative for Thai tone marks above baseline)
+        draw_y = y - bbox[1]
+        color  = (150, 150, 150) if font == font_hash else (255, 255, 255)
+        draw.text((x + 2, draw_y + 2), text, font=font, fill=(30, 30, 30))
+        draw.text((x,     draw_y),     text, font=font, fill=color)
+        # advance by actual rendered height (top to bottom inclusive)
+        y += (bbox[3] - bbox[1]) + LINE_GAP
 
     img.save(path)
     print(f"Image saved: {path}")
