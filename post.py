@@ -310,7 +310,10 @@ def _balance_last(draw, lines, font, max_width, min_ratio=0.42, min_chars=4):
     merged   = prev + " " + last
     total_w  = draw.textbbox((0, 0), merged, font=font)[2]
     target_w = min(max_width, int(total_w * 0.55))
-    rebalanced = _wrap_char(draw, merged, font, target_w)
+    if " " in merged.strip():
+        rebalanced = _wrap_words(draw, merged, font, target_w)
+    else:
+        rebalanced = _wrap_char(draw, merged, font, target_w)
     if all(draw.textbbox((0, 0), l, font=font)[2] <= max_width for l in rebalanced):
         return lines[:-2] + rebalanced
     return lines
