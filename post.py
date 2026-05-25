@@ -256,7 +256,7 @@ def _balance_last(draw, lines, font, max_width, min_ratio=0.42, min_chars=4):
     is_orphan = (last_w < prev_w * min_ratio) or (len(last) <= min_chars)
     if not is_orphan:
         return lines
-    merged   = prev + last
+    merged   = prev + " " + last
     total_w  = draw.textbbox((0, 0), merged, font=font)[2]
     target_w = min(max_width, int(total_w * 0.55))
     rebalanced = _wrap_char(draw, merged, font, target_w)
@@ -265,9 +265,35 @@ def _balance_last(draw, lines, font, max_width, min_ratio=0.42, min_chars=4):
     return lines
 
 
+def _wrap_words(draw, text, font, max_width):
+    """ตัดจากช่องว่างก่อน เพื่อไม่ผ่าคำไทยกลางคำโดยไม่จำเป็น"""
+    words = [w for w in text.split(" ") if w]
+    if not words:
+        return [text]
+    lines, current = [], ""
+    for word in words:
+        test = word if not current else current + " " + word
+        if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+            current = test
+            continue
+        if current:
+            lines.append(current)
+        current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
 def wrap_thai(text, font, draw, max_width):
-    """ตัดบรรทัดให้พอดีความกว้าง — char-by-char + balance orphan"""
-    lines = _wrap_char(draw, text, font, max_width)
+    """ตัดบรรทัดให้พอดีความกว้าง โดยพยายามรักษาคำ/วลีไทยไว้ก่อน"""
+    if draw.textbbox((0, 0), text, font=font)[2] <= max_width:
+        return [text]
+
+    if " " in text.strip():
+        lines = _wrap_words(draw, text, font, max_width)
+    else:
+        # อย่ารีบผ่าคำไทยตอน font ยังใหญ่ ให้ auto-fit ลด font ก่อน
+        lines = [text] if getattr(font, "size", 99) > 42 else _wrap_char(draw, text, font, max_width)
     return _balance_last(draw, lines, font, max_width)
 
 def _build_lines(quote, font_main, font_hash, draw, max_w):
@@ -310,7 +336,11 @@ def generate_image(quote):
         font_hash = ImageFont.truetype(FONT_HASH_PATH, int(font_size * 0.65))
         all_lines = _build_lines(quote, font_main, font_hash, draw, max_w)
         total_h = sum(draw.textbbox((0,0), t, font=f)[3] + LINE_GAP for t, f in all_lines)
-        if total_h <= max_h:
+        width_ok = all(
+            (not t) or draw.textbbox((0, 0), t, font=f)[2] <= max_w
+            for t, f in all_lines
+        )
+        if total_h <= max_h and width_ok:
             break
         font_size -= 2
 
