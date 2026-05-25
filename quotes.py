@@ -21,6 +21,61 @@ SILVER      = (200, 200, 200)
 FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
+_LEADING_VOWELS  = set("เแโใไ")
+_COMBINING_CHARS = set("่้๊๋์ิีึืุูัํ็")
+
+
+def _wrap_char(draw, text, font, max_width):
+    lines, current = [], ""
+    for ch in text:
+        test = current + ch
+        fits = draw.textbbox((0, 0), test, font=font)[2] <= max_width
+        if fits or ch in _COMBINING_CHARS:
+            current = test
+            continue
+        if current:
+            if current[-1] in _LEADING_VOWELS:
+                orphan = current[-1]
+                current = current[:-1]
+                if current:
+                    lines.append(current)
+                current = orphan + ch
+            else:
+                lines.append(current)
+                current = ch
+        else:
+            current = ch
+    if current:
+        lines.append(current)
+    return lines or [text]
+
+
+def _wrap_words(draw, text, font, max_width):
+    words = [w for w in text.split(" ") if w]
+    if not words:
+        return [text]
+    lines, current = [], ""
+    for word in words:
+        test = word if not current else current + " " + word
+        if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+            current = test
+            continue
+        if current:
+            lines.append(current)
+        current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def _wrap_quote_line(draw, text, font, max_width):
+    text = text.strip()
+    if not text or draw.textbbox((0, 0), text, font=font)[2] <= max_width:
+        return [text] if text else []
+    if " " in text:
+        return _wrap_words(draw, text, font, max_width)
+    return [text] if getattr(font, "size", 99) > 42 else _wrap_char(draw, text, font, max_width)
+
 
 # -- ZenQuotes API --
 def get_quote():
@@ -210,44 +265,61 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
 
     draw = ImageDraw.Draw(bg)
 
-    # Fonts
-    try:
-        font_big    = ImageFont.truetype(FONT_PATH, 88)
-        font_author = ImageFont.truetype(FONT_PATH, 52)
-        font_sub    = ImageFont.truetype(FONT_PATH, 42)
-        font_quote  = ImageFont.truetype(FONT_PATH, 100)  # unused but keep
-    except Exception:
-        font_big = font_author = font_sub = font_quote = ImageFont.load_default()
-
     # Layout: text zone ขวา (x: 480 - 1050)
     x_left  = 480
     x_right = 1050
     zone_w  = x_right - x_left
 
-    # คำนวณ y_start ให้ข้อความอยู่ตรงกลางแนวตั้ง
-    line_h    = 105
-    author_h  = 60
-    sub_h     = 40
-    gap       = 35
-    total_h   = len(lines) * line_h + gap + author_h + sub_h + 30
-    y_start   = (size - total_h) // 2
+    # Auto-fit: รักษาวลีไทยไว้ก่อน ลด font ก่อนค่อย fallback char-wrap
+    render_source = [l.strip() for l in lines if l and l.strip()]
+    if not render_source:
+        render_source = ["คำคมวันนี้"]
 
-    # รวม " เข้าไปใน text บรรทัดแรกและสุดท้าย
-    render_lines = lines[:]
-    render_lines[0]  = "“" + render_lines[0]
-    render_lines[-1] = render_lines[-1] + "”"
+    font_size = 88
+    while font_size >= 42:
+        try:
+            font_big    = ImageFont.truetype(FONT_PATH, font_size)
+            font_author = ImageFont.truetype(FONT_PATH, max(30, int(font_size * 0.58)))
+            font_sub    = ImageFont.truetype(FONT_PATH, max(24, int(font_size * 0.46)))
+        except Exception:
+            font_big = font_author = font_sub = ImageFont.load_default()
+
+        render_lines = []
+        for line in render_source:
+            render_lines.extend(_wrap_quote_line(draw, line, font_big, zone_w))
+        render_lines[0] = "“" + render_lines[0]
+        render_lines[-1] = render_lines[-1] + "”"
+
+        line_gap = max(12, font_size // 6)
+        line_heights = [
+            draw.textbbox((0, 0), line, font=font_big)[3] -
+            draw.textbbox((0, 0), line, font=font_big)[1]
+            for line in render_lines
+        ]
+        quote_h = sum(line_heights) + line_gap * (len(render_lines) - 1)
+        author_h = draw.textbbox((0, 0), f"...  {author_thai}  ...", font=font_author)[3]
+        sub_h = draw.textbbox((0, 0), "วาทะคนดัง", font=font_sub)[3]
+        gap = max(24, font_size // 2)
+        total_h = quote_h + gap + author_h + sub_h + 40
+        width_ok = all(draw.textbbox((0, 0), line, font=font_big)[2] <= zone_w for line in render_lines)
+        if total_h <= 860 and width_ok:
+            break
+        font_size -= 4
+
+    y_start = (size - total_h) // 2
 
     # บรรทัดคำคม (ขวาชิดขวา text zone)
+    y = y_start
     for i, line in enumerate(render_lines):
-        y = y_start + i * line_h
         bbox   = draw.textbbox((0, 0), line, font=font_big)
         w_text = bbox[2] - bbox[0]
         x      = x_right - w_text  # right-align
         # shadow
         draw.text((x + 3, y + 3), line, font=font_big, fill=(0, 0, 0, 160))
         draw.text((x, y), line, font=font_big, fill=WHITE)
+        y += (bbox[3] - bbox[1]) + line_gap
 
-    y_author = y_start + len(lines) * line_h + gap
+    y_author = y + gap
 
     # ชื่อผู้พูด (ภาษาไทย) right-align + "..." คั่น
     author_text = f"...  {author_thai}  ..."
