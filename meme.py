@@ -47,46 +47,34 @@ ART_STYLE = (
 # ─── Fallback scenarios (label1_th, scene1_en, label2_th, scene2_en) ──
 FALLBACK_SCENARIOS = [
     (
-        "ตอนรับ offer งานใหม่",
-        "Thai man in 30s confidently shaking hands with boss, big smile, hopeful bright eyes, modern office",
-        "หลังผ่านโปร 3 เดือน",
-        "Same man slumped at overflowing desk, hollow exhausted eyes, towering stacks of files everywhere",
+        "ตอนประกาศจะตั้งใจทำงาน",
+        "Thai man in 30s confidently looking at his blank calendar with a bright morning smile, ready to work",
+        "หลังผ่านไป 1 ชั่วโมง",
+        "Same man looking exhausted, holding a cup of coffee with stress sweat drops, looking at a calendar filled with urgent meetings",
     ),
     (
-        "ก่อนเงินเดือนออก",
-        "Thai man cheerfully writing shopping list in notebook, relaxed smile, leaning back in chair",
-        "หลังจ่ายบิลครบ",
-        "Same man staring at near-empty wallet with blank stunned expression, single coin visible",
+        "เมื่อบอสบอกว่ามีรางวัลพิเศษให้",
+        "Thai man in 30s clapping hands happily with eyes sparkling with hope in a neat modern office",
+        "รางวัลที่ได้รับจริง",
+        "Same man slumped at desk buried under giant stacks of new folders, holding a massive pile of files with a blank numb expression",
     ),
     (
-        "ตั้งใจจะออมเงิน",
-        "Thai man standing firm arms crossed next to large piggy bank, determined confident face",
-        "พอเห็นโปรลดราคา",
-        "Same man sprinting toward sale sign, wallet flying open, eyes sparkling with excitement",
+        "เช้าวันเสาร์ที่ตั้งใจจะพักผ่อน",
+        "Thai man lying peacefully on bed reading a book, soft morning light, relaxed smile",
+        "เมื่อมีแจ้งเตือน LINE จากหัวหน้า",
+        "Same man staring at his glowing smartphone screen in panic, eyes wide with horror, sweat drops flying",
     ),
     (
-        "วางแผนงานตอนเช้า",
-        "Thai man at clean desk with neat to-do list, fresh coffee, confident morning smile",
-        "ตอนเย็นก่อนกลับบ้าน",
-        "Same man surrounded by crumpled paper, head drooping on desk, only 1 item crossed off the list",
+        "ตอนบอสบอกว่า 'เปิดใจคุยกันได้'",
+        "Thai man smiling warmly, preparing to speak at a conference table, boss nodding",
+        "หลังจากพูดความจริงไป",
+        "Same man sweating profusely with a forced tight smile, packaging his personal belongings into a cardboard box",
     ),
     (
-        "คิดว่าแค่เช็กโทรศัพท์แป๊บเดียว",
-        "Thai man picking up phone with one finger, casual innocent expression",
-        "4 ชั่วโมงต่อมา",
-        "Same man lying sideways on sofa in dark room, phone glowing on face, totally glazed-over eyes",
-    ),
-    (
-        "ก่อนสัมภาษณ์งาน",
-        "Thai man in neat suit, confident posture, memorizing strengths in mirror",
-        "หลังได้งานจริง",
-        "Same man buried under laptop screens, phone ringing, stress sweat drops flying everywhere",
-    ),
-    (
-        "ตอนบอกตัวเองว่าจะนอนเร็ว",
-        "Thai man lying in bed, eyes closed, phone face-down on nightstand, peaceful expression",
-        "ตีสองของคืนเดียวกัน",
-        "Same man wide awake scrolling phone under blanket, blue light illuminating shocked face",
+        "วันเงินเดือนออก กินหรูอยู่แพง",
+        "Thai man sitting happily at a fancy steakhouse table, gourmet food, confident rich expression",
+        "สัปดาห์ถัดมา จ้องซองกาแฟ 3-in-1",
+        "Same man in his kitchen looking sadly at a near-empty wallet and holding a single instant coffee sachet",
     ),
 ]
 
@@ -104,13 +92,13 @@ def gemini_text(prompt):
 def generate_scenario_2panel():
     """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en)"""
     prompt = (
-        "Create a 2-panel 'before vs after' Thai comic scenario for office workers aged 30-40.\n"
-        "Make it VERY relatable and funny about: work, money, relationships, or daily life.\n"
-        "The twist from panel 1 to panel 2 should make people laugh or feel deeply seen.\n\n"
+        "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario for office workers aged 30-45.\n"
+        "Focus on sarcastic office realities, brutal work truths, financial struggles, or adulting dilemmas.\n"
+        "The contrast from panel 1 (expectation/hopeful) to panel 2 (brutal reality/sarcastic twist) must be very funny, relatable, and prompt-driven to get comments.\n\n"
         "Output EXACTLY 4 lines, nothing else:\n"
-        "Line 1: Panel 1 Thai label — short specific phrase 3-7 words (e.g. ตอนเพิ่งได้งานใหม่)\n"
+        "Line 1: Panel 1 Thai label — short specific phrase 3-7 words (e.g. ตอนอาสาทำงานใหม่)\n"
         "Line 2: Panel 1 image — English description of what character does/feels, 15-25 words\n"
-        "Line 3: Panel 2 Thai label — short specific phrase 3-7 words (e.g. หลังผ่านโปร 3 เดือน)\n"
+        "Line 3: Panel 2 Thai label — short specific phrase 3-7 words (e.g. สิ่งที่ได้คืองานเพื่อนร่วมงาน)\n"
         "Line 4: Panel 2 image — English description of SAME character in contrasting situation, 15-25 words\n"
         "Do NOT include line numbers or prefixes. Just the 4 lines."
     )
