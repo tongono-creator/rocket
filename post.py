@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, requests, time, random
+import sys, io, os, re, requests, time, random
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
