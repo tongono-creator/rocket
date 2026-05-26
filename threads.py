@@ -159,7 +159,7 @@ def clean_hook_lines(raw_text):
         parts = text.split("|")
     else:
         parts = text.split("\n")
-    label_pattern = r'^(ข้อความในโพสต์\\s*Facebook|ข้อความบนรูป|ข้อความในรูป|ข้อความ|คำบรรยาย|คำอธิบาย|บรรทัดที่\\s*\\d+|บรรทัด\\s*\\d+|ประโยคที่\\s*\\d+|ประโยค\\s*\\d+|Hook\\s*text|Hook|Line\\s*\\d+|[L|l]ine\\s*\\d+|\\d+)\\s*[:\\-\\.\\s]\\s*'
+    label_pattern = r'^(ข้อความในโพสต์\\s*Facebook|Facebook\\s*Caption|Facebook\\s*caption|Caption|caption|ข้อความบนรูป|ข้อความในรูป|ข้อความ|คำบรรยาย|คำอธิบาย|บรรทัดที่\\s*\\d+|บรรทัด\\s*\\d+|ประโยคที่\\s*\\d+|ประโยค\\s*\\d+|Hook\\s*text|Hook|Line\\s*\\d+|[L|l]ine\\s*\\d+|\\d+)\\s*[:\\-\\.\\s]\\s*'
     cleaned_lines = []
     for part in parts:
         cleaned = re.sub(label_pattern, '', part, flags=re.IGNORECASE).strip()
