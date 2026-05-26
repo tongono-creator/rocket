@@ -2,3 +2,7 @@ config.py
 output/
 __pycache__/
 *.pyc
+threads_token.txt
+save_threads_token.py
+get_threads_token.py
+fb_insights_export.csv
