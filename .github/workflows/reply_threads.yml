@@ -1,0 +1,44 @@
+name: Threads AI Auto-Reply
+
+on:
+  schedule:
+    # รันตรวจสอบคอมเมนต์ทุกๆ 2 ชั่วโมง
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # รันตรวจคอมเมนต์มือได้จาก GitHub UI
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-genai requests
+
+      - name: Run Threads Reply Script
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
+          GOOGLE_API_KEY:       ${{ secrets.GOOGLE_API_KEY }}
+        run: python reply_threads.py
+
+      - name: Commit and push if history updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add replied_comments.txt
+          if git diff --cached --quiet; then
+            echo "No changes in replied_comments.txt"
+          else
+            git commit -m "chore: update replied_comments.txt history [skip ci]"
+            git push
+          fi
