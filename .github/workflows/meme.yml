@@ -2,8 +2,8 @@ name: Meme Post (Daily Comic)
 
 on:
   schedule:
-    # 08:00 BKK = 01:00 UTC
-    - cron: '0 1 * * *'
+    # 05:00 BKK = 22:00 UTC
+    - cron: '0 22 * * *'
     # 12:00 BKK = 05:00 UTC
     - cron: '0 5 * * *'
     # 17:00 BKK = 10:00 UTC
