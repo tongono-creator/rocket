@@ -432,16 +432,16 @@ def post_facebook(img_path, caption):
     if "id" in result:
         post_id = result.get("post_id") or result["id"]
         print(f"FB Posted! ID: {post_id}")
-        add_comment(post_id)
+        add_comment(post_id, caption=caption, img_path=img_path)
         return post_id
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
 
 # ─── 4. Auto-comment ลิงก์เว็บ + product rotation ──────────────
-def add_comment(post_id):
+def add_comment(post_id, caption=None, img_path=None):
     from affiliate_utils import get_all_comments
-    comments = get_all_comments()
+    comments = get_all_comments(caption=caption, img_path=img_path)
     # หน่วงก่อน comment แรก — ดูเหมือนคนมาเห็นโพสแล้วคอมเม้น
     delay0 = random.uniform(60, 180)
     print(f"Waiting {delay0:.0f}s before first comment...")

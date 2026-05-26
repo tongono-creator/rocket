@@ -1,0 +1,55 @@
+Create a Thai ecommerce review-style poster using the UPLOADED PRODUCT IMAGE as the STRICT MAIN REFERENCE.
+
+IMPORTANT PRODUCT RULES:
+- DO NOT redesign the product
+- DO NOT change product shape, colors, materials, proportions, buttons, textures, keycaps, logos, layout, or lighting style
+- Product must look IDENTICAL to the uploaded image
+- Use the uploaded product cutout directly whenever possible
+- Only improve lighting, sharpness, reflections, and background composition
+- Keep exact real product details
+- No AI reinterpretation
+- No fantasy redesign
+- No changing keycap colors or keyboard layout
+
+LAYOUT:
+- Top 70% = product showcase only
+- Bottom 30% = text section only
+- ALL text stays strictly inside the black bottom section
+- No text over product area
+
+TRANSITION:
+- Add a smooth cinematic dark gradient fade between image area and black section
+- Fade from transparent dark gray into deep matte black
+- Soft premium transition, not blurry
+
+TEXT STYLE:
+- Large bold Thai typography
+- White main text
+- Highlight keywords with deep muted green
+- Highlight words larger than surrounding text
+- Minimal wording
+- Easy mobile readability
+
+PRODUCT SECTION:
+- One large main product image
+- 2-3 smaller close-up detail images
+- Clean rectangular layout
+- White or light gray background
+- Thin separators between image sections
+- Premium commercial lighting
+
+STYLE:
+- Modern Thai viral ecommerce review ad
+- High CTR Facebook/TikTok thumbnail style
+- Minimal and premium
+- Clean composition
+- No clutter
+- No fake UI
+- No unnecessary props or accessories
+
+FINAL RESULT:
+- Looks like a real successful Thai review page
+- Extremely clean and clickable
+- Product remains 100% accurate to uploaded reference
+- 4:5 aspect ratio
+- Ultra realistic commercial ad quality

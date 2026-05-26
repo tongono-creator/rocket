@@ -403,7 +403,7 @@ def _create_and_publish(text, reply_to_id=None):
     result = resp2.json()
     return result.get("id")
 
-def post_threads(image_url, caption):
+def post_threads(image_url, caption, img_path=None):
     print("Posting to Threads...")
     # Step 1: Create image container
     resp = requests.post(
@@ -437,7 +437,7 @@ def post_threads(image_url, caption):
 
     # Step 3: Add reply comments
     from affiliate_utils import get_all_comments
-    all_comments = get_all_comments()
+    all_comments = get_all_comments(caption=caption, img_path=img_path)
     delay0 = random.uniform(60, 180)
     print(f"Waiting {delay0:.0f}s before first reply...")
     time.sleep(delay0)
@@ -571,8 +571,8 @@ def run_meme_mode():
         print(f"Funny caption:\n{caption}\n")
         # upload ผ่าน ImgBB
         hosted_url = upload_image_to_imgur(img_path)
+        post_threads(hosted_url, caption, img_path=img_path)
         os.unlink(img_path)
-        post_threads(hosted_url, caption)
         return
     print("Meme mode failed after 4 attempts, fallback to quote mode")
     run_quote_mode()
@@ -584,7 +584,9 @@ def run_quote_mode():
     quote    = generate_quote(topic, slot)
     img_path = generate_image(quote)
     img_url  = upload_image_to_imgur(img_path)
-    post_threads(img_url, quote)
+    post_threads(img_url, quote, img_path=img_path)
+    if img_path and os.path.exists(img_path):
+        os.unlink(img_path)
 
 
 if __name__ == "__main__":
