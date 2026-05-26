@@ -11,7 +11,7 @@ from moviepy import ImageClip, concatenate_videoclips, AudioFileClip, CompositeV
 from moviepy.video.fx import CrossFadeIn, CrossFadeOut
 import numpy as np
 
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "AIzaSyCi6AbETW4XTjJpcbRxj2oL3ftEWRbv_xI")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 IMAGE_MODEL    = "gemini-3-pro-image-preview"
 TEXT_MODEL     = "gemini-3.5-flash"
 OUTPUT_DIR     = "output"
