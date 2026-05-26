@@ -275,7 +275,7 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
     if not render_source:
         render_source = ["คำคมวันนี้"]
 
-    font_size = 88
+    font_size = 120
     while font_size >= 42:
         try:
             font_big    = ImageFont.truetype(FONT_PATH, font_size)

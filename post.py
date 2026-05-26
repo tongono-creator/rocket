@@ -384,7 +384,7 @@ def generate_image(quote):
     LINE_GAP = 18
 
     # auto-fit: หา font size ใหญ่ที่สุดที่ยังพอดีกรอบ
-    font_size = 82
+    font_size = 124
     while font_size >= 36:
         font_main = ImageFont.truetype(FONT_PATH,      font_size)
         font_hash = ImageFont.truetype(FONT_HASH_PATH, int(font_size * 0.65))
