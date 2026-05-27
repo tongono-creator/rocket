@@ -89,12 +89,77 @@ def gemini_text(prompt):
     return ""
 
 
+# ─── มุมมองการเสียดสีและมุกตลกเพื่อความหลากหลาย (Meme Angles Rotation) ───
+MEME_ANGLES = [
+    {
+        "category": "การประชุมและงานด่วน (Meetings & Urgent Tasks)",
+        "focus": "การประชุมที่ลากยาวอย่างไร้สาระเพื่อหาข้อสรุปที่ไม่มีใครทำตาม หรือการโดนเรียกประชุมด่วนช่วงจะเลิกงาน"
+    },
+    {
+        "category": "เงินเดือนและสภาพคล่อง (Salary & Mid-month struggles)",
+        "focus": "ความรู้สึกรวยในวันเงินเดือนออกเพียง 5 นาที ก่อนที่บิลค่าใช้จ่าย/หนี้สินจะหักไปจนแทบหมด"
+    },
+    {
+        "category": "วันหยุดและงานลาม (Weekends vs Work)",
+        "focus": "การวางแผนนอนโง่ๆ พักผ่อนเต็มที่ในวันเสาร์อาทิตย์ แต่โดนหัวหน้าแท็กสั่งงานด่วนในกลุ่ม LINE"
+    },
+    {
+        "category": "คำสัญญาของหัวหน้า (Boss Promises vs Reality)",
+        "focus": "หัวหน้าบอกว่า 'ถ้างานนี้ผ่านจะมีรางวัลพิเศษให้' หรือ 'เปิดใจคุยกันได้' แต่ผลลัพธ์กลับตรงกันข้ามโดยสิ้นเชิง"
+    },
+    {
+        "category": "การซื้อของประชดชีวิต (Retail Therapy)",
+        "focus": "การทำงานหนักแล้วเอาเงินไปซื้อกาแฟแก้วละ 150 บาท หรือของฟุ่มเฟือยเพื่อบำบัดจิตใจ ทั้งที่เงินเก็บไม่มี"
+    },
+    {
+        "category": "ประเมินผลงานและความก้าวหน้า (Performance & Career)",
+        "focus": "ความขยันทำงานแทบตายแต่ตอนประเมินผลได้เท่าเดิม หรือการทำงานหนักจนหลังหักแต่คนอื่นได้เลื่อนขั้น"
+    },
+    {
+        "category": "สุขภาพร่างกายและออฟฟิศซินโดรม (Office Syndrome & Health)",
+        "focus": "ตอนเริ่มงานอายุ 25 ร่างกายแข็งแรงฟิตปั๋ง ตอนนี้อายุ 30+ ตื่นมาพร้อมความปวดหลัง คอ บ่า ไหล่ และพลาสเตอร์ยาเต็มตัว"
+    },
+    {
+        "category": "พนักงานใหม่ vs พนักงานเก่า (Junior vs Senior)",
+        "focus": "พนักงานใหม่เข้ามาทำงานด้วยพลังเปี่ยมล้นและรอยยิ้มสดใส VS รุ่นพี่อายุ 30+ ที่จิบกาแฟจ้องหน้าจอด้วยสายตาว่างเปล่าและเหนื่อยล้า"
+    },
+    {
+        "category": "การวางแผนเก็บเงิน (Failed Savings Plan)",
+        "focus": "ตั้งเป้าต้นปีว่าจะเก็บเงิน 1 แสนบาทถ้วนเพื่ออนาคต แต่กลางปีพบว่าเงินเก็บเหลือ 50 บาทถ้วนและหนี้งอกขึ้นมาใหม่"
+    },
+    {
+        "category": "ความฝันในการลาออก (Dreams of Resigning)",
+        "focus": "จินตนาการในหัวว่าถ้าถูกหวยรางวัลที่ 1 จะเดินไปโยนใบลาออกใส่หน้าหัวหน้าอย่างสง่างาม แต่ความจริงคือเสียงนาฬิกาปลุกดังและต้องรีบวิ่งไปขึ้นรถเมล์"
+    }
+]
+
+
 def generate_scenario_2panel():
-    """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en)"""
+    """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en) โดยใช้การหมุนเวียนมุมมองมุกตลกเพื่อป้องกันมุกซ้ำ"""
+    bkk = timezone(timedelta(hours=7))
+    now = datetime.now(bkk)
+    
+    # คำนวณช่วงเวลาโพสต์ (0 = เช้า, 1 = เที่ยง, 2 = เย็น/ดึก)
+    hour = now.hour
+    if hour < 10:
+        slot = 0
+    elif hour < 15:
+        slot = 1
+    else:
+        slot = 2
+        
+    day_of_year = now.timetuple().tm_yday
+    angle_idx = (day_of_year * 3 + slot) % len(MEME_ANGLES)
+    selected_angle = MEME_ANGLES[angle_idx]
+    
+    print(f"Selected Angle for rotation index {angle_idx}: {selected_angle['category']}")
+
     prompt = (
         "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario for office workers aged 30-45.\n"
-        "Focus on sarcastic office realities, brutal work truths, financial struggles, or adulting dilemmas.\n"
-        "The contrast from panel 1 (expectation/hopeful) to panel 2 (brutal reality/sarcastic twist) must be very funny, relatable, and prompt-driven to get comments.\n\n"
+        f"You MUST base the comic scenario on this specific joke theme:\n"
+        f"- Category: {selected_angle['category']}\n"
+        f"- Focus/Angle: {selected_angle['focus']}\n\n"
+        "Ensure the contrast from panel 1 (expectation/hopeful) to panel 2 (brutal reality/sarcastic twist) is very funny, relatable, and prompt-driven to get comments.\n\n"
         "Output EXACTLY 4 lines, nothing else:\n"
         "Line 1: Panel 1 Thai label — short specific phrase 3-7 words (e.g. ตอนอาสาทำงานใหม่)\n"
         "Line 2: Panel 1 image — English description of what character does/feels, 15-25 words\n"
@@ -276,8 +341,23 @@ def add_comment(post_id):
 
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="Run in dry-run mode without generating images or posting")
+    args = parser.parse_args()
+
     # Step 1: AI คิด scenario
     label1, scene1, label2, scene2 = generate_scenario_2panel()
+
+    if args.dry_run:
+        print("\n--- [DRY RUN RESULTS] ---")
+        print(f"Panel 1 Label: {label1}")
+        print(f"Panel 1 Image Prompt: {scene1}")
+        print(f"Panel 2 Label: {label2}")
+        print(f"Panel 2 Image Prompt: {scene2}")
+        caption = generate_caption(label1, label2)
+        print("\nDry run completed successfully (image generation and posting skipped).")
+        sys.exit(0)
 
     # Step 2: Generate 2 panels แยกกัน → ป้องกัน duplicate panel bug
     img1 = generate_panel_image(scene1, panel_num=1)
