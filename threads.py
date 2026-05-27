@@ -14,7 +14,7 @@ GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
 IMAGE_MODEL          = "gemini-2.0-flash-preview-image-generation"  # unused (PIL renders)
-TEXT_MODELS          = ["gemini-3.5-flash", "gemini-2.5-flash"]
+TEXT_MODELS          = ["gemini-2.5-flash", "gemini-3.5-flash"]
 OUTPUT_DIR           = "output"
 
 if not GOOGLE_API_KEY:

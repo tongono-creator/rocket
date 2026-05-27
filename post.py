@@ -13,7 +13,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODEL       = "gemini-2.0-flash-preview-image-generation"  # unused in post.py (PIL renders text)
-TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]  # fallback order
+TEXT_MODELS       = ["gemini-2.5-flash", "gemini-3.5-flash"]  # fallback order
 OUTPUT_DIR        = "output"
 
 # fallback รันบน local ใช้ config.py
