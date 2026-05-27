@@ -85,14 +85,19 @@ def get_topic():
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
     hour = now.hour
+    day_of_year = now.timetuple().tm_yday
     if hour < 10:
-        return random.choice(MORNING_TOPICS), "morning"
+        idx = day_of_year % len(MORNING_TOPICS)
+        return MORNING_TOPICS[idx], "morning"
     elif hour < 16:
-        return random.choice(NOON_TOPICS), "noon"
+        idx = day_of_year % len(NOON_TOPICS)
+        return NOON_TOPICS[idx], "noon"
     elif hour < 21:
-        return random.choice(EVENING_TOPICS), "evening"
+        idx = day_of_year % len(EVENING_TOPICS)
+        return EVENING_TOPICS[idx], "evening"
     else:
-        return random.choice(LATE_TOPICS), "late"
+        idx = day_of_year % len(LATE_TOPICS)
+        return LATE_TOPICS[idx], "late"
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
@@ -473,8 +478,23 @@ def add_comment(post_id, caption=None, img_path=None):
 
 # ─── Main ────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="Run without posting to Facebook")
+    args = parser.parse_args()
+
     topic, slot = get_topic()
     quote    = generate_quote(topic, slot)
     story    = generate_story(topic, slot)
     img_path = generate_image(quote)
-    post_facebook(img_path, story or quote)
+
+    if args.dry_run:
+        print("\n--- [DRY RUN RESULTS] ---")
+        print(f"Topic: {topic}")
+        print(f"Slot: {slot}")
+        print(f"Quote:\n{quote}")
+        print(f"Story/Caption:\n{story}")
+        print(f"Image Path: {img_path}")
+        print("\nDry run completed successfully (posting skipped).")
+    else:
+        post_facebook(img_path, story or quote)

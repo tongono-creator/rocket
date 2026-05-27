@@ -84,14 +84,19 @@ def get_topic():
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
     hour = now.hour
+    day_of_year = now.timetuple().tm_yday
     if hour < 10:
-        return random.choice(MORNING_TOPICS), "morning"
+        idx = day_of_year % len(MORNING_TOPICS)
+        return MORNING_TOPICS[idx], "morning"
     elif hour < 16:
-        return random.choice(NOON_TOPICS), "noon"
+        idx = day_of_year % len(NOON_TOPICS)
+        return NOON_TOPICS[idx], "noon"
     elif hour < 21:
-        return random.choice(EVENING_TOPICS), "evening"
+        idx = day_of_year % len(EVENING_TOPICS)
+        return EVENING_TOPICS[idx], "evening"
     else:
-        return random.choice(LATE_TOPICS), "late"
+        idx = day_of_year % len(LATE_TOPICS)
+        return LATE_TOPICS[idx], "late"
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
