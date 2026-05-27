@@ -41,7 +41,10 @@ ART_STYLE = (
     "ABSOLUTELY NO speech bubbles — not empty, not filled, not any balloon shape. "
     "NO thought bubbles. NO text or captions anywhere in the image. "
     "Story told ENTIRELY through character expression and body language. "
-    "1:1 square format. Image fills edge to edge, no white outer border."
+    "Wide horizontal composition. The main character must be fully visible and centered in the frame, "
+    "with generous safety margins (at least 25% empty background space) at both the top and the bottom. "
+    "Do not crop the character's head or body to the edges; keep the character relatively compact within the center "
+    "so they fit perfectly when cropped to a wide panel, without white outer border."
 )
 
 # ─── Fallback scenarios (label1_th, scene1_en, label2_th, scene2_en) ──
@@ -243,9 +246,9 @@ def stitch_panels(img1_path, img2_path, label1, label2):
             left = (iw - new_w) // 2
             img = img.crop((left, 0, left + new_w, ih))
         else:
-            # สูงเกิน — crop บนล่าง (offset เล็กน้อยเพื่อเน้นบน เพราะ character มักอยู่กลาง-บน)
+            # สูงเกิน — crop บนล่าง (ใช้ offset ปานกลาง 2.5 เพื่อให้เหลือพื้นที่หัวและตัวด้านล่างสมดุลกัน)
             new_h = int(iw / target_ratio)
-            top = max(0, (ih - new_h) // 4)
+            top = int(max(0, (ih - new_h) // 2.5))
             img = img.crop((0, top, iw, top + new_h))
 
         img = img.resize((W, panel_h), Image.LANCZOS)
