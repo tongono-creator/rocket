@@ -226,35 +226,47 @@ def clean_hook_lines(raw_text):
     return "\n".join(cleaned_lines)
 
 FALLBACK_QUOTES = [
-    "การเดินเรือที่ปลอดภัยที่สุด คือการอยู่แต่ในฝั่ง... แต่นั่นไม่ใช่จุดประสงค์ของการสร้างเรือขึ้นมา\n— John A. Shedd",
     "อายุ 30+ สิ่งที่น่าตื่นเต้นที่สุดไม่ใช่เงินเดือนออก\nแต่คือตื่นมาแล้วหลังไม่ปวดครับ\n#ชีวิตคนทำงาน",
     "ไม่มีอะไรทำร้ายเราได้เท่าเสียงแจ้งเตือน LINE สั่งงานตอนสี่ทุ่ม\n#ชีวิตมนุษย์เงินเดือน",
-    "งานด่วนคือข้อยกเว้น งานที่ทำไม่ทันคือเรื่องปกติ\nสู้ๆ ครับมนุษย์ออฟฟิศทุกคน",
-    "การทำงานหนักไม่ได้ช่วยให้รวยขึ้นทันที\nแต่ช่วยให้หมดวันเร็วขึ้นแน่นอนครับ",
+    "งานด่วนคือข้อยกเว้น งานที่ทำไม่ทันคือเรื่องปกติ\nสู้ๆ ครับมนุษย์ออฟฟิศทุกคน\n#ชีวิตมนุษย์ออฟฟิศ",
+    "การทำงานหนักไม่ได้ช่วยให้รวยขึ้นทันที\nแต่ช่วยให้หมดวันเร็วขึ้นแน่นอนครับ\n#งานคือเงิน",
+    "อยากรวยต้องทำงาน แต่พอทำงานก็ไม่มีเวลาใช้เงิน\nตกลงเราทำงานไปเพื่ออะไรกันแน่ครับ\n#สู้ชีวิตแต่ชีวิตสู้กลับ",
+    "เงินเก็บ 1 แสนแรกหายากที่สุด\nแต่ 1 พันสุดท้ายหลังจากวันหวยออก หายากกว่าเยอะครับ\n#เรื่องมันเศร้า",
+    "เป้าหมายการเงินปีนี้คือรอดตาย\nเรื่องกำไรค่อยคุยกันปีหน้าครับ\n#รอดตายก่อน",
+    "ความสุขไม่ได้อยู่ที่การมีเงินเยอะๆ\nแต่มันอยู่ตรงที่ได้นอนเฉยๆ แล้วมีเงินโอนเข้าบัญชีต่างหากครับ\n#อิสระที่แท้จริง",
+    "ทำงานเหมือนเป็นเจ้าของบริษัท\nแต่ตอนเงินเดือนออก นึกว่าเป็นผู้บริจาคเงินให้บริษัท\n#ฮาๆกันไป",
+    "สุขภาพที่ดีคือลาภอันประเสริฐ\nแต่ออฟฟิศซินโดรมคือเพื่อนแท้ที่ไม่มีวันทิ้งเราไป\n#ออฟฟิศซินโดรม",
+    "วัย 30+ เริ่มรู้ซึ้งว่า การไม่มีหนี้\nคือลาภอันประเสริฐยิ่งกว่าถูกหวยงวดนี้อีกครับ\n#ชีวิตคนทำงาน",
+    "อยากมี passive income เดือนละหมื่น\nแต่ตอนนี้นั่งลุ้นเงินฝากออมทรัพย์ได้ดอกเบี้ยสิบบาท\n#ชีวิตต้องสู้",
+    "การลงทุนมีความเสี่ยง\nแต่การไม่ลงทุนอะไรเลยแล้วหวังจะรวย เสี่ยงที่สุดครับ\n#คิดการใหญ่ใจต้องนิ่ง",
+    "อย่าเอาสุขภาพทั้งชีวิต\nไปแลกกับเงินเดือนหลักหมื่นที่หมดไปกับค่าหมอตอนแก่เลยครับ\n#ถนอมตัวด้วยนะ"
 ]
 
 def generate_quote(topic, slot="morning"):
-    style_idx = SLOT_STYLE.get(slot, 0)
-    style = CONTENT_STYLES[style_idx]
-    prompt = style.format(topic=topic)
-    print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
-    for model in TEXT_MODELS:
-        for attempt in range(2):
-            try:
-                resp = client.models.generate_content(model=model, contents=prompt)
-                quote = clean_hook_lines(resp.text)
-                print(f"Quote [{model}]:\n{quote}\n")
-                return quote
-            except Exception as e:
-                print(f"[{model}] attempt {attempt+1} failed: {str(e)[:100]}")
-                if attempt < 1:
-                    time.sleep(10)
-        print(f"[{model}] unavailable, trying next model...")
-    
-    print("Quote generation failed on all models. Using fallback quote.")
-    quote = random.choice(FALLBACK_QUOTES)
-    print(f"Fallback quote used: {quote}")
-    return quote
+    try:
+        style_idx = SLOT_STYLE.get(slot, 0)
+        style = CONTENT_STYLES[style_idx]
+        prompt = style.format(topic=topic)
+        print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
+        for model in TEXT_MODELS:
+            for attempt in range(2):
+                try:
+                    resp = client.models.generate_content(model=model, contents=prompt)
+                    quote = clean_hook_lines(resp.text)
+                    print(f"Quote [{model}]:\n{quote}\n")
+                    return quote
+                except Exception as e:
+                    print(f"[{model}] attempt {attempt+1} failed: {str(e)[:100]}")
+                    if attempt < 1:
+                        time.sleep(10)
+            print(f"[{model}] unavailable, trying next model...")
+        raise RuntimeError("Quote generation failed on all models and attempts")
+    except Exception as outer_e:
+        print(f"Error during quote generation: {str(outer_e)}")
+        print("Using random fallback quote from the local Thai/Office/Work/Life list.")
+        quote = random.choice(FALLBACK_QUOTES)
+        print(f"Fallback quote used:\n{quote}")
+        return quote
 
 
 def generate_story(topic, slot="morning"):
