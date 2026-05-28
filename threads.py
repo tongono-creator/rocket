@@ -217,6 +217,13 @@ def clean_hook_lines(raw_text):
         if cleaned:
             cleaned_lines.append(cleaned)
     return "\n".join(cleaned_lines)
+FALLBACK_QUOTES = [
+    "การเดินเรือที่ปลอดภัยที่สุด คือการอยู่แต่ในฝั่ง... แต่นั่นไม่ใช่จุดประสงค์ของการสร้างเรือขึ้นมา\n— John A. Shedd",
+    "อายุ 30+ สิ่งที่น่าตื่นเต้นที่สุดไม่ใช่เงินเดือนออก\nแต่คือตื่นมาแล้วหลังไม่ปวดครับ\n#ชีวิตคนทำงาน",
+    "ไม่มีอะไรทำร้ายเราได้เท่าเสียงแจ้งเตือน LINE สั่งงานตอนสี่ทุ่ม\n#ชีวิตมนุษย์เงินเดือน",
+    "งานด่วนคือข้อยกเว้น งานที่ทำไม่ทันคือเรื่องปกติ\nสู้ๆ ครับมนุษย์ออฟฟิศทุกคน",
+    "การทำงานหนักไม่ได้ช่วยให้รวยขึ้นทันที\nแต่ช่วยให้หมดวันเร็วขึ้นแน่นอนครับ",
+]
 
 def generate_quote(topic, slot="morning"):
     style_idx = SLOT_STYLE.get(slot, 0)
@@ -235,7 +242,11 @@ def generate_quote(topic, slot="morning"):
                 if attempt < 1:
                     time.sleep(10)
         print(f"[{model}] unavailable, trying next model...")
-    raise RuntimeError("Quote generation failed on all models")
+    
+    print("Quote generation failed on all models. Using fallback quote.")
+    quote = random.choice(FALLBACK_QUOTES)
+    print(f"Fallback quote used: {quote}")
+    return quote
 
 FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 IMG_SIZE  = 1080
