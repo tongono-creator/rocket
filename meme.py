@@ -8,12 +8,13 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
 from google.genai import types
+from google.genai.types import HttpOptions
 
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-3.1-flash-image-preview"
-TEXT_MODELS       = ["gemini-3.5-flash", "gemini-2.5-flash"]
+IMAGE_MODEL       = "gemini-2.0-flash-preview-image-generation"
+TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]
 OUTPUT_DIR        = "output"
 FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 
@@ -24,7 +25,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options=HttpOptions(timeout=300))
 
 HISTORY_FILE = "posted_history.txt"
 
