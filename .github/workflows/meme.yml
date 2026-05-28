@@ -13,8 +13,12 @@ on:
 jobs:
   meme:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,3 +34,18 @@ jobs:
           PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
           PAGE_ID:           ${{ secrets.PAGE_ID }}
         run: python meme.py
+
+      - name: Commit and push if history updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f posted_history.txt ]; then
+            git add posted_history.txt
+            if git diff --cached --quiet; then
+              echo "No changes in posted_history.txt"
+            else
+              git commit -m "chore: update posted_history.txt history [skip ci]"
+              git pull --rebase
+              git push
+            fi
+          fi

@@ -26,6 +26,29 @@ if not GOOGLE_API_KEY:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
+HISTORY_FILE = "posted_history.txt"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            return []
+    return []
+
+def save_to_history(item):
+    items = load_history()
+    items.append(item)
+    items = items[-300:] # Cap history
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            for it in items:
+                f.write(it + "\n")
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
+
 # ─── Topic rotation — 4 slots × 10 หัวข้อ = 40 โพสไม่ซ้ำ ────────
 # เช้า: การเงินและวินัยการสร้างตัว (Financial Mindset & Social Realities)
 MORNING_TOPICS = [
@@ -91,22 +114,31 @@ LATE_TOPICS = [
 ]
 
 def get_topic():
+    history = set(load_history())
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
     hour = now.hour
-    day_of_year = now.timetuple().tm_yday
+    
     if hour < 10:
-        idx = day_of_year % len(MORNING_TOPICS)
-        return MORNING_TOPICS[idx], "morning"
+        topics = MORNING_TOPICS
+        slot = "morning"
     elif hour < 16:
-        idx = day_of_year % len(NOON_TOPICS)
-        return NOON_TOPICS[idx], "noon"
+        topics = NOON_TOPICS
+        slot = "noon"
     elif hour < 21:
-        idx = day_of_year % len(EVENING_TOPICS)
-        return EVENING_TOPICS[idx], "evening"
+        topics = EVENING_TOPICS
+        slot = "evening"
     else:
-        idx = day_of_year % len(LATE_TOPICS)
-        return LATE_TOPICS[idx], "late"
+        topics = LATE_TOPICS
+        slot = "late"
+
+    available = [t for t in topics if t not in history]
+    if not available:
+        print(f"All topics in {slot} slot have been posted. Resetting history for this slot.")
+        available = topics
+    
+    chosen = random.choice(available)
+    return chosen, slot
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
@@ -505,4 +537,6 @@ if __name__ == "__main__":
         print(f"Image Path: {img_path}")
         print("\nDry run completed successfully (posting skipped).")
     else:
-        post_facebook(img_path, story or quote)
+        post_id = post_facebook(img_path, story or quote)
+        if post_id:
+            save_to_history(topic)

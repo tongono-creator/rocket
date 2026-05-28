@@ -26,6 +26,29 @@ if not GOOGLE_API_KEY:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
+HISTORY_FILE = "posted_history.txt"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            return []
+    return []
+
+def save_to_history(item):
+    items = load_history()
+    items.append(item)
+    items = items[-300:] # Cap history
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            for it in items:
+                f.write(it + "\n")
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
+
 # ─── ตัวละครประจำ Rocket21 ─────────────────────────────────────
 # ใส่ทุก image prompt — ให้ character เดิมปรากฏทั้ง 2 panel
 ROCKET_CHARACTER = (
@@ -138,24 +161,15 @@ MEME_ANGLES = [
 
 
 def generate_scenario_2panel():
-    """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en) โดยใช้การหมุนเวียนมุมมองมุกตลกเพื่อป้องกันมุกซ้ำ"""
-    bkk = timezone(timedelta(hours=7))
-    now = datetime.now(bkk)
+    """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en, category) โดยใช้การหมุนเวียนมุมมองมุกตลกเพื่อป้องกันมุกซ้ำ"""
+    history = set(load_history())
+    available = [a for a in MEME_ANGLES if a['category'] not in history]
+    if not available:
+        print("All meme angles already posted. Resetting history for angles.")
+        available = MEME_ANGLES
+    selected_angle = random.choice(available)
     
-    # คำนวณช่วงเวลาโพสต์ (0 = เช้า, 1 = เที่ยง, 2 = เย็น/ดึก)
-    hour = now.hour
-    if hour < 10:
-        slot = 0
-    elif hour < 15:
-        slot = 1
-    else:
-        slot = 2
-        
-    day_of_year = now.timetuple().tm_yday
-    angle_idx = (day_of_year * 3 + slot) % len(MEME_ANGLES)
-    selected_angle = MEME_ANGLES[angle_idx]
-    
-    print(f"Selected Angle for rotation index {angle_idx}: {selected_angle['category']}")
+    print(f"Selected Angle: {selected_angle['category']}")
 
     prompt = (
         "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario for office workers aged 30-45.\n"
@@ -179,10 +193,11 @@ def generate_scenario_2panel():
         label1, scene1, label2, scene2 = lines[0], lines[1], lines[2], lines[3]
         print(f"Scenario: [{label1}] {scene1}")
         print(f"          [{label2}] {scene2}")
-        return label1, scene1, label2, scene2
+        return label1, scene1, label2, scene2, selected_angle['category']
 
     print("Scenario gen failed — using fallback")
-    return random.choice(FALLBACK_SCENARIOS)
+    fb = random.choice(FALLBACK_SCENARIOS)
+    return fb[0], fb[1], fb[2], fb[3], "Fallback"
 
 
 def generate_panel_image(scene_en, panel_num):
@@ -306,6 +321,7 @@ def post_facebook(img_path, caption):
         post_id = result.get("post_id") or result["id"]
         print(f"Posted! ID: {post_id}")
         add_comment(post_id)
+        return post_id
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
@@ -350,10 +366,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Step 1: AI คิด scenario
-    label1, scene1, label2, scene2 = generate_scenario_2panel()
+    label1, scene1, label2, scene2, category = generate_scenario_2panel()
 
     if args.dry_run:
         print("\n--- [DRY RUN RESULTS] ---")
+        print(f"Category: {category}")
         print(f"Panel 1 Label: {label1}")
         print(f"Panel 1 Image Prompt: {scene1}")
         print(f"Panel 2 Label: {label2}")
@@ -378,4 +395,6 @@ if __name__ == "__main__":
 
     # Step 5: Caption + Post
     caption = generate_caption(label1, label2)
-    post_facebook(comic, caption)
+    post_id = post_facebook(comic, caption)
+    if post_id and category != "Fallback":
+        save_to_history(category)

@@ -21,6 +21,29 @@ SILVER      = (200, 200, 200)
 FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
+HISTORY_FILE = "posted_history.txt"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            return []
+    return []
+
+def save_to_history(item):
+    items = load_history()
+    items.append(item)
+    items = items[-300:] # Cap history
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            for it in items:
+                f.write(it + "\n")
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
+
 _LEADING_VOWELS  = set("เแโใไ")
 _COMBINING_CHARS = set("่้๊๋์ิีึืุูัํ็")
 
@@ -79,6 +102,7 @@ def _wrap_quote_line(draw, text, font, max_width):
 
 # -- ZenQuotes API --
 def get_quote():
+    history = set(load_history())
     for _ in range(5):
         try:
             resp = requests.get("https://zenquotes.io/api/random", timeout=10)
@@ -89,6 +113,9 @@ def get_quote():
                 quote  = item.get("q", "").strip()
                 author = item.get("a", "").strip()
                 if not quote or not author or author.lower() in ("unknown", "anonymous", ""):
+                    continue
+                if quote in history:
+                    print(f"Quote already posted: {quote[:40]}... Retrying.")
                     continue
                 print(f"Quote: {author} — {quote[:60]}")
                 return quote, author
@@ -427,6 +454,7 @@ def main():
 
         success = post_photo(caption, final_path)
         if success:
+            save_to_history(quote_en)
             return
 
     print("Failed after 5 attempts")

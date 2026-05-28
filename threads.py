@@ -26,6 +26,29 @@ if not GOOGLE_API_KEY:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 client = genai.Client(api_key=GOOGLE_API_KEY)
 
+HISTORY_FILE = "posted_history.txt"
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            return []
+    return []
+
+def save_to_history(item):
+    items = load_history()
+    items.append(item)
+    items = items[-300:] # Cap history
+    try:
+        with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+            for it in items:
+                f.write(it + "\n")
+    except Exception as e:
+        print(f"Error saving history: {e}")
+
+
 # ─── Topics (เหมือน post.py) ─────────────────────────────────────
 # เช้า: การเงินและวินัยการสร้างตัว (Financial Mindset & Social Realities)
 MORNING_TOPICS = [
@@ -91,22 +114,31 @@ LATE_TOPICS = [
 ]
 
 def get_topic():
+    history = set(load_history())
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
     hour = now.hour
-    day_of_year = now.timetuple().tm_yday
+    
     if hour < 10:
-        idx = day_of_year % len(MORNING_TOPICS)
-        return MORNING_TOPICS[idx], "morning"
+        topics = MORNING_TOPICS
+        slot = "morning"
     elif hour < 16:
-        idx = day_of_year % len(NOON_TOPICS)
-        return NOON_TOPICS[idx], "noon"
+        topics = NOON_TOPICS
+        slot = "noon"
     elif hour < 21:
-        idx = day_of_year % len(EVENING_TOPICS)
-        return EVENING_TOPICS[idx], "evening"
+        topics = EVENING_TOPICS
+        slot = "evening"
     else:
-        idx = day_of_year % len(LATE_TOPICS)
-        return LATE_TOPICS[idx], "late"
+        topics = LATE_TOPICS
+        slot = "late"
+
+    available = [t for t in topics if t not in history]
+    if not available:
+        print(f"All topics in {slot} slot have been posted. Resetting history for this slot.")
+        available = topics
+    
+    chosen = random.choice(available)
+    return chosen, slot
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
@@ -283,6 +315,44 @@ def _wrap_words(draw, text, font, max_width):
         lines.append(current)
     return lines
 
+def run_meme_mode():
+    """โหมดสุ่มรูปตลกมาโพส"""
+    print("Mode: MEME")
+    history = set(load_history())
+    for attempt in range(4):
+        img_url, subreddit = get_meme_image(history)
+        if not img_url:
+            continue
+        img_path = download_image(img_url)
+        if not img_path:
+            continue
+        desc = analyze_meme(img_path)
+        if not desc or "ไม่น่าสนใจ" in desc:
+            os.unlink(img_path)
+            continue
+        caption = generate_funny_caption(desc, subreddit)
+        caption += f"\n📷 via r/{subreddit}"
+        print(f"Funny caption:\n{caption}\n")
+        # upload ผ่าน ImgBB
+        hosted_url = upload_image_to_imgur(img_path)
+        post_threads(hosted_url, caption, img_path=img_path)
+        save_to_history(img_url)
+        os.unlink(img_path)
+        return
+    print("Meme mode failed after 4 attempts, fallback to quote mode")
+    run_quote_mode()
+
+
+def run_quote_mode():
+    """โหมดคำคม — PIL image + quote"""
+    topic, slot = get_topic()
+    quote    = generate_quote(topic, slot)
+    img_path = generate_image(quote)
+    img_url  = upload_image_to_imgur(img_path)
+    post_threads(img_url, quote, img_path=img_path)
+    save_to_history(topic)
+    if img_path and os.path.exists(img_path):
+        os.unlink(img_path)
 
 def wrap_thai(text, font, draw, max_width):
     """ตัดบรรทัดให้พอดีความกว้าง โดยพยายามรักษาคำ/วลีไทยไว้ก่อน"""
@@ -479,7 +549,9 @@ IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
 HEADERS_RSS = {"User-Agent": "Mozilla/5.0 (compatible; ThreadsBot/1.0; +github)"}
 
 
-def get_meme_image():
+def get_meme_image(history=None):
+    if history is None:
+        history = set()
     subreddit = random.choice(MEME_SUBREDDITS)
     url = f"https://www.reddit.com/r/{subreddit}/hot.rss"
     try:
@@ -492,7 +564,7 @@ def get_meme_image():
         for entry in entries:
             content   = entry.findtext("atom:content", "", ns)
             img_urls  = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content or "")
-            good_imgs = [u for u in img_urls if "i.redd.it" in u or "imgur.com" in u]
+            good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
             if good_imgs:
                 posts.append({"url": good_imgs[0], "subreddit": subreddit})
         if not posts:
@@ -572,40 +644,7 @@ def generate_funny_caption(image_desc, subreddit):
     return "555 😂\n#meme #ตลก"
 
 
-def run_meme_mode():
-    """โหมดมีมตลก — Reddit → Vision → funny caption → Threads"""
-    for attempt in range(4):
-        img_url, subreddit = get_meme_image()
-        if not img_url:
-            continue
-        img_path = download_image(img_url)
-        if not img_path:
-            continue
-        desc = analyze_meme(img_path)
-        if not desc or "ไม่น่าสนใจ" in desc:
-            os.unlink(img_path)
-            continue
-        caption = generate_funny_caption(desc, subreddit)
-        caption += f"\n📷 via r/{subreddit}"
-        print(f"Funny caption:\n{caption}\n")
-        # upload ผ่าน ImgBB
-        hosted_url = upload_image_to_imgur(img_path)
-        post_threads(hosted_url, caption, img_path=img_path)
-        os.unlink(img_path)
-        return
-    print("Meme mode failed after 4 attempts, fallback to quote mode")
-    run_quote_mode()
-
-
-def run_quote_mode():
-    """โหมดคำคม — PIL image + quote"""
-    topic, slot = get_topic()
-    quote    = generate_quote(topic, slot)
-    img_path = generate_image(quote)
-    img_url  = upload_image_to_imgur(img_path)
-    post_threads(img_url, quote, img_path=img_path)
-    if img_path and os.path.exists(img_path):
-        os.unlink(img_path)
+# Run modes are defined above.
 
 
 if __name__ == "__main__":
