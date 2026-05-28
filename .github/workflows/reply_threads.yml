@@ -37,10 +37,4 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add replied_comments.txt
-          if git diff --cached --quiet; then
-            echo "No changes in replied_comments.txt"
-          else
-            git commit -m "chore: update replied_comments.txt history [skip ci]"
-            git push
-          fi
+          python merge_history.py
