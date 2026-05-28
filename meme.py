@@ -13,7 +13,7 @@ from google.genai.types import HttpOptions
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODEL       = "gemini-2.0-flash-preview-image-generation"
+IMAGE_MODELS      = ["gemini-2.0-flash-exp", "gemini-2.0-flash-preview-image-generation"]
 TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]
 OUTPUT_DIR        = "output"
 FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
@@ -25,7 +25,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY, http_options=HttpOptions(timeout=300))
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options=HttpOptions(timeout=300000))
 
 HISTORY_FILE = "posted_history.txt"
 
@@ -209,32 +209,36 @@ def generate_panel_image(scene_en, panel_num):
         f"Scene: {scene_en}. "
         f"{ART_STYLE}"
     )
-    for attempt in range(3):
-        try:
-            resp = client.models.generate_content(
-                model=IMAGE_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE", "TEXT"]
+    for model in IMAGE_MODELS:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE", "TEXT"]
+                    )
                 )
-            )
-            for part in resp.candidates[0].content.parts:
-                if part.inline_data:
-                    data = part.inline_data.data
-                    if isinstance(data, str):
-                        data = base64.b64decode(data)
-                    bkk = timezone(timedelta(hours=7))
-                    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-                    path = os.path.join(OUTPUT_DIR, f"panel{panel_num}_{ts}.png")
-                    with open(path, "wb") as f:
-                        f.write(data)
-                    print(f"Panel {panel_num} saved: {path}")
-                    return path
-        except Exception as e:
-            print(f"Panel {panel_num} attempt {attempt+1} failed: {str(e)[:100]}")
-            if attempt < 2:
-                time.sleep(15)
-    raise RuntimeError(f"Panel {panel_num} generation failed after 3 attempts")
+                for part in resp.candidates[0].content.parts:
+                    if part.inline_data:
+                        data = part.inline_data.data
+                        if isinstance(data, str):
+                            data = base64.b64decode(data)
+                        bkk = timezone(timedelta(hours=7))
+                        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+                        path = os.path.join(OUTPUT_DIR, f"panel{panel_num}_{ts}.png")
+                        with open(path, "wb") as f:
+                            f.write(data)
+                        print(f"Panel {panel_num} saved: {path} (model={model})")
+                        return path
+            except Exception as e:
+                err = str(e)[:120]
+                print(f"Panel {panel_num} [{model}] attempt {attempt+1} failed: {err}")
+                if "404" in err or "not found" in err.lower():
+                    break  # ไม่ต้อง retry — model ไม่มี
+                if attempt < 2:
+                    time.sleep(15)
+    raise RuntimeError(f"Panel {panel_num} generation failed — all models exhausted")
 
 
 def stitch_panels(img1_path, img2_path, label1, label2):

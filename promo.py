@@ -7,12 +7,13 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
 from google.genai import types
+from google.genai.types import HttpOptions
 
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 WEBSITE_URL       = "https://shopee-ranking.vercel.app/"
-IMAGE_MODEL       = "gemini-3.1-flash-image-preview"
+IMAGE_MODELS      = ["gemini-2.0-flash-exp", "gemini-2.0-flash-preview-image-generation"]
 TEXT_MODEL        = "gemini-2.5-flash"
 OUTPUT_DIR        = "output"
 
@@ -23,7 +24,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options=HttpOptions(timeout=300000))
 
 PROMO_ANGLES = [
     "10 สินค้าขายดีที่สุดบน Shopee เดือนนี้ คุณซื้อไปแล้วกี่อัน?",
@@ -64,32 +65,36 @@ def generate_promo_image(angle):
         f"Thai text concept: {angle}. "
         f"Eye-catching, viral Facebook post style. No actual text needed."
     )
-    for attempt in range(3):
-        try:
-            resp = client.models.generate_content(
-                model=IMAGE_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_modalities=["IMAGE", "TEXT"]
+    for model in IMAGE_MODELS:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE", "TEXT"]
+                    )
                 )
-            )
-            for part in resp.candidates[0].content.parts:
-                if part.inline_data:
-                    data = part.inline_data.data
-                    if isinstance(data, str):
-                        data = base64.b64decode(data)
-                    bkk = timezone(timedelta(hours=7))
-                    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-                    path = os.path.join(OUTPUT_DIR, f"promo_{ts}.png")
-                    with open(path, "wb") as f:
-                        f.write(data)
-                    print(f"Image saved: {path}")
-                    return path
-        except Exception as e:
-            print(f"Attempt {attempt+1} failed: {str(e)[:100]}")
-            if attempt < 2:
-                time.sleep(15)
-    raise RuntimeError("Image generation failed")
+                for part in resp.candidates[0].content.parts:
+                    if part.inline_data:
+                        data = part.inline_data.data
+                        if isinstance(data, str):
+                            data = base64.b64decode(data)
+                        bkk = timezone(timedelta(hours=7))
+                        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+                        path = os.path.join(OUTPUT_DIR, f"promo_{ts}.png")
+                        with open(path, "wb") as f:
+                            f.write(data)
+                        print(f"Image saved: {path} (model={model})")
+                        return path
+            except Exception as e:
+                err = str(e)[:120]
+                print(f"[{model}] attempt {attempt+1} failed: {err}")
+                if "404" in err or "not found" in err.lower():
+                    break  # model ไม่มี — ลองตัวถัดไป
+                if attempt < 2:
+                    time.sleep(15)
+    raise RuntimeError("Image generation failed — all models exhausted")
 
 def post_facebook(img_path, caption):
     print("Posting promo to Facebook...")
