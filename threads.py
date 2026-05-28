@@ -24,7 +24,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY)
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
 HISTORY_FILE = "posted_history.txt"
 
@@ -457,7 +457,8 @@ def upload_image_to_imgur(img_path):
         img_data = base64.b64encode(f.read()).decode("utf-8")
     resp = requests.post(
         "https://api.imgbb.com/1/upload",
-        data={"key": IMGBB_API_KEY, "image": img_data}
+        data={"key": IMGBB_API_KEY, "image": img_data},
+        timeout=60
     )
     result = resp.json()
     if result.get("success"):
@@ -477,7 +478,8 @@ def _create_and_publish(text, reply_to_id=None):
         data["reply_to_id"] = reply_to_id
     resp = requests.post(
         f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
-        data=data
+        data=data,
+        timeout=60
     )
     container_id = resp.json().get("id")
     if not container_id:
@@ -486,7 +488,8 @@ def _create_and_publish(text, reply_to_id=None):
     time.sleep(3)
     resp2 = requests.post(
         f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
-        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN}
+        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN},
+        timeout=60
     )
     result = resp2.json()
     return result.get("id")
@@ -501,7 +504,8 @@ def post_threads(image_url, caption, img_path=None):
             "image_url": image_url,
             "text": caption,
             "access_token": THREADS_ACCESS_TOKEN,
-        }
+        },
+        timeout=60
     )
     result = resp.json()
     if "id" not in result:
@@ -514,7 +518,8 @@ def post_threads(image_url, caption, img_path=None):
     # Step 2: Publish
     resp2 = requests.post(
         f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
-        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN}
+        data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN},
+        timeout=60
     )
     result2 = resp2.json()
     if "id" not in result2:

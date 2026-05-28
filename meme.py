@@ -24,7 +24,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY)
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
 HISTORY_FILE = "posted_history.txt"
 
@@ -314,7 +314,8 @@ def post_facebook(img_path, caption):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos",
             data={"access_token": PAGE_ACCESS_TOKEN, "caption": caption, "published": "true"},
-            files={"source": ("meme.jpg", f, "image/jpeg")}
+            files={"source": ("meme.jpg", f, "image/jpeg")},
+            timeout=60
         )
     result = resp.json()
     if "id" in result:
@@ -347,6 +348,7 @@ def add_comment(post_id):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
             data=data,
+            timeout=60
         )
         result = resp.json()
         if "id" in result:

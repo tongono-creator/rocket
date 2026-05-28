@@ -35,7 +35,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY)
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
 # --- แหล่งข่าวซับเรดดิตยอดนิยม (เน้นเทคโนโลยี วิทยาศาสตร์ และเรื่องราวน่าสนใจระดับโลก) ---
 NEWS_SUBREDDITS = [

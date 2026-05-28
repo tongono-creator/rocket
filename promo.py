@@ -23,7 +23,7 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY)
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
 PROMO_ANGLES = [
     "10 สินค้าขายดีที่สุดบน Shopee เดือนนี้ คุณซื้อไปแล้วกี่อัน?",
@@ -97,7 +97,8 @@ def post_facebook(img_path, caption):
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos",
             data={"access_token": PAGE_ACCESS_TOKEN, "caption": caption, "published": "true"},
-            files={"source": ("promo.png", f, "image/png")}
+            files={"source": ("promo.png", f, "image/png")},
+            timeout=60
         )
     result = resp.json()
     if "id" in result:

@@ -28,7 +28,7 @@ if not THREADS_ACCESS_TOKEN or not THREADS_USER_ID:
     print("Error: THREADS_ACCESS_TOKEN หรือ THREADS_USER_ID ว่างเปล่า")
     sys.exit(1)
 
-client = genai.Client(api_key=GOOGLE_API_KEY)
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
 def load_replied_history():
     if not os.path.exists(HISTORY_FILE):
