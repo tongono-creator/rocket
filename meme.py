@@ -13,7 +13,7 @@ from google.genai.types import HttpOptions
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODELS      = ["gemini-2.0-flash-exp", "gemini-2.0-flash-preview-image-generation"]
+IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
 TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]
 OUTPUT_DIR        = "output"
 FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
