@@ -2,3 +2,4 @@ google-genai
 requests
 openpyxl
 Pillow
+feedparser
