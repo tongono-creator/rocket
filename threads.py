@@ -266,16 +266,46 @@ IMG_SIZE  = 1080
 _LEADING_VOWELS  = set('เแโใไ')
 _COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
 
+def contains_thai(text):
+    if not text:
+        return False
+    return bool(re.search(r'[\u0e00-\u0e7f]', text))
+
+def segment_thai_text(text, client):
+    if not text or not contains_thai(text):
+        return text
+    prompt = (
+        "You are an expert Thai word segmentation tool. "
+        "Your task is to insert a zero-width space character (\\u200b) at every natural word boundary in the provided Thai text. "
+        "Strict rules:\n"
+        "1. Do NOT modify, delete, or add any words, characters, punctuation, spaces, or newlines of the original text. "
+        "Keep the exact same characters and layout.\n"
+        "2. Do NOT add any introductory or concluding remarks. Output ONLY the segmented text.\n"
+        "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
+        f"Text to segment:\n{text}"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            segmented = resp.text.strip().replace('\\u200b', '\u200b')
+            clean_orig = text.replace('\u200b', '').replace('\\u200b', '')
+            clean_seg = segmented.replace('\u200b', '').replace('\\u200b', '')
+            if len(clean_orig) == len(clean_seg):
+                return segmented
+        except Exception as e:
+            print(f"[{model}] segment_thai_text failed: {e}")
+    return text
+
 def _wrap_char(draw, text, font, max_width):
-    """ตัดบรรทัด char-by-char — รองรับภาษาไทยที่ไม่มี space
-    - combining chars (วรรณยุกต์/สระ) ไม่ขึ้นบรรทัดใหม่เด็ดขาด
-    - สระนำหน้า (เแโใไ) ไม่ค้างท้ายบรรทัด — ดึงติดพยัญชนะถัดไป
-    """
+    if '\u200b' in text or '\\u200b' in text:
+        tokens = text.replace('\\u200b', '\u200b').split('\u200b')
+    else:
+        tokens = list(text)
     lines, current = [], ""
-    for ch in text:
-        test = current + ch
+    for token in tokens:
+        test = current + token
         fits = draw.textbbox((0, 0), test, font=font)[2] <= max_width
-        if fits or ch in _COMBINING_CHARS:
+        if fits or (len(token) == 1 and token in _COMBINING_CHARS):
             current = test
         else:
             if current:
@@ -284,12 +314,12 @@ def _wrap_char(draw, text, font, max_width):
                     current = current[:-1]
                     if current:
                         lines.append(current)
-                    current = orphan + ch
+                    current = orphan + token
                 else:
                     lines.append(current)
-                    current = ch
+                    current = token
             else:
-                current = ch
+                current = token
     if current:
         lines.append(current)
     return lines or [text]
@@ -370,6 +400,7 @@ def run_quote_mode():
     """โหมดคำคม — PIL image + quote"""
     topic, slot = get_topic()
     quote    = generate_quote(topic, slot)
+    quote    = segment_thai_text(quote, client)
     img_path = generate_image(quote)
     img_url  = upload_image_to_imgur(img_path)
     post_threads(img_url, quote, img_path=img_path)

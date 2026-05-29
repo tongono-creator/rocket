@@ -37,6 +37,71 @@ if not GOOGLE_API_KEY:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
+# --- Thai Helpers and Fallbacks ---
+def contains_thai(text):
+    if not text:
+        return False
+    return bool(re.search(r'[\u0e00-\u0e7f]', text))
+
+def segment_thai_text(text, client=client):
+    if not text or not contains_thai(text):
+        return text
+    prompt = (
+        "You are an expert Thai word segmentation tool. "
+        "Your task is to insert a zero-width space character (\\u200b) at every natural word boundary in the provided Thai text. "
+        "Strict rules:\n"
+        "1. Do NOT modify, delete, or add any words, characters, punctuation, spaces, or newlines of the original text. "
+        "Keep the exact same characters and layout.\n"
+        "2. Do NOT add any introductory or concluding remarks. Output ONLY the segmented text.\n"
+        "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
+        f"Text to segment:\n{text}"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            segmented = resp.text.strip()
+            clean_orig = text.replace('\\u200b', '')
+            clean_seg = segmented.replace('\\u200b', '')
+            if len(clean_orig) == len(clean_seg):
+                return segmented
+        except Exception as e:
+            print(f"[{model}] segment_thai_text failed: {e}")
+    return text
+
+def translate_to_thai(text):
+    if not text:
+        return ""
+    if contains_thai(text):
+        return text
+    prompt = f"Translate the following technology/science news text to natural Thai. Only output the translation, no explanation:\n\n{text}"
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            translated = resp.text.strip()
+            if contains_thai(translated):
+                return translated
+        except Exception as e:
+            print(f"[{model}] Translation failed: {e}")
+    return text  # Fallback to original text if translation fails
+
+FALLBACK_NEWS = [
+    {
+        "line1": "ความสำเร็จขั้นสุด",
+        "line2": "นักวิทย์ผลิตแบตเตอรี่โซลิดสเตตสำเร็จ",
+        "caption": "นักวิทยาศาสตร์ประสบความสำเร็จในการพัฒนาแบตเตอรี่โซลิดสเตต (Solid-State Battery) รุ่นใหม่ที่มีความหนาแน่นพลังงานสูงกว่าเดิมถึง 2 เท่า และสามารถชาร์จเต็มได้ภายในเวลาเพียง 5 นาทีครับ\n\nเทคโนโลยีนี้คาดว่าจะถูกนำมาใช้งานในรถยนต์ไฟฟ้า (EV) ยุคถัดไป ซึ่งจะช่วยแก้ปัญหาเรื่องระยะเวลาการชาร์จและเพิ่มความปลอดภัยอย่างมาก เนื่องจากไม่มีของเหลวไวไฟอยู่ภายในเหมือนแบตเตอรี่ลิเธียมไอออนทั่วไปครับ\n\nทุกท่านคิดว่าเทคโนโลยีแบตเตอรี่ใหม่นี้จะเปลี่ยนโฉมวงการรถยนต์ไฟฟ้าได้เร็วแค่ไหนครับ ลองคอมเมนต์คุยกันได้เลยครับ\n\n#เทคโนโลยี #แบตเตอรี่ #รถยนต์ไฟฟ้า"
+    },
+    {
+        "line1": "เทคโนโลยีสุดล้ำ",
+        "line2": "จีนสร้างศูนย์ข้อมูล AI ใต้น้ำเป็นที่แรก",
+        "caption": "วิศวกรจีนประสบความสำเร็จในการจัดตั้งศูนย์ข้อมูล (Data Center) สำหรับ AI ใต้ทะเลลึกเพื่อใช้ประโยชน์จากน้ำทะเลเย็นในการช่วยระบายความร้อนให้กับเครื่องเซิร์ฟเวอร์ครับ\n\nการย้ายศูนย์ข้อมูลลงใต้น้ำช่วยประหยัดพลังงานไฟฟ้าที่ใช้ในระบบหล่อเย็นได้มากกว่า 40% และยังช่วยประหยัดพื้นที่บนบกที่มีราคาสูงอีกด้วย โดยระบบทั้งหมดถูกออกแบบมาให้ทนทานต่อแรงดันน้ำและการกัดกร่อนของเกลือทะเลได้เป็นอย่างดีครับ\n\nทุกท่านคิดว่าไอเดียการสร้างดาต้าเซ็นเตอร์ใต้น้ำแบบนี้จะกลายเป็นมาตรฐานใหม่ในอนาคตไหมครับ\n\n#ศูนย์ข้อมูลใต้น้ำ #ปัญญาประดิษฐ์ #เทคโนโลยีจีน"
+    },
+    {
+        "line1": "การค้นพบใหม่",
+        "line2": "นาซาพบเบาะแสน้ำเหลวบนดาวอังคาร",
+        "caption": "ยานสำรวจรุ่นล่าสุดขององค์การนาซา (NASA) ได้ค้นพบหลักฐานใหม่ที่บ่งชี้ถึงการมีอยู่ของแหล่งน้ำไหลที่เป็นของเหลวใต้พื้นผิวดาวอังคารในอดีต ซึ่งอาจเป็นกุญแจสำคัญในการค้นหาสิ่งมีชีวิตนอกโลกครับ\n\nข้อมูลระบุว่าน้ำดังกล่าวอาจมีความเค็มจัดจนไม่แข็งตัวภายใต้อุณหภูมิที่หนาวเย็นของดาวอังคาร ทำให้นักวิทยาศาสตร์มีความหวังมากขึ้นในการส่งภารกิจสำรวจที่มีมนุษย์ควบคุมไปลงจอดในพื้นที่ดังกล่าวในอนาคตครับ\n\nคิดว่าเราจะได้เห็นมนุษย์คนแรกไปเหยียบดาวอังคารภายในทศวรรษนี้ไหมครับ ลองแบ่งปันมุมมองกันได้ครับ\n\n#นาซา #ดาวอังคาร #ดาราศาสตร์"
+    }
+]
+
 # --- แหล่งข่าวซับเรดดิตยอดนิยม (เน้นเทคโนโลยี วิทยาศาสตร์ และเรื่องราวน่าสนใจระดับโลก) ---
 NEWS_SUBREDDITS = [
     "technology",
@@ -167,13 +232,26 @@ def generate_news_content(img_bytes, reddit_title, sub, original_link):
                 if original_link:
                     caption += f"\n.\nที่มา: {original_link}"
 
-                return line1, line2, caption
+                return line1, line2, caption, False
             except Exception as e:
                 print(f"[{model}] attempt {attempt + 1} failed: {e}")
                 time.sleep(5)
                 
     # Fallback if all models and attempts fail
-    return "ข่าวเด่นวันนี้", reddit_title[:30], f"{reddit_title}\n\n#เทคโนโลยี #ข่าวสาร\nที่มา: {original_link}"
+    translated_title = translate_to_thai(reddit_title)
+    if contains_thai(translated_title):
+        line1 = "ข่าวเด่นวันนี้"
+        line2 = translated_title[:30] if len(translated_title) <= 30 else translated_title[:27] + "..."
+        caption = f"{translated_title}\n\nรายละเอียดเพิ่มเติมกำลังตามมาครับ ติดตามอัปเดตข่าวสารเทคโนโลยีกับพวกเราได้เลยครับ\n\n#เทคโนโลยี #ข่าวสาร"
+        if original_link:
+            caption += f"\n.\nที่มา: {original_link}"
+        return line1, line2, caption, False
+
+    fb = random.choice(FALLBACK_NEWS)
+    caption = fb["caption"]
+    if original_link:
+        caption += f"\n.\nที่มา: {original_link}"
+    return fb["line1"], fb["line2"], caption, True
 
 def post_facebook(img_path, caption):
     """โพสต์รูปภาพข่าวพร้อมแคปชั่นลงเพจ Facebook"""
@@ -250,24 +328,31 @@ def main():
         f.write(news["img_bytes"])
 
     # เจนเนอเรตเนื้อหาข่าว
-    line1, line2, caption = generate_news_content(
+    line1, line2, caption, is_static_fallback = generate_news_content(
         news["img_bytes"], 
         news["reddit_title"], 
         news["subreddit"],
         news["link"]
     )
+    line1 = segment_thai_text(line1, client)
+    line2 = segment_thai_text(line2, client)
     print(f"Hook generated: {line1} | {line2}")
     print(f"Caption:\n{caption}\n")
 
     # ใส่ overlay ข้อความบนรูปภาพ
     out_path = os.path.join(OUTPUT_DIR, f"news_{int(time.time())}.jpg")
     try:
-        final_img = add_overlay(temp_path, line1, line2, accent_color=ACCENT_COLOR, out_path=out_path)
-        os.unlink(temp_path)
+        img_to_overlay = None if is_static_fallback else temp_path
+        final_img = add_overlay(img_to_overlay, line1, line2, accent_color=ACCENT_COLOR, out_path=out_path)
+        if os.path.exists(temp_path):
+            try:
+                os.unlink(temp_path)
+            except Exception:
+                pass
         print(f"Overlay created: {final_img}")
     except Exception as e:
-        print(f"Overlay failed, using raw image: {e}")
-        final_img = temp_path
+        print(f"Overlay failed: {e}")
+        final_img = None if is_static_fallback else temp_path
 
     # โพสต์หรือหยุดทำแห้ง (dry-run)
     if args.dry_run:
