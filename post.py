@@ -418,9 +418,17 @@ def wrap_thai(text, font, draw, max_width):
 
     if " " in text.strip():
         lines = _wrap_words(draw, text, font, max_width)
+        if getattr(font, "size", 99) <= 75:
+            new_lines = []
+            for l in lines:
+                if draw.textbbox((0, 0), l, font=font)[2] > max_width:
+                    new_lines.extend(_wrap_char(draw, l, font, max_width))
+                else:
+                    new_lines.append(l)
+            lines = new_lines
     else:
         # อย่ารีบผ่าคำไทยตอน font ยังใหญ่ ให้ auto-fit ลด font ก่อน
-        lines = [text] if getattr(font, "size", 99) > 42 else _wrap_char(draw, text, font, max_width)
+        lines = [text] if getattr(font, "size", 99) > 75 else _wrap_char(draw, text, font, max_width)
     return _balance_last(draw, lines, font, max_width)
 
 def _build_lines(quote, font_main, font_hash, draw, max_w):

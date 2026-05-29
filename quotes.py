@@ -96,8 +96,17 @@ def _wrap_quote_line(draw, text, font, max_width):
     if not text or draw.textbbox((0, 0), text, font=font)[2] <= max_width:
         return [text] if text else []
     if " " in text:
-        return _wrap_words(draw, text, font, max_width)
-    return [text] if getattr(font, "size", 99) > 42 else _wrap_char(draw, text, font, max_width)
+        lines = _wrap_words(draw, text, font, max_width)
+        if getattr(font, "size", 99) <= 75:
+            new_lines = []
+            for l in lines:
+                if draw.textbbox((0, 0), l, font=font)[2] > max_width:
+                    new_lines.extend(_wrap_char(draw, l, font, max_width))
+                else:
+                    new_lines.append(l)
+            lines = new_lines
+        return lines
+    return [text] if getattr(font, "size", 99) > 75 else _wrap_char(draw, text, font, max_width)
 
 
 # -- ZenQuotes API --
@@ -301,6 +310,11 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
     render_source = [l.strip() for l in lines if l and l.strip()]
     if not render_source:
         render_source = ["คำคมวันนี้"]
+    
+    # Prepend/append quotes to the text before wrapping
+    render_source_with_quotes = [l for l in render_source]
+    render_source_with_quotes[0] = "“" + render_source_with_quotes[0]
+    render_source_with_quotes[-1] = render_source_with_quotes[-1] + "”"
 
     font_size = 120
     while font_size >= 42:
@@ -312,10 +326,8 @@ def make_quote_image(lines, author_en, author_thai, img_path=None):
             font_big = font_author = font_sub = ImageFont.load_default()
 
         render_lines = []
-        for line in render_source:
+        for line in render_source_with_quotes:
             render_lines.extend(_wrap_quote_line(draw, line, font_big, zone_w))
-        render_lines[0] = "“" + render_lines[0]
-        render_lines[-1] = render_lines[-1] + "”"
 
         line_gap = max(12, font_size // 6)
         line_heights = [
