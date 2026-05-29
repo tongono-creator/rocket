@@ -23,6 +23,22 @@ HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
 HISTORY_FILE = "posted_history.txt"
 
+def contains_thai(text):
+    return any("\u0e00" <= char <= "\u0e7f" for char in text)
+
+FALLBACK_QUOTES = [
+    {"quote": "หนทางเดียวที่จะทำงานที่ยิ่งใหญ่ได้ คือรักในสิ่งที่คุณทำ", "author_en": "Steve Jobs", "author_thai": "สตีฟ จอบส์"},
+    {"quote": "จงเป็นตัวของตัวเอง เพราะคนอื่นมีคนเป็นไปหมดแล้ว", "author_en": "Oscar Wilde", "author_thai": "ออสการ์ ไวลด์"},
+    {"quote": "ความล้มเหลวที่แท้จริงเพียงอย่างเดียวในชีวิต คือการไม่เรียนรู้จากมัน", "author_en": "Albert Einstein", "author_thai": "อัลเบิร์ต ไอน์สไตน์"},
+    {"quote": "สิ่งที่อยู่ข้างหลังเราและสิ่งที่อยู่ข้างหน้าเรา เป็นเรื่องเล็กน้อยมากเมื่อเทียบกับสิ่งที่อยู่ภายในตัวเรา", "author_en": "Ralph Waldo Emerson", "author_thai": "ราล์ฟ วัลโด เอเมอร์สัน"},
+    {"quote": "อย่ากลัวที่จะละทิ้งสิ่งที่ดี เพื่อไปหาสิ่งที่ยอดเยี่ยมกว่า", "author_en": "John D. Rockefeller", "author_thai": "จอห์น ดี. ร็อกกี้เฟลเลอร์"},
+    {"quote": "ความลับของความก้าวหน้า คือการเริ่มต้น", "author_en": "Mark Twain", "author_thai": "มาร์ก ทเวน"},
+    {"quote": "สิ่งที่คุณทำในวันนี้ สามารถปรับปรุงอนาคตทั้งหมดของคุณได้", "author_en": "Ralph Marston", "author_thai": "ราล์ฟ มาร์สตัน"},
+    {"quote": "เชื่อว่าคุณทำได้ และคุณก็ไปได้ครึ่งทางแล้ว", "author_en": "Theodore Roosevelt", "author_thai": "ธีโอดอร์ รูสเวลต์"},
+    {"quote": "ชีวิตคือสิ่งที่เกิดขึ้นในขณะที่คุณกำลังยุ่งอยู่กับการวางแผนอื่นๆ", "author_en": "John Lennon", "author_thai": "จอห์น เลนนอน"},
+    {"quote": "เวลาของคุณมีจำกัด อย่าเสียเวลาไปกับการใช้ชีวิตของคนอื่น", "author_en": "Steve Jobs", "author_thai": "สตีฟ จอบส์"}
+]
+
 def load_history():
     if os.path.exists(HISTORY_FILE):
         try:
@@ -449,7 +465,15 @@ def main():
             continue
 
         quote_thai  = translate_quote(quote_en, author_en)
-        author_thai = transliterate_author(author_en)
+        if not quote_thai or not contains_thai(quote_thai):
+            print("Translation returned no Thai text. Using a local famous Thai quote fallback...")
+            fallback = random.choice(FALLBACK_QUOTES)
+            quote_thai = fallback["quote"]
+            author_en = fallback["author_en"]
+            author_thai = fallback["author_thai"]
+        else:
+            author_thai = transliterate_author(author_en)
+            
         lines       = split_quote_lines(quote_thai)
 
         # หารูปผู้พูด
