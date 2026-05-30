@@ -34,18 +34,118 @@ if not GOOGLE_API_KEY:
     except ImportError:
         pass
 
+API_ENABLED = True
+
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
+client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 15000.0})
 
 # --- Thai Helpers and Fallbacks ---
+_LEADING_VOWELS  = set('เแโใไ')
+_COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
+
+THAI_WORDS = [
+    "รายละเอียด", "โปรโมชั่น", "เครื่องมือ", "คอมพิวเตอร์", "แอปพลิเคชัน", "เก็บเงินปลายทาง",
+    "โทรศัพท์", "แบตเตอรี่", "บัตรเครดิต", "พร้อมส่ง", "จัดส่ง", "ต่างประเทศ",
+    "พรีออเดอร์", "ประหยัด", "ปลอดภัย", "คุ้มค่า", "สะดวกสบาย", "ธรรมชาติ",
+    "คุณภาพ", "ภาพถ่าย", "พลาสติก", "ของแท้", "รับประกัน", "ลิขสิทธิ์",
+    "แนะนำ", "สินค้า", "รีวิว", "สุดยอด", "ดีที่สุด", "สะดวก", "สบาย", "ง่ายดาย",
+    "รวดเร็ว", "โปรโมชั่", "ส่วนลด", "คูปอง", "จัดส่ง", "ประกัน",
+    "ชาร์จ", "หน้าจอ", "ลำโพง", "หูฟัง", "กล้อง", "เลนส์", "มือถือ", "ปุ่มกด",
+    "สำหรับ", "เกี่ยวกับ", "อย่างไร", "เมื่อไหร่", "ที่ไหน", "เท่าไหร่",
+    "ทุกคน", "ทุกวัน", "ทุกคืน", "สุดท้าย", "แรกเริ่ม", "จริงจัง",
+    "สวัสดี", "ขอบคุณ", "ขอโทษ", "ยินดี", "หัวเราะ", "ร้องไห้",
+    "ทำงาน", "พักผ่อน", "ออกกำลัง", "ท่องเที่ยว", "เดินทาง",
+    "เก้าอี้", "โต๊ะทำงาน", "เบาะรอง", "พิงหลัง", "สายรัด", "การ์ตูน",
+    "กระเป๋า", "รองเท้า", "เสื้อผ้า", "กางเกง", "นาฬิกา", "แว่นตา", "เครื่อง", "ระบบ",
+    "ความสุข", "ร่างกาย", "สุขภาพ", "ออกกำลัง", "อาหาร", "ผลไม้", "น้ำดื่ม", "กาแฟ",
+    "ราคา", "พิเศษ", "ทั่วไป", "ส่งฟรี", "ลดราคา", "ของแถม", "ปลายทาง",
+    "ชั่วโมง", "นาที", "วินาที", "สัปดาห์", "ปีใหม่", "วันนี้", "พรุ่งนี้", "เมื่อวาน",
+    "ใครก็ตาม", "สิ่งใด", "ทั้งหมด", "บางส่วน", "ประเภท", "รูปแบบ",
+    "ติดตาม", "กดไลก์", "แชร์โพส", "คอมเมนต์", "คลิกลิงก์", "พิกัด", "ชี้เป้า",
+    "ค่ะ", "ครับ", "ผม", "เรา", "คุณ", "ท่าน",
+    "พี่", "น้อง", "พ่อ", "แม่", "เพื่อน", "บ้าน", "เมือง", "เวลา", "ดีใจ", "เสียใจ", 
+    "รัก", "ชอบ", "เกลียด", "กลัว", "โกรธ", "ทำ", "กิน", "นอน", "เดิน", "วิ่ง", "นั่ง", 
+    "ยืน", "พูด", "ฟัง", "ดู", "เห็น", "คิด", "รู้", "จำ", "ลืม", "เรียน", "เล่น", "ซื้อ", 
+    "ขาย", "ราคา", "ถูก", "แพง", "ลด", "แถม", "ส่ง", "ด่วน", "ฟรี", "รับ", "ศูนย์",
+    "แท้", "ใหม่", "เก่า", "แรก", "นี้", "นั้น", "โน้น", "นี่", "นั่น", "โน่น", "อะไร", 
+    "ใคร", "กี่", "บ้าง", "ทุก", "บาง", "จริง", "จัง", "แท้", "เทียม", "ปลอม", "สาย", 
+    "เคส", "ฟิล์ม", "ภาพ", "รูป", "เสียง", "เพลง", "หนัง", "เกม", "แอป", "เว็บ", "เน็ต", 
+    "โค้ด", "โอน", "หวย", "ออก", "เงิน", "เก็บ", "แสน", "แรก", "งาน", "การ", "ช่วย", 
+    "บอก", "ให้", "คน", "ทอง", "ร้อย", "พัน", "หมื่น", "ล้าน", "มาก", "น้อย", "ดี", 
+    "เลว", "ชั่ว", "สูง", "ต่ำ", "ดำ", "ขาว", "แดง", "เขียว", "เหลือง", "ฟ้า", "ส้ม", 
+    "ชมพู", "ม่วง", "เทา", "สวย", "หล่อ", "และ", "หรือ", "แต่", "ที่", "ซึ่ง", "อัน", 
+    "ของ", "เพื่อ", "ใน", "จาก", "โดย", "ตาม", "กับ", "มี", "เป็น", "จะ", "ต้อง", 
+    "อยาก", "นุ่ม", "แข็ง", "ใหญ่", "เล็ก", "ยาว", "สั้น", "กว้าง", "แคบ", "หนา", 
+    "บาง", "ร้อน", "เย็น", "อุ่น", "หนาว", "ง่าย", "ยาก", "เร็ว", "ช้า", "ได้", 
+    "เลย", "ด้วย", "จาก", "ถึง", "จน", "กว่า", "ก็", "ยัง", "อีก", "แล้ว", "นะ", 
+    "สิ", "ละ", "หน่อย", "นิด", "ชิ้น", "กล่อง", "อัน", "ตัว", "ใบ", "คู่", "ชุด", 
+    "แผ่น", "ม้วน"
+]
+
 def contains_thai(text):
     if not text:
         return False
     return bool(re.search(r'[\u0e00-\u0e7f]', text))
 
+def local_segment_thai(text):
+    if not text:
+        return ""
+    word_set = set(THAI_WORDS)
+    max_len = max(len(w) for w in THAI_WORDS)
+    
+    result = []
+    i = 0
+    n = len(text)
+    
+    while i < n:
+        if not contains_thai(text[i]):
+            result.append(text[i])
+            i += 1
+            continue
+            
+        matched = False
+        for l in range(min(max_len, n - i), 0, -1):
+            substr = text[i:i+l]
+            if substr in word_set:
+                result.append(substr)
+                i += l
+                matched = True
+                break
+        
+        if not matched:
+            start = i
+            while i < n and contains_thai(text[i]):
+                word_matched_here = False
+                if i > start:
+                    for l in range(min(max_len, n - i), 0, -1):
+                        if text[i:i+l] in word_set:
+                            word_matched_here = True
+                            break
+                if word_matched_here:
+                    break
+                i += 1
+            result.append(text[start:i])
+            
+    output = []
+    for idx, part in enumerate(result):
+        if idx > 0:
+            prev_char = result[idx-1][-1]
+            curr_char = part[0]
+            if (contains_thai(prev_char) and contains_thai(curr_char) and 
+                prev_char != '\u200b' and curr_char != '\u200b' and
+                curr_char not in _COMBINING_CHARS and
+                prev_char not in _LEADING_VOWELS):
+                output.append('\u200b')
+        output.append(part)
+        
+    return "".join(output)
+
 def segment_thai_text(text, client=client):
+    global API_ENABLED
     if not text or not contains_thai(text):
         return text
+    if not API_ENABLED:
+        return local_segment_thai(text)
     prompt = (
         "You are an expert Thai word segmentation tool. "
         "Your task is to insert a zero-width space character (\\u200b) at every natural word boundary in the provided Thai text. "
@@ -66,7 +166,36 @@ def segment_thai_text(text, client=client):
                 return segmented
         except Exception as e:
             print(f"[{model}] segment_thai_text failed: {e}")
-    return text
+    print("[Warning] segment_thai_text failed on all models. Disabling API calls for this run.")
+    API_ENABLED = False
+    return local_segment_thai(text)
+
+def verify_image_title_match(img_bytes, reddit_title):
+    global API_ENABLED
+    if not API_ENABLED:
+        return True
+    prompt = (
+        f"Analyze this image and the Reddit thread title: '{reddit_title}'. "
+        "Do the title and the image describe/show the same event, object, or subject matter? "
+        "(e.g. if the title is about space telescopes and the image shows a chess board, they do NOT match). "
+        "Output ONLY 'yes' or 'no' in lowercase, without punctuation."
+    )
+    part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(
+                model=model,
+                contents=[part, prompt]
+            )
+            result = resp.text.strip().lower()
+            print(f"[{model}] Image-title match verification result: '{result}'")
+            if "yes" in result:
+                return True
+            elif "no" in result:
+                return False
+        except Exception as e:
+            print(f"[{model}] verify_image_title_match failed: {e}")
+    return True
 
 def translate_to_thai(text):
     if not text:
@@ -164,7 +293,7 @@ def fetch_interesting_news():
                     # ตรวจสอบความถูกต้องของภาพ
                     Image.open(BytesIO(img_bytes)).verify()
                     
-                    return {
+                    yield {
                         "img_bytes": img_bytes,
                         "reddit_title": getattr(entry, "title", ""),
                         "subreddit": sub,
@@ -176,7 +305,6 @@ def fetch_interesting_news():
         except Exception as e:
             print(f"Failed to fetch from r/{sub}: {e}")
             continue
-    return None
 
 def generate_news_content(img_bytes, reddit_title, sub, original_link):
     """ส่งให้ Gemini Vision ช่วยแปล วิเคราะห์ และแต่งข้อความพาดหัว+แคปชั่นข่าวในสไตล์แอดมินเพจผู้ชาย"""
@@ -314,53 +442,62 @@ def main():
     args = parser.parse_args()
 
     print("=== Rocket21 News Bot ===")
-    news = fetch_interesting_news()
-    if not news:
-        print("No suitable news with image found.")
-        return
+    
+    news_found = False
+    for news in fetch_interesting_news():
+        print(f"Candidate Subreddit: r/{news['subreddit']}")
+        print(f"Title: {news['reddit_title']}")
+        
+        # Verify if image matches the title
+        if not verify_image_title_match(news["img_bytes"], news["reddit_title"]):
+            print(f"[Warning] Image and Title mismatch for: '{news['reddit_title']}'. Skipping.")
+            continue
+            
+        news_found = True
+        
+        # โหลดไฟล์ภาพชั่วคราว
+        temp_path = "temp_news.jpg"
+        with open(temp_path, "wb") as f:
+            f.write(news["img_bytes"])
 
-    print(f"Selected Subreddit: r/{news['subreddit']}")
-    print(f"Title: {news['reddit_title']}")
+        # เจนเนอเรตเนื้อหาข่าว
+        line1, line2, caption, is_static_fallback = generate_news_content(
+            news["img_bytes"], 
+            news["reddit_title"], 
+            news["subreddit"],
+            news["link"]
+        )
+        line1 = segment_thai_text(line1, client)
+        line2 = segment_thai_text(line2, client)
+        print(f"Hook generated: {line1} | {line2}")
+        print(f"Caption:\n{caption}\n")
 
-    # โหลดไฟล์ภาพชั่วคราว
-    temp_path = "temp_news.jpg"
-    with open(temp_path, "wb") as f:
-        f.write(news["img_bytes"])
+        # ใส่ overlay ข้อความบนรูปภาพ
+        out_path = os.path.join(OUTPUT_DIR, f"news_{int(time.time())}.jpg")
+        try:
+            img_to_overlay = None if is_static_fallback else temp_path
+            final_img = add_overlay(img_to_overlay, line1, line2, accent_color=ACCENT_COLOR, out_path=out_path)
+            if os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except Exception:
+                    pass
+            print(f"Overlay created: {final_img}")
+        except Exception as e:
+            print(f"Overlay failed: {e}")
+            final_img = None if is_static_fallback else temp_path
 
-    # เจนเนอเรตเนื้อหาข่าว
-    line1, line2, caption, is_static_fallback = generate_news_content(
-        news["img_bytes"], 
-        news["reddit_title"], 
-        news["subreddit"],
-        news["link"]
-    )
-    line1 = segment_thai_text(line1, client)
-    line2 = segment_thai_text(line2, client)
-    print(f"Hook generated: {line1} | {line2}")
-    print(f"Caption:\n{caption}\n")
+        # โพสต์หรือหยุดทำแห้ง (dry-run)
+        if args.dry_run:
+            print(f"Dry-run mode complete. Local image path: {final_img}")
+        else:
+            post_facebook(final_img, caption)
+            if os.path.exists(final_img):
+                os.unlink(final_img)
+        break
 
-    # ใส่ overlay ข้อความบนรูปภาพ
-    out_path = os.path.join(OUTPUT_DIR, f"news_{int(time.time())}.jpg")
-    try:
-        img_to_overlay = None if is_static_fallback else temp_path
-        final_img = add_overlay(img_to_overlay, line1, line2, accent_color=ACCENT_COLOR, out_path=out_path)
-        if os.path.exists(temp_path):
-            try:
-                os.unlink(temp_path)
-            except Exception:
-                pass
-        print(f"Overlay created: {final_img}")
-    except Exception as e:
-        print(f"Overlay failed: {e}")
-        final_img = None if is_static_fallback else temp_path
-
-    # โพสต์หรือหยุดทำแห้ง (dry-run)
-    if args.dry_run:
-        print(f"Dry-run mode complete. Local image path: {final_img}")
-    else:
-        post_facebook(final_img, caption)
-        if os.path.exists(final_img):
-            os.unlink(final_img)
+    if not news_found:
+        print("No suitable news with matching image found.")
 
 if __name__ == "__main__":
     main()
