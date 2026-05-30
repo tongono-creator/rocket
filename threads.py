@@ -124,10 +124,10 @@ def get_topic():
     if hour < 10:
         topics = MORNING_TOPICS
         slot = "morning"
-    elif hour < 16:
+    elif hour < 13:
         topics = NOON_TOPICS
         slot = "noon"
-    elif hour < 21:
+    elif hour < 19:
         topics = EVENING_TOPICS
         slot = "evening"
     else:
