@@ -1,4 +1,6 @@
 import os
+import sys
+import io
 import re
 import random
 import time
@@ -7,13 +9,39 @@ import tempfile
 from PIL import Image, ImageDraw, ImageFont
 from google import genai
 
-# -- Config --
-PAGE_ID           = "111830598532037"
-PAGE_ACCESS_TOKEN = os.environ["PAGE_ACCESS_TOKEN"]
-GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY", "")
-PEXELS_API_KEY    = os.environ["PEXELS_API_KEY"]
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-client      = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 90.0})
+# -- Config --
+PAGE_ID           = os.environ.get("PAGE_ID", "111830598532037")
+PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
+GEMINI_API_KEY    = os.environ.get("GEMINI_API_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")
+PEXELS_API_KEY    = os.environ.get("PEXELS_API_KEY", "")
+
+# Try fallback from config.py if they are not set in environment
+if not GEMINI_API_KEY or not PAGE_ACCESS_TOKEN:
+    try:
+        from config import GOOGLE_API_KEY, PAGE_ACCESS_TOKEN as CFG_PAT, PAGE_ID as CFG_ID
+        if not GEMINI_API_KEY:
+            GEMINI_API_KEY = GOOGLE_API_KEY
+        if not PAGE_ACCESS_TOKEN:
+            PAGE_ACCESS_TOKEN = CFG_PAT
+        if not PAGE_ID:
+            PAGE_ID = CFG_ID
+    except ImportError:
+        pass
+
+API_ENABLED = True
+client = None
+if not GEMINI_API_KEY or GEMINI_API_KEY in ("DUMMY_KEY", "DUMMY"):
+    print("[Warning] GEMINI_API_KEY is not set or is a dummy key. Disabling API calls.")
+    API_ENABLED = False
+else:
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 15000.0})
+    except Exception as e:
+        print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
+        API_ENABLED = False
+
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
 GOLD        = (255, 215, 0)
 WHITE       = (255, 255, 255)
@@ -23,8 +51,142 @@ HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
 HISTORY_FILE = "posted_history.txt"
 
+THAI_WORDS = [
+    "รายละเอียด", "โปรโมชั่น", "เครื่องมือ", "คอมพิวเตอร์", "แอปพลิเคชัน", "เก็บเงินปลายทาง",
+    "โทรศัพท์", "แบตเตอรี่", "บัตรเครดิต", "พร้อมส่ง", "จัดส่ง", "ต่างประเทศ",
+    "พรีออเดอร์", "ประหยัด", "ปลอดภัย", "คุ้มค่า", "สะดวกสบาย", "ธรรมชาติ",
+    "คุณภาพ", "ภาพถ่าย", "พลาสติก", "ของแท้", "รับประกัน", "ลิขสิทธิ์",
+    "แนะนำ", "สินค้า", "รีวิว", "สุดยอด", "ดีที่สุด", "สะดวก", "สบาย", "ง่ายดาย",
+    "รวดเร็ว", "โปรโมชั่", "ส่วนลด", "คูปอง", "จัดส่ง", "ประกัน",
+    "ชาร์จ", "หน้าจอ", "ลำโพง", "หูฟัง", "กล้อง", "เลนส์", "มือถือ", "ปุ่มกด",
+    "สำหรับ", "เกี่ยวกับ", "อย่างไร", "เมื่อไหร่", "ที่ไหน", "เท่าไหร่",
+    "ทุกคน", "ทุกวัน", "ทุกคืน", "สุดท้าย", "แรกเริ่ม", "จริงจัง",
+    "สวัสดี", "ขอบคุณ", "ขอโทษ", "ยินดี", "หัวเราะ", "ร้องไห้",
+    "ทำงาน", "พักผ่อน", "ออกกำลัง", "ท่องเที่ยว", "เดินทาง",
+    "เก้าอี้", "โต๊ะทำงาน", "เบาะรอง", "พิงหลัง", "สายรัด", "การ์ตูน",
+    "กระเป๋า", "รองเท้า", "เสื้อผ้า", "กางเกง", "นาฬิกา", "แว่นตา", "เครื่อง", "ระบบ",
+    "ความสุข", "ร่างกาย", "สุขภาพ", "ออกกำลัง", "อาหาร", "ผลไม้", "น้ำดื่ม", "กาแฟ",
+    "ราคา", "พิเศษ", "ทั่วไป", "ส่งฟรี", "ลดราคา", "ของแถม", "ปลายทาง",
+    "ชั่วโมง", "นาที", "วินาที", "สัปดาห์", "ปีใหม่", "วันนี้", "พรุ่งนี้", "เมื่อวาน",
+    "ใครก็ตาม", "สิ่งใด", "ทั้งหมด", "บางส่วน", "ประเภท", "รูปแบบ",
+    "ติดตาม", "กดไลก์", "แชร์โพส", "คอมเมนต์", "คลิกลิงก์", "พิกัด", "ชี้เป้า",
+    "ค่ะ", "ครับ", "ผม", "เรา", "คุณ", "ท่าน",
+    "พี่", "น้อง", "พ่อ", "แม่", "เพื่อน", "บ้าน", "เมือง", "เวลา", "ดีใจ", "เสียใจ", 
+    "รัก", "ชอบ", "เกลียด", "กลัว", "โกรธ", "ทำ", "กิน", "นอน", "เดิน", "วิ่ง", "นั่ง", 
+    "ยืน", "พูด", "ฟัง", "ดู", "เห็น", "คิด", "รู้", "จำ", "ลืม", "เรียน", "เล่น", "ซื้อ", 
+    "ขาย", "ราคา", "ถูก", "แพง", "ลด", "แถม", "ส่ง", "ด่วน", "ฟรี", "รับ", "ศูนย์",
+    "แท้", "ใหม่", "เก่า", "แรก", "นี้", "นั้น", "โน้น", "นี่", "นั่น", "โน่น", "อะไร", 
+    "ใคร", "กี่", "บ้าง", "ทุก", "บาง", "จริง", "จัง", "แท้", "เทียม", "ปลอม", "สาย", 
+    "เคส", "ฟิล์ม", "ภาพ", "รูป", "เสียง", "เพลง", "หนัง", "เกม", "แอป", "เว็บ", "เน็ต", 
+    "โค้ด", "โอน", "หวย", "ออก", "เงิน", "เก็บ", "แสน", "แรก", "งาน", "การ", "ช่วย", 
+    "บอก", "ให้", "คน", "ทอง", "ร้อย", "พัน", "หมื่น", "ล้าน", "มาก", "น้อย", "ดี", 
+    "เลว", "ชั่ว", "สูง", "ต่ำ", "ดำ", "ขาว", "แดง", "เขียว", "เหลือง", "ฟ้า", "ส้ม", 
+    "ชมพู", "ม่วง", "เทา", "สวย", "หล่อ", "และ", "หรือ", "แต่", "ที่", "ซึ่ง", "อัน", 
+    "ของ", "เพื่อ", "ใน", "จาก", "โดย", "ตาม", "กับ", "มี", "เป็น", "จะ", "ต้อง", 
+    "อยาก", "นุ่ม", "แข็ง", "ใหญ่", "เล็ก", "ยาว", "สั้น", "กว้าง", "แคบ", "หนา", 
+    "บาง", "ร้อน", "เย็น", "อุ่น", "หนาว", "ง่าย", "ยาก", "เร็ว", "ช้า", "ได้", 
+    "เลย", "ด้วย", "จาก", "ถึง", "จน", "กว่า", "ก็", "ยัง", "อีก", "แล้ว", "นะ", 
+    "สิ", "ละ", "หน่อย", "นิด", "ชิ้น", "กล่อง", "อัน", "ตัว", "ใบ", "คู่", "ชุด", 
+    "แผ่น", "ม้วน"
+]
+
 def contains_thai(text):
-    return any("\u0e00" <= char <= "\u0e7f" for char in text)
+    if not text:
+        return False
+    return bool(re.search(r'[\u0e00-\u0e7f]', text))
+
+def local_segment_thai(text):
+    if not text:
+        return ""
+    word_set = set(THAI_WORDS)
+    max_len = max(len(w) for w in THAI_WORDS)
+    
+    result = []
+    i = 0
+    n = len(text)
+    
+    while i < n:
+        if not contains_thai(text[i]):
+            result.append(text[i])
+            i += 1
+            continue
+            
+        matched = False
+        for l in range(min(max_len, n - i), 0, -1):
+            substr = text[i:i+l]
+            if substr in word_set:
+                result.append(substr)
+                i += l
+                matched = True
+                break
+        
+        if not matched:
+            start = i
+            while i < n and contains_thai(text[i]):
+                word_matched_here = False
+                if i > start:
+                    for l in range(min(max_len, n - i), 0, -1):
+                        if text[i:i+l] in word_set:
+                            word_matched_here = True
+                            break
+                if word_matched_here:
+                    break
+                i += 1
+            result.append(text[start:i])
+            
+    output = []
+    for idx, part in enumerate(result):
+        if idx > 0:
+            prev_char = result[idx-1][-1]
+            curr_char = part[0]
+            if (contains_thai(prev_char) and contains_thai(curr_char) and 
+                prev_char != '\u200b' and curr_char != '\u200b' and
+                curr_char not in _COMBINING_CHARS and
+                prev_char not in _LEADING_VOWELS):
+                output.append('\u200b')
+        output.append(part)
+        
+    return "".join(output)
+
+def segment_thai_text(text, client_obj=None):
+    global API_ENABLED
+    if not text or not contains_thai(text):
+        return text
+    active_client = client_obj if client_obj is not None else client
+    if not API_ENABLED or active_client is None:
+        return local_segment_thai(text)
+    prompt = (
+        "You are an expert Thai word segmentation tool. "
+        "Your task is to insert a zero-width space character (\\u200b) at every natural word boundary in the provided Thai text. "
+        "Strict rules:\n"
+        "1. Do NOT modify, delete, or add any words, characters, punctuation, spaces, or newlines of the original text. "
+        "Keep the exact same characters and layout.\n"
+        "2. Do NOT add any introductory or concluding remarks. Output ONLY the segmented text.\n"
+        "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
+        f"Text to segment:\n{text}"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = active_client.models.generate_content(model=model, contents=prompt)
+            segmented = resp.text.strip().replace('\\u200b', '\u200b')
+            clean_orig = text.replace('\u200b', '').replace('\\u200b', '')
+            clean_seg = segmented.replace('\u200b', '').replace('\\u200b', '')
+            if len(clean_orig) == len(clean_seg):
+                return segmented
+        except Exception as e:
+            err_msg = str(e)
+            print(f"[{model}] segment_thai_text failed: {err_msg[:80]}")
+            if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
+                print("Persistent API key issue detected. Disabling API calls immediately.")
+                API_ENABLED = False
+                break
+            
+    if not API_ENABLED:
+        print("[Warning] API calls disabled. Falling back to local_segment_thai.")
+    else:
+        print("[Warning] segment_thai_text failed on all models. Disabling API calls for this run.")
+        API_ENABLED = False
+    return local_segment_thai(text)
 
 FALLBACK_QUOTES = [
     {"quote": "หนทางเดียวที่จะทำงานที่ยิ่งใหญ่ได้ คือรักในสิ่งที่คุณทำ", "author_en": "Steve Jobs", "author_thai": "สตีฟ จอบส์"},
@@ -65,6 +227,24 @@ _COMBINING_CHARS = set("่้๊๋์ิีึืุูัํ็")
 
 
 def _wrap_char(draw, text, font, max_width):
+    if '\u200b' in text or '\\u200b' in text:
+        text = text.replace('\\u200b', '\u200b')
+        tokens = text.split('\u200b')
+        lines, current = [], ""
+        for token in tokens:
+            test = current + token
+            if draw.textbbox((0, 0), test, font=font)[2] <= max_width:
+                current = test
+            else:
+                if current:
+                    lines.append(current)
+                    current = token
+                else:
+                    current = token
+        if current:
+            lines.append(current)
+        return lines
+
     lines, current = [], ""
     for ch in text:
         test = current + ch
@@ -111,6 +291,8 @@ def _wrap_quote_line(draw, text, font, max_width):
     text = text.strip()
     if not text or draw.textbbox((0, 0), text, font=font)[2] <= max_width:
         return [text] if text else []
+    if '\u200b' in text or '\\u200b' in text:
+        return _wrap_char(draw, text, font, max_width)
     if " " in text:
         lines = _wrap_words(draw, text, font, max_width)
         if getattr(font, "size", 99) <= 75:
@@ -162,6 +344,9 @@ def clean_text(text):
 
 
 def translate_quote(content, author):
+    global API_ENABLED
+    if not API_ENABLED or not client:
+        return content
     prompt = (
         f'Translate this English quote to natural Thai language.\n'
         f'Quote: "{content}"\n'
@@ -181,6 +366,20 @@ def translate_quote(content, author):
 
 def split_quote_lines(quote_thai):
     """ให้ Gemini ตัดคำคมเป็นวลีสั้นๆ ทีละบรรทัด สไตล์โปสเตอร์ดราม่า"""
+    global API_ENABLED
+    if not API_ENABLED or not client:
+        # fallback: split at ~10 chars
+        words = quote_thai.split()
+        lines, cur = [], ""
+        for w in words:
+            if len(cur) + len(w) > 10 and cur:
+                lines.append(cur.strip())
+                cur = w + " "
+            else:
+                cur += w + " "
+        if cur.strip():
+            lines.append(cur.strip())
+        return lines
     prompt = (
         f'ตัดประโยคนี้เป็นวลีสั้นๆ สำหรับโปสเตอร์คำคม\n'
         f'ประโยค: {quote_thai}\n'
@@ -212,6 +411,9 @@ def split_quote_lines(quote_thai):
 
 def transliterate_author(author):
     """แปลชื่อภาษาอังกฤษเป็นการออกเสียงภาษาไทย"""
+    global API_ENABLED
+    if not API_ENABLED or not client:
+        return author
     prompt = (
         f'เขียนชื่อนี้เป็นภาษาไทยตามการออกเสียง: {author}\n'
         f'ตอบแค่ชื่อภาษาไทย ไม่มีอะไรอื่น'
@@ -228,6 +430,9 @@ def transliterate_author(author):
 
 
 def make_caption(quote_thai, author):
+    global API_ENABLED
+    if not API_ENABLED or not client:
+        return f'"{quote_thai}"\n— {author}\n#คำคม #แรงบันดาลใจ'
     prompt = (
         f'เขียน Facebook caption ภาษาไทยสำหรับโพสคำคมของ {author}\n'
         f'คำคม: {quote_thai}\n'
@@ -454,7 +659,7 @@ def add_comment(post_id):
 
 
 # -- Main --
-def main():
+def main(dry_run=False):
     print("=== Rocket21 Quotes Bot ===")
 
     for attempt in range(5):
@@ -475,6 +680,7 @@ def main():
             author_thai = transliterate_author(author_en)
             
         lines       = split_quote_lines(quote_thai)
+        lines       = [segment_thai_text(l, client) for l in lines]
 
         # หารูปผู้พูด
         img_path  = None
@@ -489,13 +695,27 @@ def main():
         caption = make_caption(quote_thai, author_en)
         print(f"Caption:\n{caption}\n")
 
-        success = post_photo(caption, final_path)
-        if success:
-            save_to_history(quote_en)
+        if dry_run:
+            print("\n--- [DRY RUN RESULTS] ---")
+            print(f"Quote EN: {quote_en}")
+            print(f"Quote TH: {quote_thai}")
+            print(f"Author: {author_thai} ({author_en})")
+            print(f"Lines: {lines}")
+            print(f"Image Path: {final_path}")
+            print("\nDry run completed successfully (posting skipped).")
             return
+        else:
+            success = post_photo(caption, final_path)
+            if success:
+                save_to_history(quote_en)
+                return
 
     print("Failed after 5 attempts")
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dry-run", action="store_true", help="Run without posting to Facebook")
+    args = parser.parse_args()
+    main(dry_run=args.dry_run)
