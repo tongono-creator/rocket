@@ -25,7 +25,17 @@ if not GOOGLE_API_KEY:
         pass
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
-client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 15000.0})
+
+client = None
+if not GOOGLE_API_KEY or GOOGLE_API_KEY in ("DUMMY_KEY", "DUMMY"):
+    print("[Warning] GOOGLE_API_KEY is not set or is a dummy key. Disabling API calls.")
+    API_ENABLED = False
+else:
+    try:
+        client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 15000.0})
+    except Exception as e:
+        print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
+        API_ENABLED = False
 
 _LEADING_VOWELS  = set('เแโใไ')
 _COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
@@ -127,11 +137,12 @@ def local_segment_thai(text):
         
     return "".join(output)
 
-def segment_thai_text(text, client=client):
+def segment_thai_text(text, client_obj=None):
     global API_ENABLED
     if not text or not contains_thai(text):
         return text
-    if not API_ENABLED:
+    active_client = client_obj if client_obj is not None else client
+    if not API_ENABLED or active_client is None:
         return local_segment_thai(text)
     prompt = (
         "You are an expert Thai word segmentation tool. "
@@ -145,17 +156,25 @@ def segment_thai_text(text, client=client):
     )
     for model in TEXT_MODELS:
         try:
-            resp = client.models.generate_content(model=model, contents=prompt)
+            resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
             clean_orig = text.replace('\u200b', '').replace('\\u200b', '')
             clean_seg = segmented.replace('\u200b', '').replace('\\u200b', '')
             if len(clean_orig) == len(clean_seg):
                 return segmented
         except Exception as e:
-            print(f"[{model}] segment_thai_text failed: {e}")
+            err_msg = str(e)
+            print(f"[{model}] segment_thai_text failed: {err_msg[:80]}")
+            if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
+                print("Persistent API key issue detected. Disabling API calls immediately.")
+                API_ENABLED = False
+                break
             
-    print("[Warning] segment_thai_text failed on all models. Disabling API calls for this run.")
-    API_ENABLED = False
+    if not API_ENABLED:
+        print("[Warning] API calls disabled. Falling back to local_segment_thai.")
+    else:
+        print("[Warning] segment_thai_text failed on all models. Disabling API calls for this run.")
+        API_ENABLED = False
     return local_segment_thai(text)
 
 def load_next_product():
@@ -208,7 +227,7 @@ def extract_highlights(detail, promo):
     """ให้ AI สกัดจุดเด่นจาก raw detail"""
     global API_ENABLED
     highlights = None
-    if API_ENABLED:
+    if API_ENABLED and client:
         prompt = (
             f"จากรายละเอียดสินค้านี้:\n{detail}\n\n"
             f"สกัดออกมาเป็น bullet points ภาษาไทยสั้นๆ 3-5 จุดเด่น "
@@ -222,9 +241,14 @@ def extract_highlights(detail, promo):
                 if highlights:
                     break
             except Exception as e:
-                print(f"[{model}] highlights failed: {str(e)[:80]}")
+                err_msg = str(e)
+                print(f"[{model}] highlights failed: {err_msg[:80]}")
+                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
+                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                    API_ENABLED = False
+                    break
                 
-        if not highlights:
+        if not highlights and API_ENABLED:
             print("[Warning] Highlights generation failed on all models. Disabling API calls for this run.")
             API_ENABLED = False
             
@@ -268,7 +292,7 @@ def download_image(url):
 def generate_hook(detail, highlights):
     """สร้างหัวข้อสั้นพาดหัวรูปภาพ 2 บรรทัด คั่นด้วย '|'"""
     global API_ENABLED
-    if API_ENABLED:
+    if API_ENABLED and client:
         prompt = (
             f"จากรายละเอียดสินค้าต่อไปนี้:\n{detail}\n\n"
             f"จุดเด่นสินค้าที่สกัดแล้ว:\n{highlights}\n\n"
@@ -295,10 +319,16 @@ def generate_hook(detail, highlights):
                 else:
                     return result[:15], ""
             except Exception as e:
-                print(f"[{model}] hook generation failed: {e}")
+                err_msg = str(e)
+                print(f"[{model}] hook generation failed: {err_msg[:80]}")
+                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
+                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                    API_ENABLED = False
+                    break
         
-        print("[Warning] Hook generation failed on all models. Disabling API calls for this run.")
-        API_ENABLED = False
+        if API_ENABLED:
+            print("[Warning] Hook generation failed on all models. Disabling API calls for this run.")
+            API_ENABLED = False
         
     # Local fallback for hook
     title = re.sub(r'^[•\-\*\d\.\s\u2013\(\[\{\)\|\}]+', '', detail).strip()
@@ -312,7 +342,7 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
     promo_line = f"\n🔥 โปรโมชั่น: {promo}" if promo else ""
     lazada_line = f"\n🛍️ Lazada → {lazada}" if lazada and "xxx" not in lazada else ""
     caption = None
-    if API_ENABLED:
+    if API_ENABLED and client:
         prompt = (
             f"เขียน Facebook post ภาษาไทยรีวิวสินค้าอย่างตรงไปตรงมาและน่าอ่าน สไตล์เพจรีวิวชื่อดัง (เช่น CatDumb)\n"
             f"เขียนด้วยบุคลิกแอดมินผู้ชาย (ใช้คำลงท้ายว่า 'ครับ' และแทนตัวว่า 'ผม' หรือ 'พี่' เท่านั้น)\n"
@@ -332,9 +362,14 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
                 if caption:
                     break
             except Exception as e:
-                print(f"[{model}] caption generation failed: {e}")
+                err_msg = str(e)
+                print(f"[{model}] caption generation failed: {err_msg[:80]}")
+                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
+                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                    API_ENABLED = False
+                    break
                 
-        if not caption:
+        if not caption and API_ENABLED:
             print("[Warning] Caption generation failed on all models. Disabling API calls for this run.")
             API_ENABLED = False
             
@@ -400,15 +435,20 @@ if __name__ == "__main__":
     line2 = segment_thai_text(line2, client)
     print(f"Hook generated: {line1} | {line2}")
 
-    product_img = download_image(product["image_url"])
+    try:
+        product_img = download_image(product["image_url"])
+    except Exception as img_err:
+        print(f"[Warning] Failed to download product image: {img_err}. Using solid background fallback.")
+        product_img = None
     
     # PIL Overlay
     try:
         review_img = add_overlay(product_img, line1, line2, ACCENT_COLOR)
-        os.unlink(product_img)
+        if product_img and os.path.exists(product_img):
+            os.unlink(product_img)
         print(f"Review image overlaid: {review_img}")
     except Exception as overlay_err:
-        print(f"Overlay failed, using original image: {overlay_err}")
+        print(f"Overlay failed: {overlay_err}")
         review_img = product_img
 
     caption = generate_caption(
