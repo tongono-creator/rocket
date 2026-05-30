@@ -59,9 +59,9 @@ def segment_thai_text(text, client=client):
     for model in TEXT_MODELS:
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
-            segmented = resp.text.strip()
-            clean_orig = text.replace('\\u200b', '')
-            clean_seg = segmented.replace('\\u200b', '')
+            segmented = resp.text.strip().replace('\\u200b', '\u200b')
+            clean_orig = text.replace('\u200b', '').replace('\\u200b', '')
+            clean_seg = segmented.replace('\u200b', '').replace('\\u200b', '')
             if len(clean_orig) == len(clean_seg):
                 return segmented
         except Exception as e:

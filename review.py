@@ -26,6 +26,36 @@ if not GOOGLE_API_KEY:
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 90.0})
 
+def contains_thai(text):
+    if not text:
+        return False
+    return bool(re.search(r'[\u0e00-\u0e7f]', text))
+
+def segment_thai_text(text, client=client):
+    if not text or not contains_thai(text):
+        return text
+    prompt = (
+        "You are an expert Thai word segmentation tool. "
+        "Your task is to insert a zero-width space character (\\u200b) at every natural word boundary in the provided Thai text. "
+        "Strict rules:\n"
+        "1. Do NOT modify, delete, or add any words, characters, punctuation, spaces, or newlines of the original text. "
+        "Keep the exact same characters and layout.\n"
+        "2. Do NOT add any introductory or concluding remarks. Output ONLY the segmented text.\n"
+        "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
+        f"Text to segment:\n{text}"
+    )
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(model=model, contents=prompt)
+            segmented = resp.text.strip().replace('\\u200b', '\u200b')
+            clean_orig = text.replace('\u200b', '').replace('\\u200b', '')
+            clean_seg = segmented.replace('\u200b', '').replace('\\u200b', '')
+            if len(clean_orig) == len(clean_seg):
+                return segmented
+        except Exception as e:
+            print(f"[{model}] segment_thai_text failed: {e}")
+    return text
+
 def load_next_product():
     wb = openpyxl.load_workbook(EXCEL_PATH)
     ws = wb.active
@@ -80,15 +110,34 @@ def extract_highlights(detail, promo):
         f"เน้นประโยชน์ที่คนซื้อสนใจ ห้ามใส่ข้อมูลราคาหรือโปรโมชั่น "
         f"ตอบแค่ bullet points เท่านั้น"
     )
+    highlights = None
     for model in TEXT_MODELS:
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             highlights = resp.text.strip()
-            break
+            if highlights:
+                break
         except Exception as e:
             print(f"[{model}] highlights failed: {str(e)[:80]}")
-    else:
-        raise RuntimeError("Highlights generation failed on all models")
+            
+    if not highlights:
+        print("[Warning] Highlights generation failed on all models. Falling back to local heuristic extraction.")
+        lines = [l.strip() for l in detail.splitlines() if l.strip()]
+        thai_lines = [l for l in lines if contains_thai(l)]
+        if not thai_lines:
+            thai_lines = lines
+        
+        bullets = []
+        for line in thai_lines:
+            cleaned = re.sub(r'^[•\-\*\d\.\s\u2013]+', '', line).strip()
+            if cleaned and len(cleaned) > 5 and len(cleaned) < 100:
+                bullets.append(f"• {cleaned}")
+            if len(bullets) >= 4:
+                break
+        if not bullets:
+            bullets = [f"• {line[:80]}" for line in thai_lines[:3]]
+        highlights = "\n".join(bullets) if bullets else "• รายละเอียดเพิ่มเติมตามระบุในลิงก์ร้านค้าครับ"
+
     if promo:
         highlights += f"\n🔥 โปรตอนนี้: {promo}"
     return highlights
@@ -154,22 +203,36 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
         f"เขียนให้น่าอ่าน สั้นกระชับ เป็นกันเอง ท้ายโพสต์ใส่แฮชแท็ก 2-3 อัน\n"
         f"ห้ามใช้ markdown ตัวหนา (**) และตอบเฉพาะตัวแคปชั่นรีวิวเท่านั้น"
     )
+    caption = None
     for model in TEXT_MODELS:
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             caption = resp.text.strip()
-            lines = caption.splitlines()
-            while lines and (
-                re.search(r'^(ได้เลย|นี่คือ|แน่นอน|โพสต์รีวิว|ครับ|ค่ะ|---)', lines[0].strip(), re.IGNORECASE)
-                or lines[0].strip() in ("", "---")
-            ):
-                lines.pop(0)
-            caption = "\n".join(lines).strip()
-            caption += f"{promo_line}\n\n👉 Shopee → {shopee}{lazada_line}"
-            return caption
+            if caption:
+                break
         except Exception as e:
             print(f"[{model}] caption generation failed: {e}")
-    raise RuntimeError("Caption generation failed on all models")
+            
+    if not caption:
+        print("[Warning] Caption generation failed on all models. Falling back to local heuristic caption.")
+        first_few_lines = " ".join([l.strip() for l in detail.splitlines() if l.strip()][:3])
+        caption = (
+            f"สวัสดีครับทุกคน วันนี้ผมมีสินค้าดีๆ มาแนะนำครับ!\n\n"
+            f"ตัวนี้คือ {first_few_lines} บอกเลยว่าตอบโจทย์ชีวิตประจำวันมากครับ ลองดูรายละเอียดและจุดเด่นด้านล่างได้เลยครับ\n\n"
+            f"{highlights}\n\n"
+            f"ใครที่กำลังมองหาอยู่หรืออยากสั่งซื้อไปลองใช้งาน สามารถกดสั่งได้ที่ลิงก์ตะกร้าด้านล่างนี้ได้เลยครับผม 👇"
+        )
+    else:
+        lines = caption.splitlines()
+        while lines and (
+            re.search(r'^(ได้เลย|นี่คือ|แน่นอน|โพสต์รีวิว|ครับ|ค่ะ|---)', lines[0].strip(), re.IGNORECASE)
+            or lines[0].strip() in ("", "---")
+        ):
+            lines.pop(0)
+        caption = "\n".join(lines).strip()
+        
+    caption += f"{promo_line}\n\n👉 Shopee → {shopee}{lazada_line}"
+    return caption
 
 def post_to_page(img_path, caption):
     print("Posting to Facebook Page...")
@@ -208,6 +271,8 @@ if __name__ == "__main__":
     print(f"Highlights:\n{highlights}\n")
 
     line1, line2 = generate_hook(product["detail"], highlights)
+    line1 = segment_thai_text(line1, client)
+    line2 = segment_thai_text(line2, client)
     print(f"Hook generated: {line1} | {line2}")
 
     product_img = download_image(product["image_url"])
