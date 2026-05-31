@@ -32,7 +32,7 @@ if not GOOGLE_API_KEY or GOOGLE_API_KEY in ("DUMMY_KEY", "DUMMY"):
     API_ENABLED = False
 else:
     try:
-        client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 15000.0})
+        client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 60000.0})
     except Exception as e:
         print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
         API_ENABLED = False
@@ -165,8 +165,8 @@ def segment_thai_text(text, client_obj=None):
         except Exception as e:
             err_msg = str(e)
             print(f"[{model}] segment_thai_text failed: {err_msg[:80]}")
-            if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
-                print("Persistent API key issue detected. Disabling API calls immediately.")
+            if any(x in err_msg.lower() for x in ["api key", "invalid_argument", "api_key", "timeout", "timed out", "deadline exceeded", "connection", "connect", "unreachable"]):
+                print("Persistent API key or network/timeout issue detected. Disabling API calls immediately.")
                 API_ENABLED = False
                 break
             
@@ -243,14 +243,13 @@ def extract_highlights(detail, promo):
             except Exception as e:
                 err_msg = str(e)
                 print(f"[{model}] highlights failed: {err_msg[:80]}")
-                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
-                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                if any(x in err_msg.lower() for x in ["api key not valid", "permission_denied", "api_key_invalid"]):
+                    print("Persistent API key or network/timeout issue detected. Disabling API calls immediately.")
                     API_ENABLED = False
                     break
-                
+
         if not highlights and API_ENABLED:
-            print("[Warning] Highlights generation failed on all models. Disabling API calls for this run.")
-            API_ENABLED = False
+            print("[Warning] Highlights generation failed on all models, using local fallback.")
             
     if not highlights:
         print("[Warning] Falling back to local heuristic extraction.")
@@ -315,14 +314,16 @@ def generate_hook(detail, highlights):
                     parts = result.split("|", 1)
                     line1 = parts[0].strip()
                     line2 = parts[1].strip()
-                    return line1, line2
                 else:
-                    return result[:15], ""
+                    line1, line2 = result[:15], ""
+                line1 = line1.strip("()[]{}| -–•*")
+                line2 = line2.strip("()[]{}| -–•*")
+                return line1, line2
             except Exception as e:
                 err_msg = str(e)
                 print(f"[{model}] hook generation failed: {err_msg[:80]}")
-                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
-                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                if any(x in err_msg.lower() for x in ["api key", "invalid_argument", "api_key", "timeout", "timed out", "deadline exceeded", "connection", "connect", "unreachable"]):
+                    print("Persistent API key or network/timeout issue detected. Disabling API calls immediately.")
                     API_ENABLED = False
                     break
         
@@ -335,6 +336,8 @@ def generate_hook(detail, highlights):
     first_line = title.split('\n')[0].split('|')[0].split(' - ')[0].split(' – ')[0].strip()
     line1 = first_line[:15] if first_line else "สินค้าแนะนำ"
     line2 = "รายละเอียดเพิ่มเติม"
+    line1 = line1.strip("()[]{}| -–•*")
+    line2 = line2.strip("()[]{}| -–•*")
     return line1, line2
 
 def generate_caption(detail, shopee, lazada, promo, highlights):
@@ -364,8 +367,8 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
             except Exception as e:
                 err_msg = str(e)
                 print(f"[{model}] caption generation failed: {err_msg[:80]}")
-                if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
-                    print("Persistent API key issue detected. Disabling API calls immediately.")
+                if any(x in err_msg.lower() for x in ["api key", "invalid_argument", "api_key", "timeout", "timed out", "deadline exceeded", "connection", "connect", "unreachable"]):
+                    print("Persistent API key or network/timeout issue detected. Disabling API calls immediately.")
                     API_ENABLED = False
                     break
                 
