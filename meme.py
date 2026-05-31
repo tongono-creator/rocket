@@ -157,6 +157,34 @@ MEME_ANGLES = [
     {
         "category": "ความฝันในการลาออก (Dreams of Resigning)",
         "focus": "จินตนาการในหัวว่าถ้าถูกหวยรางวัลที่ 1 จะเดินไปโยนใบลาออกใส่หน้าหัวหน้าอย่างสง่างาม แต่ความจริงคือเสียงนาฬิกาปลุกดังและต้องรีบวิ่งไปขึ้นรถเมล์"
+    },
+    {
+        "category": "ความรักและคนโสด (Love & Single Life)",
+        "focus": "ตอนเห็นคู่อื่นหวานกันในโซเชียลแล้วคิดว่าตัวเองพร้อมมีความรัก VS ความจริงคือนอนกอดหมอนข้างกับมือถือคนเดียวในห้อง"
+    },
+    {
+        "category": "การลดน้ำหนักและการกิน (Diet & Eating)",
+        "focus": "ตั้งใจไดเอทตอนเช้ากินสลัดผักอย่างมีวินัย VS ตกเย็นสั่งหมูกระทะชาบูบุฟเฟต์เพราะคิดว่าพรุ่งนี้ค่อยเริ่มใหม่"
+    },
+    {
+        "category": "การออกกำลังกายและฟิตเนส (Gym & Exercise)",
+        "focus": "ตอนสมัครฟิตเนสรายปีด้วยไฟแรงคิดว่าจะหุ่นดี VS ความจริงคือไปแค่ 2 ครั้งแล้วใช้เป็นที่แขวนเสื้อผ้าที่บ้าน"
+    },
+    {
+        "category": "รถติดและการเดินทาง (Traffic & Commute)",
+        "focus": "ตอนออกจากบ้านเช้าๆ คิดว่าจะถึงที่หมายเร็ว VS ความจริงคือติดแหง็กบนถนนหรือรอรถเมล์/รถไฟฟ้าที่คนแน่นเหมือนปลากระป๋อง"
+    },
+    {
+        "category": "โซเชียลมีเดียและมือถือ (Social Media Addiction)",
+        "focus": "ตั้งใจจะเล่นมือถือแค่ 5 นาทีก่อนนอน VS เงยหน้าขึ้นมาอีกทีตี 3 ยังไถฟีดไม่เลิกตาแห้งโบ๋"
+    },
+    {
+        "category": "ช้อปปิ้งออนไลน์และพัสดุ (Online Shopping)",
+        "focus": "ตอนกดสั่งของลดราคาตอนตี 2 ด้วยความสุขคิดว่าคุ้มมาก VS ตอนของมาส่งแล้วจำไม่ได้ว่าสั่งอะไรไปและไม่ได้ใช้"
+    },
+    {
+        "category": "ครอบครัวและญาติ (Family & Relatives)",
+        "focus": "ตอนกลับบ้านต่างจังหวัดคิดว่าจะได้พักผ่อน VS โดนญาติถามเรื่องเงินเดือน แฟน และเมื่อไหร่จะแต่งงานจนอยากรีบกลับ"
     }
 ]
 
@@ -173,7 +201,8 @@ def generate_scenario_2panel():
     print(f"Selected Angle: {selected_angle['category']}")
 
     prompt = (
-        "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario for office workers aged 30-45.\n"
+        "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario about everyday life of Thai adults aged 30-45.\n"
+        "The scenario MUST match the joke theme below — do NOT default to office/work jokes unless the category is about work.\n"
         f"You MUST base the comic scenario on this specific joke theme:\n"
         f"- Category: {selected_angle['category']}\n"
         f"- Focus/Angle: {selected_angle['focus']}\n\n"
