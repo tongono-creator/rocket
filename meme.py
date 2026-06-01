@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""meme.py — Reddit meme parser with Gemini translation, overlay rendering and Facebook post"""
+"""meme.py — Reddit-sourced 2-panel comic strip generator featuring consistent Rocket21 character"""
 
 import sys
 import io
@@ -20,13 +20,14 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 from google import genai
 from google.genai import types
 from google.genai.types import HttpOptions
-import overlay_utils
 
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]
+IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
+TEXT_MODELS       = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]
 OUTPUT_DIR        = "output"
+FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 
 if not GOOGLE_API_KEY:
     try:
@@ -68,7 +69,6 @@ def get_reddit_meme(history=None):
     if history is None:
         history = set()
     
-    # Shuffle subreddits to get different themes
     subs = list(MEME_SUBREDDITS)
     random.shuffle(subs)
     
@@ -86,7 +86,6 @@ def get_reddit_meme(history=None):
                 title = entry.findtext("atom:title", "", ns).strip()
                 content = entry.findtext("atom:content", "", ns) or ""
                 
-                # Extract image URL from HTML content
                 img_urls = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content)
                 good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
                 
@@ -98,7 +97,6 @@ def get_reddit_meme(history=None):
                     })
             
             if posts:
-                # Pick one of the top posts
                 post = random.choice(posts[:10])
                 print(f"Selected Reddit post: r/{subreddit} | {post['title'][:60]} | URL: {post['url']}")
                 return post
@@ -134,8 +132,8 @@ def download_meme_image(url):
         print(f"Download failed: {e}")
         return None
 
-# ─── Gemini Vision Translation ──────────────────────────────────────
-def analyze_meme_image(img_path, reddit_title):
+# ─── Gemini Vision Joke-to-Scenario Mapping ─────────────────────────
+def analyze_meme_to_scenario(img_path, reddit_title):
     with open(img_path, "rb") as f:
         img_data = f.read()
         
@@ -150,16 +148,20 @@ def analyze_meme_image(img_path, reddit_title):
     prompt = (
         "นี่คือมีม (Meme) ภาษาอังกฤษจาก Reddit ของต่างประเทศ\n"
         f"ชื่อโพสต์ต้นฉบับ: \"{reddit_title}\"\n\n"
-        "งานของคุณคือแสดงความเป็นผู้เชี่ยวชาญด้านอารมณ์ขัน แปลความหมายเชิงเสียดสีและมุกตลกในมีมนี้ให้เป็นมุกที่โดนใจวัยทำงานคนไทย (อายุ 30+) โดยการคิดพาดหัวและเขียนแคปชั่นตามข้อกำหนดต่อไปนี้:\n\n"
-        "1. พาดหัวแบบไทย (Thai Overlay Text): คิดประโยคสั้นๆ 2 บรรทัดที่อธิบายมีมนี้เป็นภาษาไทยแนวพาดหัวเด็ดๆ ขำๆ\n"
-        "   - บรรทัดที่ 1 (headline_accent): สีทอง (Accent) สั้นกระชับ (2-6 คำ) เช่น 'เมื่อบอกบอสว่าใกล้เสร็จ'\n"
-        "   - บรรทัดที่ 2 (headline_white): สีขาว (White) หักมุม/ความจริงอันโหดร้าย (2-6 คำ) เช่น 'แต่ยังไม่ได้สร้างไฟล์'\n"
-        "2. แคปชั่น (Caption): เขียน 1 ย่อหน้าสั้นๆ แนวพูดคุยเป็นมิตรตลกๆ ภาษาธรรมชาติ (ความยาวประมาณ 2-4 บรรทัด) ในบุคลิกแอดมินเพจผู้ชาย (ใช้หางเสียงครับ/ผม/พี่ เสมอ) ชวนให้คนอ่านรู้สึกอินตามและคอมเมนต์แชร์เรื่องของตัวเอง\n"
-        "3. แฮชแท็ก (Hashtags): ใส่แฮชแท็ก 2-3 อัน ท้ายข้อความแคปชั่น\n\n"
-        "ตอบกลับในรูปแบบ JSON เท่านั้น โดยมีรูปแบบตามคีย์ดังนี้:\n"
+        "งานของคุณคือวิเคราะห์อารมณ์ขันและมุกตลกในมีมนี้ จากนั้นแปลงมุกนี้มาทำเป็นบทการ์ตูน 2 ช่องแนว 'ความคาดหวัง vs ความจริง' (Before vs After) หรือสถานการณ์หักมุมที่เข้ากับคนทำงานออฟฟิศ/ผู้ใหญ่ชาวไทย (อายุ 30+)\n\n"
+        "บทการ์ตูนจะมีตัวละครหลักเป็นหนุ่มไทยอายุ 30 ปี ผมสั้นสีดำเรียบร้อย สวมแว่นตากรอบโลหะทรงสี่เหลี่ยมผืนผ้าบาง ใส่เสื้อเชิ้ตสีขาวมีรอยยับเล็กน้อย\n\n"
+        "กรุณาสร้างและอธิบายองค์ประกอบสำหรับการ์ตูน 2 ช่องนี้ โดยตอบกลับเป็นรูปแบบ JSON ที่มีคีย์ดังนี้:\n"
+        "1. label1_th: ข้อความพาดหัวภาษาไทยของช่องที่ 1 (สั้นกระชับ 3-7 คำ อธิบายบริบทความหวัง/ช่วงแรก) เช่น 'ตอนลาพักร้อนวันแรก'\n"
+        "2. scene1_en: คำอธิบายภาพช่องที่ 1 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้าผ่อนคลาย/มีความหวัง ทำกิจกรรมตามหัวข้อ เช่น Thai man in 30s lying relaxed on a beach chair, holding a coconut, smiling warmly)\n"
+        "3. label2_th: ข้อความพาดหัวภาษาไทยของช่องที่ 2 (สั้นกระชับ 3-7 คำ อธิบายความจริงอันโหดร้าย/จุดหักมุม) เช่น 'งานด่วนจากบอสเข้า'\n"
+        "4. scene2_en: คำอธิบายภาพช่องที่ 2 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้ากังวล/เหงื่อตก/ช็อกค้าง เช่น Same Thai man working on a laptop on the beach in panic, sweat drops, wide eyes of shock)\n"
+        "5. caption: แคปชั่นภาษาไทย 1 ย่อหน้าสั้นๆ (2-4 ประโยค) สไตล์แอดมินเพจผู้ชาย (ใช้หางเสียงครับ/ผม/พี่ เสมอ) ชวนให้คนกดคอมเมนต์แชร์เรื่องตัวเอง ท้ายข้อความใส่แฮชแท็ก 2-3 อัน\n\n"
+        "กรุณาตอบเป็น JSON ในรูปแบบนี้เท่านั้น (ห้ามมี markdown codeblock หรือคำนำหน้าใดๆ):\n"
         "{\n"
-        "  \"headline_accent\": \"...\",\n"
-        "  \"headline_white\": \"...\",\n"
+        "  \"label1_th\": \"...\",\n"
+        "  \"scene1_en\": \"...\",\n"
+        "  \"label2_th\": \"...\",\n"
+        "  \"scene2_en\": \"...\",\n"
         "  \"caption\": \"...\"\n"
         "}"
     )
@@ -179,15 +181,122 @@ def analyze_meme_image(img_path, reddit_title):
             result_text = resp.text.strip()
             data = json.loads(result_text)
             return (
-                data.get("headline_accent", "").strip(),
-                data.get("headline_white", "").strip(),
+                data.get("label1_th", "").strip(),
+                data.get("scene1_en", "").strip(),
+                data.get("label2_th", "").strip(),
+                data.get("scene2_en", "").strip(),
                 data.get("caption", "").strip()
             )
         except Exception as e:
-            print(f"[{model}] vision analysis attempt failed: {e}")
+            print(f"[{model}] scenario analysis failed: {e}")
             time.sleep(5)
             
-    raise RuntimeError("Meme vision analysis failed on all models")
+    raise RuntimeError("Scenario analysis failed on all models")
+
+# ─── Comic Strip Visual Settings ─────────────────────────────────────
+ROCKET_CHARACTER = (
+    "Thai man in his early 30s, short neat black hair, thin rectangular metal-frame glasses, "
+    "white button-up shirt slightly wrinkled. SAME character must appear in this panel."
+)
+
+ART_STYLE = (
+    "ART STYLE: Thai manga comic panel illustration. Clean thick black outlines. "
+    "Flat cel-shaded colors. Slightly chibi proportions with expressive faces. "
+    "Warm color palette — blues, warm grays, soft yellows. "
+    "Rich background showing context clearly (office, home, street). "
+    "ABSOLUTELY NO speech bubbles — not empty, not filled, not any balloon shape. "
+    "NO thought bubbles. NO text or captions anywhere in the image. "
+    "Story told ENTIRELY through character expression and body language. "
+    "Wide horizontal composition. The main character must be fully visible and centered in the frame, "
+    "with generous safety margins (at least 25% empty background space) at both the top and the bottom. "
+    "Do not crop the character's head or body to the edges; keep the character relatively compact within the center "
+    "so they fit perfectly when cropped to a wide panel, without white outer border."
+)
+
+def generate_panel_image(scene_en, panel_num):
+    prompt = (
+        f"Draw a single comic panel illustration. "
+        f"{ROCKET_CHARACTER} "
+        f"Scene: {scene_en}. "
+        f"{ART_STYLE}"
+    )
+    for model in IMAGE_MODELS:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE", "TEXT"]
+                    )
+                )
+                for part in resp.candidates[0].content.parts:
+                    if part.inline_data:
+                        data = part.inline_data.data
+                        if isinstance(data, str):
+                            data = base64.b64decode(data)
+                        bkk = timezone(timedelta(hours=7))
+                        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+                        path = os.path.join(OUTPUT_DIR, f"panel{panel_num}_{ts}.png")
+                        with open(path, "wb") as f:
+                            f.write(data)
+                        print(f"Panel {panel_num} saved: {path} (model={model})")
+                        return path
+            except Exception as e:
+                err = str(e)[:120]
+                print(f"Panel {panel_num} [{model}] attempt {attempt+1} failed: {err}")
+                if "404" in err or "not found" in err.lower():
+                    break
+                if attempt < 2:
+                    time.sleep(15)
+    raise RuntimeError(f"Panel {panel_num} generation failed — all models exhausted")
+
+def stitch_panels(img1_path, img2_path, label1, label2):
+    W, H = 1080, 1080
+    panel_h = H // 2  # 540px each panel
+    canvas = Image.new("RGB", (W, H), (240, 240, 240))
+    
+    for idx, (ipath, label) in enumerate([(img1_path, label1), (img2_path, label2)]):
+        img = Image.open(ipath).convert("RGB")
+        iw, ih = img.size
+        # Crop to 2:1 ratio from center
+        target_ratio = W / panel_h
+        if iw / ih > target_ratio:
+            new_w = int(ih * target_ratio)
+            left = (iw - new_w) // 2
+            img = img.crop((left, 0, left + new_w, ih))
+        else:
+            new_h = int(iw / target_ratio)
+            top = int(max(0, (ih - new_h) // 2.5))
+            img = img.crop((0, top, iw, top + new_h))
+            
+        img = img.resize((W, panel_h), Image.LANCZOS)
+        canvas.paste(img, (0, idx * panel_h))
+        
+        # Draw label text
+        draw = ImageDraw.Draw(canvas)
+        try:
+            font = ImageFont.truetype(FONT_PATH, 42)
+        except Exception:
+            font = ImageFont.load_default()
+            
+        MARGIN = 28
+        tx = MARGIN
+        ty = idx * panel_h + MARGIN
+        # 8-direction outline
+        for dx, dy in [(-3,-3),(-3,0),(-3,3),(0,-3),(0,3),(3,-3),(3,0),(3,3)]:
+            draw.text((tx + dx, ty + dy), label, font=font, fill=(0, 0, 0))
+        draw.text((tx, ty), label, font=font, fill=(255, 255, 255))
+        
+    draw = ImageDraw.Draw(canvas)
+    draw.line([(0, panel_h), (W, panel_h)], fill=(20, 20, 20), width=4)
+    
+    bkk = timezone(timedelta(hours=7))
+    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+    out_path = os.path.join(OUTPUT_DIR, f"meme_comic_{ts}.jpg")
+    canvas.save(out_path, "JPEG", quality=92)
+    print(f"Stitched comic saved: {out_path}")
+    return out_path
 
 # ─── Facebook Post and Comments ──────────────────────────────────────
 def post_facebook(img_path, caption):
@@ -248,7 +357,8 @@ def add_comment(post_id):
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="Run locally and render image without posting")
+    parser.add_argument("--dry-run", action="store_true", help="Run locally and map scenario without generating images or posting")
+    parser.add_argument("--dry-run-image", action="store_true", help="Run locally, map scenario, generate images and stitch, but skip posting")
     args = parser.parse_args()
 
     history = set(load_history())
@@ -263,52 +373,57 @@ def main():
     reddit_title = post["title"]
     subreddit = post["subreddit"]
 
-    # Step 2: Download Image
+    # Step 2: Download Image for Vision Analysis
     tmp_path = download_meme_image(img_url)
     if not tmp_path:
         print("Failed to download meme image.")
         sys.exit(1)
 
     try:
-        # Step 3: Analyze using Gemini
+        # Step 3: Analyze and map to 2-panel cartoon scenario using Gemini
         print("Analyzing meme with Gemini Vision...")
-        headline_accent, headline_white, caption = analyze_meme_image(tmp_path, reddit_title)
+        label1, scene1, label2, scene2, caption = analyze_meme_to_scenario(tmp_path, reddit_title)
         
         caption_with_via = f"{caption}\n\n📷 via r/{subreddit}"
         
-        print("\n--- [GEMINI LOCALIZATION RESULTS] ---")
+        print("\n--- [GEMINI COMIC SCENARIO MAP] ---")
         print(f"Reddit Title: {reddit_title}")
-        print(f"Accent line:  {headline_accent}")
-        print(f"White line:   {headline_white}")
+        print(f"Panel 1 Label:  {label1}")
+        print(f"Panel 1 Prompt: {scene1}")
+        print(f"Panel 2 Label:  {label2}")
+        print(f"Panel 2 Prompt: {scene2}")
         print(f"Caption:\n{caption_with_via}\n")
 
-        # Step 4: Render Text Overlay Matichon Style
-        # Accent color = Gold (255, 215, 0)
-        GOLD_ACCENT = (255, 215, 0)
-        
-        bkk = timezone(timedelta(hours=7))
-        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-        rendered_jpg_path = os.path.join(OUTPUT_DIR, f"meme_overlay_{ts}.jpg")
-        
-        print("Rendering overlay on image...")
-        overlay_utils.add_overlay(
-            img_path=tmp_path,
-            line1=headline_accent,
-            line2=headline_white,
-            accent_color=GOLD_ACCENT,
-            out_path=rendered_jpg_path
-        )
-        print(f"Rendered image saved to: {rendered_jpg_path}")
-
-        # Step 5: Post or Dry Run
+        # Step 4: Conditional Image Generation & Stitching
         if args.dry_run:
-            print("\nDry run completed successfully. Posting skipped.")
+            print("\nDry run completed successfully. Image generation and posting skipped.")
+            return
+
+        print("Generating Panel 1...")
+        img1 = generate_panel_image(scene1, panel_num=1)
+        
+        print("Generating Panel 2...")
+        img2 = generate_panel_image(scene2, panel_num=2)
+        
+        print("Stitching panels...")
+        comic_path = stitch_panels(img1, img2, label1, label2)
+        
+        # Clean up panel files
+        for p in [img1, img2]:
+            try:
+                os.unlink(p)
+            except Exception:
+                pass
+
+        # Step 5: Post or Dry Run Image
+        if args.dry_run_image:
+            print(f"\nDry run image completed successfully. Comic saved to: {comic_path}. Posting skipped.")
         else:
-            post_facebook(rendered_jpg_path, caption_with_via)
+            post_facebook(comic_path, caption_with_via)
             save_to_history(img_url)
             
     finally:
-        # Clean up temp file
+        # Clean up downloaded temp file
         if tmp_path and os.path.exists(tmp_path):
             try:
                 os.unlink(tmp_path)
