@@ -24,7 +24,7 @@ from overlay_utils import add_overlay
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY", "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID", "111830598532037")
-TEXT_MODELS       = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS       = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]
 OUTPUT_DIR        = "output"
 ACCENT_COLOR      = (255, 215, 0)  # Gold/Yellow สำหรับ Rocket21
 
@@ -263,25 +263,23 @@ def get_reddit_image(entry):
                 return url
     return None
 
-def fetch_interesting_news():
-    """ดึงและคัดเลือกข่าวที่มีรูปภาพจาก Reddit"""
-    random.shuffle(NEWS_SUBREDDITS)
+def fetch_top_candidates():
+    """ดึงข่าวอันดับแรก (Hottest) ที่มีรูปภาพจากแต่ละ Subreddit เพื่อนำมาเป็นตัวเลือกข่าว"""
+    candidates = []
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-
+    
     for sub in NEWS_SUBREDDITS:
         url = f"https://www.reddit.com/r/{sub}/.rss"
-        print(f"Fetching RSS from r/{sub}...")
+        print(f"Fetching RSS from r/{sub} for curation...")
         try:
             feed = feedparser.parse(url, request_headers=headers)
-            entries = list(feed.entries)
-            random.shuffle(entries)
-
-            for entry in entries[:15]:
+            # สแกนเรียงลำดับความร้อนแรงจากบนลงล่าง (Hot to Cold)
+            for entry in feed.entries:
                 img_url = get_reddit_image(entry)
                 if not img_url:
                     continue
-
-                # ตรวจสอบว่าเป็นไฟล์รูปและโหลดมาทดสอบเบื้องต้น
+                
+                # ตรวจสอบความถูกต้องของรูปภาพประกอบ
                 try:
                     resp = requests.get(img_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
                     if resp.status_code != 200:
@@ -290,21 +288,69 @@ def fetch_interesting_news():
                     if not content_type.startswith("image/"):
                         continue
                     img_bytes = resp.content
-                    # ตรวจสอบความถูกต้องของภาพ
                     Image.open(BytesIO(img_bytes)).verify()
                     
-                    yield {
+                    candidates.append({
                         "img_bytes": img_bytes,
                         "reddit_title": getattr(entry, "title", ""),
                         "subreddit": sub,
                         "link": getattr(entry, "link", "")
-                    }
+                    })
+                    print(f"-> Candidate found from r/{sub}: {entry.title[:60]}")
+                    break # เอาเฉพาะข่าวท็อปสุด 1 ข่าวต่อซับเรดดิตที่ผ่านเกณฑ์รูป
                 except Exception as e:
-                    print(f"Image verify failed: {e}")
+                    print(f"Verify failed for candidate from r/{sub}: {e}")
                     continue
         except Exception as e:
-            print(f"Failed to fetch from r/{sub}: {e}")
-            continue
+            print(f"Failed to fetch RSS for r/{sub}: {e}")
+            
+    return candidates
+
+def select_best_news_candidate(candidates):
+    """ส่งหัวข้อข่าวตัวเลือกทั้งหมดให้ Gemini คัดเลือกข่าวที่น่าสนใจและมีแววไวรัลสูงสุดสำหรับคนไทย"""
+    import json
+    if not candidates:
+        return None
+    if len(candidates) == 1:
+        return candidates[0]
+        
+    prompt = (
+        "จากรายชื่อหัวข้อข่าวเทคโนโลยี/วิทยาศาสตร์/เรื่องน่าสนใจรอบโลกภาษาอังกฤษด้านล่างนี้:\n\n"
+    )
+    for idx, c in enumerate(candidates):
+        prompt += f"[{idx}] (Subreddit: r/{c['subreddit']}): {c['reddit_title']}\n"
+        
+    prompt += (
+        "\nจงวิเคราะห์และเลือกข่าวเด่นเพียง 1 ข่าวที่มีความน่าสนใจ แปลกใหม่ ชวนตะลึง หรือมีโอกาสที่จะสร้างความไวรัล (Viral) และกระตุ้นให้ผู้ใหญ่ชาวไทยวัยทำงาน (อายุ 30+) เข้ามาเขียนคอมเมนต์พูดคุย/ถกเถียงกันในเพจมากที่สุด\n"
+        "ตอบกลับในรูปแบบ JSON เท่านั้น โดยมีคีย์ดังนี้:\n"
+        "{\n"
+        "  \"selected_index\": <ตัวเลขดัชนีของข่าวที่เลือก เช่น 0, 1, 2...>\n"
+        "}"
+    )
+    
+    for model in TEXT_MODELS:
+        try:
+            resp = client.models.generate_content(
+                model=model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
+                )
+            )
+            data = json.loads(resp.text.strip())
+            idx = int(data.get("selected_index", 0))
+            if 0 <= idx < len(candidates):
+                selected = candidates[idx]
+                print(f"[{model}] selected candidate [{idx}]: {selected['reddit_title']}")
+                return selected
+        except Exception as e:
+            print(f"[{model}] candidate selection failed: {e}")
+            
+    # Fallback สุ่มดึง
+    chosen = random.choice(candidates)
+    print(f"Fallback selected candidate: {chosen['reddit_title']}")
+    return chosen
+
 
 def generate_news_content(img_bytes, reddit_title, sub, original_link):
     """ส่งให้ Gemini Vision ช่วยแปล วิเคราะห์ และแต่งข้อความพาดหัว+แคปชั่นข่าวในสไตล์แอดมินเพจผู้ชาย"""
@@ -443,19 +489,30 @@ def main():
 
     print("=== Rocket21 News Bot ===")
     
-    news_found = False
-    for news in fetch_interesting_news():
-        print(f"Candidate Subreddit: r/{news['subreddit']}")
+    # ดึงข่าวท็อปของแต่ละซับเรดดิตมาเป็นทางเลือก
+    candidates = fetch_top_candidates()
+    if not candidates:
+        print("No news candidates found.")
+        sys.exit(0)
+        
+    news_posted = False
+    
+    while candidates:
+        # ให้ Gemini เลือกข่าวที่ดีที่สุดและมีแนวโน้มได้รับความนิยมสูงสุด
+        news = select_best_news_candidate(candidates)
+        if not news:
+            break
+            
+        print(f"\nEvaluating Curation Winner: r/{news['subreddit']}")
         print(f"Title: {news['reddit_title']}")
         
         # Verify if image matches the title
         if not verify_image_title_match(news["img_bytes"], news["reddit_title"]):
-            print(f"[Warning] Image and Title mismatch for: '{news['reddit_title']}'. Skipping.")
+            print(f"[Warning] Image and Title mismatch for: '{news['reddit_title']}'. Removing from candidates and trying next best.")
+            candidates.remove(news)
             continue
             
-        news_found = True
-        
-        # โหลดไฟล์ภาพชั่วคราว
+        # ดำเนินการโพสต์ข่าว
         temp_path = "temp_news.jpg"
         with open(temp_path, "wb") as f:
             f.write(news["img_bytes"])
@@ -494,10 +551,12 @@ def main():
             post_facebook(final_img, caption)
             if os.path.exists(final_img):
                 os.unlink(final_img)
+        
+        news_posted = True
         break
 
-    if not news_found:
-        print("No suitable news with matching image found.")
+    if not news_posted:
+        print("No suitable news found after evaluating candidates.")
 
 if __name__ == "__main__":
     main()
