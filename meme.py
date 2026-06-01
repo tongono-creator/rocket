@@ -1,22 +1,32 @@
 # -*- coding: utf-8 -*-
-"""meme.py — 2-panel comic strip style จ้อง 8 รั้ว โพส Facebook วันละ 1 ครั้ง"""
+"""meme.py — Reddit meme parser with Gemini translation, overlay rendering and Facebook post"""
 
-import sys, io, os, re, base64, requests, time, random
+import sys
+import io
+import os
+import re
+import base64
+import requests
+import time
+import random
+import tempfile
+import json
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageDraw, ImageFont
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
 from google.genai import types
 from google.genai.types import HttpOptions
+import overlay_utils
 
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
-IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
 TEXT_MODELS       = ["gemini-2.5-flash", "gemini-2.0-flash"]
 OUTPUT_DIR        = "output"
-FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
 
 if not GOOGLE_API_KEY:
     try:
@@ -49,323 +59,137 @@ def save_to_history(item):
     except Exception as e:
         print(f"Error saving history: {e}")
 
+# ─── Reddit Meme Scraping ───────────────────────────────────────────
+MEME_SUBREDDITS = ["OfficeHumor", "workplaceculture", "memes", "dankmemes", "me_irl", "funny"]
+IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
+HEADERS_RSS = {"User-Agent": "Mozilla/5.0 (compatible; RocketMemeBot/1.0; +github)"}
 
-# ─── ตัวละครประจำ Rocket21 ─────────────────────────────────────
-# ใส่ทุก image prompt — ให้ character เดิมปรากฏทั้ง 2 panel
-ROCKET_CHARACTER = (
-    "Thai man in his early 30s, short neat black hair, thin rectangular metal-frame glasses, "
-    "white button-up shirt slightly wrinkled. SAME character must appear in this panel."
-)
+def get_reddit_meme(history=None):
+    if history is None:
+        history = set()
+    
+    # Shuffle subreddits to get different themes
+    subs = list(MEME_SUBREDDITS)
+    random.shuffle(subs)
+    
+    for subreddit in subs:
+        url = f"https://www.reddit.com/r/{subreddit}/hot.rss"
+        try:
+            resp = requests.get(url, headers=HEADERS_RSS, timeout=15)
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+            ns = {"atom": "http://www.w3.org/2005/Atom"}
+            entries = root.findall("atom:entry", ns)
+            
+            posts = []
+            for entry in entries:
+                title = entry.findtext("atom:title", "", ns).strip()
+                content = entry.findtext("atom:content", "", ns) or ""
+                
+                # Extract image URL from HTML content
+                img_urls = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content)
+                good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
+                
+                if good_imgs and title:
+                    posts.append({
+                        "url": good_imgs[0], 
+                        "title": title,
+                        "subreddit": subreddit
+                    })
+            
+            if posts:
+                # Pick one of the top posts
+                post = random.choice(posts[:10])
+                print(f"Selected Reddit post: r/{subreddit} | {post['title'][:60]} | URL: {post['url']}")
+                return post
+        except Exception as e:
+            print(f"Failed to fetch RSS for r/{subreddit}: {e}")
+            continue
+            
+    return None
 
-ART_STYLE = (
-    "ART STYLE: Thai manga comic panel illustration. Clean thick black outlines. "
-    "Flat cel-shaded colors. Slightly chibi proportions with expressive faces. "
-    "Warm color palette — blues, warm grays, soft yellows. "
-    "Rich background showing context clearly (office, home, street). "
-    "ABSOLUTELY NO speech bubbles — not empty, not filled, not any balloon shape. "
-    "NO thought bubbles. NO text or captions anywhere in the image. "
-    "Story told ENTIRELY through character expression and body language. "
-    "Wide horizontal composition. The main character must be fully visible and centered in the frame, "
-    "with generous safety margins (at least 25% empty background space) at both the top and the bottom. "
-    "Do not crop the character's head or body to the edges; keep the character relatively compact within the center "
-    "so they fit perfectly when cropped to a wide panel, without white outer border."
-)
+def download_meme_image(url):
+    MAX_BYTES = 4 * 1024 * 1024 # 4MB max
+    try:
+        resp = requests.get(url, headers=HEADERS_RSS, timeout=20, stream=True)
+        resp.raise_for_status()
+        data = b""
+        for chunk in resp.iter_content(chunk_size=65536):
+            data += chunk
+            if len(data) > MAX_BYTES:
+                print("Image too large, skipping")
+                return None
+                
+        suffix = ".jpg"
+        for ext in IMAGE_EXTS:
+            if url.lower().split("?")[0].endswith(ext):
+                suffix = ext
+                break
+                
+        tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
+        tmp.write(data)
+        tmp.close()
+        return tmp.name
+    except Exception as e:
+        print(f"Download failed: {e}")
+        return None
 
-# ─── Fallback scenarios (label1_th, scene1_en, label2_th, scene2_en) ──
-FALLBACK_SCENARIOS = [
-    (
-        "ตอนประกาศจะตั้งใจทำงาน",
-        "Thai man in 30s confidently looking at his blank calendar with a bright morning smile, ready to work",
-        "หลังผ่านไป 1 ชั่วโมง",
-        "Same man looking exhausted, holding a cup of coffee with stress sweat drops, looking at a calendar filled with urgent meetings",
-    ),
-    (
-        "เมื่อบอสบอกว่ามีรางวัลพิเศษให้",
-        "Thai man in 30s clapping hands happily with eyes sparkling with hope in a neat modern office",
-        "รางวัลที่ได้รับจริง",
-        "Same man slumped at desk buried under giant stacks of new folders, holding a massive pile of files with a blank numb expression",
-    ),
-    (
-        "เช้าวันเสาร์ที่ตั้งใจจะพักผ่อน",
-        "Thai man lying peacefully on bed reading a book, soft morning light, relaxed smile",
-        "เมื่อมีแจ้งเตือน LINE จากหัวหน้า",
-        "Same man staring at his glowing smartphone screen in panic, eyes wide with horror, sweat drops flying",
-    ),
-    (
-        "ตอนบอสบอกว่า 'เปิดใจคุยกันได้'",
-        "Thai man smiling warmly, preparing to speak at a conference table, boss nodding",
-        "หลังจากพูดความจริงไป",
-        "Same man sweating profusely with a forced tight smile, packaging his personal belongings into a cardboard box",
-    ),
-    (
-        "วันเงินเดือนออก กินหรูอยู่แพง",
-        "Thai man sitting happily at a fancy steakhouse table, gourmet food, confident rich expression",
-        "สัปดาห์ถัดมา จ้องซองกาแฟ 3-in-1",
-        "Same man in his kitchen looking sadly at a near-empty wallet and holding a single instant coffee sachet",
-    ),
-]
+# ─── Gemini Vision Translation ──────────────────────────────────────
+def analyze_meme_image(img_path, reddit_title):
+    with open(img_path, "rb") as f:
+        img_data = f.read()
+        
+    mime_type = "image/jpeg"
+    if img_path.lower().endswith(".png"):
+        mime_type = "image/png"
+    elif img_path.lower().endswith(".webp"):
+        mime_type = "image/webp"
+    elif img_path.lower().endswith(".gif"):
+        mime_type = "image/gif"
 
+    prompt = (
+        "นี่คือมีม (Meme) ภาษาอังกฤษจาก Reddit ของต่างประเทศ\n"
+        f"ชื่อโพสต์ต้นฉบับ: \"{reddit_title}\"\n\n"
+        "งานของคุณคือแสดงความเป็นผู้เชี่ยวชาญด้านอารมณ์ขัน แปลความหมายเชิงเสียดสีและมุกตลกในมีมนี้ให้เป็นมุกที่โดนใจวัยทำงานคนไทย (อายุ 30+) โดยการคิดพาดหัวและเขียนแคปชั่นตามข้อกำหนดต่อไปนี้:\n\n"
+        "1. พาดหัวแบบไทย (Thai Overlay Text): คิดประโยคสั้นๆ 2 บรรทัดที่อธิบายมีมนี้เป็นภาษาไทยแนวพาดหัวเด็ดๆ ขำๆ\n"
+        "   - บรรทัดที่ 1 (headline_accent): สีทอง (Accent) สั้นกระชับ (2-6 คำ) เช่น 'เมื่อบอกบอสว่าใกล้เสร็จ'\n"
+        "   - บรรทัดที่ 2 (headline_white): สีขาว (White) หักมุม/ความจริงอันโหดร้าย (2-6 คำ) เช่น 'แต่ยังไม่ได้สร้างไฟล์'\n"
+        "2. แคปชั่น (Caption): เขียน 1 ย่อหน้าสั้นๆ แนวพูดคุยเป็นมิตรตลกๆ ภาษาธรรมชาติ (ความยาวประมาณ 2-4 บรรทัด) ในบุคลิกแอดมินเพจผู้ชาย (ใช้หางเสียงครับ/ผม/พี่ เสมอ) ชวนให้คนอ่านรู้สึกอินตามและคอมเมนต์แชร์เรื่องของตัวเอง\n"
+        "3. แฮชแท็ก (Hashtags): ใส่แฮชแท็ก 2-3 อัน ท้ายข้อความแคปชั่น\n\n"
+        "ตอบกลับในรูปแบบ JSON เท่านั้น โดยมีรูปแบบตามคีย์ดังนี้:\n"
+        "{\n"
+        "  \"headline_accent\": \"...\",\n"
+        "  \"headline_white\": \"...\",\n"
+        "  \"caption\": \"...\"\n"
+        "}"
+    )
 
-def gemini_text(prompt):
     for model in TEXT_MODELS:
         try:
-            resp = client.models.generate_content(model=model, contents=prompt)
-            return resp.text.strip()
-        except Exception as e:
-            print(f"[{model}] text failed: {str(e)[:80]}")
-    return ""
-
-
-# ─── มุมมองการเสียดสีและมุกตลกเพื่อความหลากหลาย (Meme Angles Rotation) ───
-MEME_ANGLES = [
-    {
-        "category": "การประชุมและงานด่วน (Meetings & Urgent Tasks)",
-        "focus": "การประชุมที่ลากยาวอย่างไร้สาระเพื่อหาข้อสรุปที่ไม่มีใครทำตาม หรือการโดนเรียกประชุมด่วนช่วงจะเลิกงาน"
-    },
-    {
-        "category": "เงินเดือนและสภาพคล่อง (Salary & Mid-month struggles)",
-        "focus": "ความรู้สึกรวยในวันเงินเดือนออกเพียง 5 นาที ก่อนที่บิลค่าใช้จ่าย/หนี้สินจะหักไปจนแทบหมด"
-    },
-    {
-        "category": "วันหยุดและงานลาม (Weekends vs Work)",
-        "focus": "การวางแผนนอนโง่ๆ พักผ่อนเต็มที่ในวันเสาร์อาทิตย์ แต่โดนหัวหน้าแท็กสั่งงานด่วนในกลุ่ม LINE"
-    },
-    {
-        "category": "คำสัญญาของหัวหน้า (Boss Promises vs Reality)",
-        "focus": "หัวหน้าบอกว่า 'ถ้างานนี้ผ่านจะมีรางวัลพิเศษให้' หรือ 'เปิดใจคุยกันได้' แต่ผลลัพธ์กลับตรงกันข้ามโดยสิ้นเชิง"
-    },
-    {
-        "category": "การซื้อของประชดชีวิต (Retail Therapy)",
-        "focus": "การทำงานหนักแล้วเอาเงินไปซื้อกาแฟแก้วละ 150 บาท หรือของฟุ่มเฟือยเพื่อบำบัดจิตใจ ทั้งที่เงินเก็บไม่มี"
-    },
-    {
-        "category": "ประเมินผลงานและความก้าวหน้า (Performance & Career)",
-        "focus": "ความขยันทำงานแทบตายแต่ตอนประเมินผลได้เท่าเดิม หรือการทำงานหนักจนหลังหักแต่คนอื่นได้เลื่อนขั้น"
-    },
-    {
-        "category": "สุขภาพร่างกายและออฟฟิศซินโดรม (Office Syndrome & Health)",
-        "focus": "ตอนเริ่มงานอายุ 25 ร่างกายแข็งแรงฟิตปั๋ง ตอนนี้อายุ 30+ ตื่นมาพร้อมความปวดหลัง คอ บ่า ไหล่ และพลาสเตอร์ยาเต็มตัว"
-    },
-    {
-        "category": "พนักงานใหม่ vs พนักงานเก่า (Junior vs Senior)",
-        "focus": "พนักงานใหม่เข้ามาทำงานด้วยพลังเปี่ยมล้นและรอยยิ้มสดใส VS รุ่นพี่อายุ 30+ ที่จิบกาแฟจ้องหน้าจอด้วยสายตาว่างเปล่าและเหนื่อยล้า"
-    },
-    {
-        "category": "การวางแผนเก็บเงิน (Failed Savings Plan)",
-        "focus": "ตั้งเป้าต้นปีว่าจะเก็บเงิน 1 แสนบาทถ้วนเพื่ออนาคต แต่กลางปีพบว่าเงินเก็บเหลือ 50 บาทถ้วนและหนี้งอกขึ้นมาใหม่"
-    },
-    {
-        "category": "ความฝันในการลาออก (Dreams of Resigning)",
-        "focus": "จินตนาการในหัวว่าถ้าถูกหวยรางวัลที่ 1 จะเดินไปโยนใบลาออกใส่หน้าหัวหน้าอย่างสง่างาม แต่ความจริงคือเสียงนาฬิกาปลุกดังและต้องรีบวิ่งไปขึ้นรถเมล์"
-    },
-    {
-        "category": "ความรักและคนโสด (Love & Single Life)",
-        "focus": "ตอนเห็นคู่อื่นหวานกันในโซเชียลแล้วคิดว่าตัวเองพร้อมมีความรัก VS ความจริงคือนอนกอดหมอนข้างกับมือถือคนเดียวในห้อง"
-    },
-    {
-        "category": "การลดน้ำหนักและการกิน (Diet & Eating)",
-        "focus": "ตั้งใจไดเอทตอนเช้ากินสลัดผักอย่างมีวินัย VS ตกเย็นสั่งหมูกระทะชาบูบุฟเฟต์เพราะคิดว่าพรุ่งนี้ค่อยเริ่มใหม่"
-    },
-    {
-        "category": "การออกกำลังกายและฟิตเนส (Gym & Exercise)",
-        "focus": "ตอนสมัครฟิตเนสรายปีด้วยไฟแรงคิดว่าจะหุ่นดี VS ความจริงคือไปแค่ 2 ครั้งแล้วใช้เป็นที่แขวนเสื้อผ้าที่บ้าน"
-    },
-    {
-        "category": "รถติดและการเดินทาง (Traffic & Commute)",
-        "focus": "ตอนออกจากบ้านเช้าๆ คิดว่าจะถึงที่หมายเร็ว VS ความจริงคือติดแหง็กบนถนนหรือรอรถเมล์/รถไฟฟ้าที่คนแน่นเหมือนปลากระป๋อง"
-    },
-    {
-        "category": "โซเชียลมีเดียและมือถือ (Social Media Addiction)",
-        "focus": "ตั้งใจจะเล่นมือถือแค่ 5 นาทีก่อนนอน VS เงยหน้าขึ้นมาอีกทีตี 3 ยังไถฟีดไม่เลิกตาแห้งโบ๋"
-    },
-    {
-        "category": "ช้อปปิ้งออนไลน์และพัสดุ (Online Shopping)",
-        "focus": "ตอนกดสั่งของลดราคาตอนตี 2 ด้วยความสุขคิดว่าคุ้มมาก VS ตอนของมาส่งแล้วจำไม่ได้ว่าสั่งอะไรไปและไม่ได้ใช้"
-    },
-    {
-        "category": "ครอบครัวและญาติ (Family & Relatives)",
-        "focus": "ตอนกลับบ้านต่างจังหวัดคิดว่าจะได้พักผ่อน VS โดนญาติถามเรื่องเงินเดือน แฟน และเมื่อไหร่จะแต่งงานจนอยากรีบกลับ"
-    },
-    {
-        "category": "ป้าข้างบ้านขี้อวด (Nosy Showy Neighbor)",
-        "focus": "ป้าข้างบ้านทำตัวใจดีสงสารถามไถ่เหมือนนางเอกละครคุณธรรม VS จริงๆ แค่อยากมาอวดลูกได้เกียรตินิยม รถใหม่ บ้านใหม่ และจับผิดชีวิตเรา"
-    },
-    {
-        "category": "ดราม่าคอนโด/หอพัก (Condo & Dorm Drama)",
-        "focus": "ตอนย้ายเข้าคอนโดใหม่คิดว่าจะได้อยู่เงียบสงบ VS เจอเพื่อนบ้านเปิดเพลงดัง สูบบุหรี่ริมระเบียง และจอดรถขวางตลอด"
-    },
-    {
-        "category": "งานบุญงานบวชและการลงขัน (Social Obligations)",
-        "focus": "ตอนได้รับการ์ดเชิญงานแต่ง/งานบวชคิดว่ายินดีด้วย VS พอเปิดดูปฏิทินเจอ 5 งานในเดือนเดียวจนซองเงินบานปลายกระเป๋าแห้ง"
-    },
-    {
-        "category": "เน็ตไอดอลกับชีวิตจริง (Influencer vs Reality)",
-        "focus": "รูปในโซเชียลดูไลฟ์สไตล์หรูเดินทางหรูกินหรู VS เบื้องหลังคือถ่ายรูปเป็นร้อยใบ กินมาม่า และผ่อนบัตรเครดิตเพื่อของในรูป"
-    },
-    {
-        "category": "เพื่อนตอนชวนลงทุน (Friends & Get-Rich-Quick)",
-        "focus": "เพื่อนเก่าทักมาทักทายอบอุ่นเหมือนคิดถึงกันจริง VS จริงๆ แค่จะชวนลงทุนขายตรง คริปโต หรือแชร์ลูกโซ่"
-    },
-    {
-        "category": "หมอดูกับความหวัง (Fortune Teller & Hope)",
-        "focus": "ตอนไปดูหมอเสียเงินหวังว่าชีวิตจะดีขึ้นมีคนรักมีเงิน VS กลับมาชีวิตเหมือนเดิมแต่จนลงเพราะค่าครู"
-    }
-]
-
-
-def generate_scenario_2panel():
-    """AI คิด 2-panel scenario — คืน (label1_th, scene1_en, label2_th, scene2_en, category) โดยใช้การหมุนเวียนมุมมองมุกตลกเพื่อป้องกันมุกซ้ำ"""
-    history = set(load_history())
-    available = [a for a in MEME_ANGLES if a['category'] not in history]
-    if not available:
-        print("All meme angles already posted. Resetting history for angles.")
-        available = MEME_ANGLES
-    selected_angle = random.choice(available)
-    
-    print(f"Selected Angle: {selected_angle['category']}")
-
-    prompt = (
-        "Create a 2-panel 'before vs after' or 'expectation vs reality' Thai comic scenario about everyday life of Thai adults aged 30-45.\n"
-        "The scenario MUST match the joke theme below — do NOT default to office/work jokes unless the category is about work.\n"
-        f"You MUST base the comic scenario on this specific joke theme:\n"
-        f"- Category: {selected_angle['category']}\n"
-        f"- Focus/Angle: {selected_angle['focus']}\n\n"
-        "Ensure the contrast from panel 1 (expectation/hopeful) to panel 2 (brutal reality/sarcastic twist) is very funny, relatable, and prompt-driven to get comments.\n\n"
-        "Output EXACTLY 4 lines, nothing else:\n"
-        "Line 1: Panel 1 Thai label — short specific phrase 3-7 words (e.g. ตอนอาสาทำงานใหม่)\n"
-        "Line 2: Panel 1 image — English description of what character does/feels, 15-25 words\n"
-        "Line 3: Panel 2 Thai label — short specific phrase 3-7 words (e.g. สิ่งที่ได้คืองานเพื่อนร่วมงาน)\n"
-        "Line 4: Panel 2 image — English description of SAME character in contrasting situation, 15-25 words\n"
-        "Do NOT include line numbers or prefixes. Just the 4 lines."
-    )
-    result = gemini_text(prompt)
-    lines = [re.sub(r'^(Line\s*\d+[:.]\s*|[\d]+[.)]\s*)', '', l).strip()
-             for l in result.split("\n") if l.strip()]
-    lines = [l for l in lines if l]
-
-    if len(lines) >= 4:
-        label1, scene1, label2, scene2 = lines[0], lines[1], lines[2], lines[3]
-        print(f"Scenario: [{label1}] {scene1}")
-        print(f"          [{label2}] {scene2}")
-        return label1, scene1, label2, scene2, selected_angle['category']
-
-    print("Scenario gen failed — using fallback")
-    fb = random.choice(FALLBACK_SCENARIOS)
-    return fb[0], fb[1], fb[2], fb[3], "Fallback"
-
-
-def generate_panel_image(scene_en, panel_num):
-    """Generate รูป 1 panel — คืน path PNG"""
-    prompt = (
-        f"Draw a single comic panel illustration. "
-        f"{ROCKET_CHARACTER} "
-        f"Scene: {scene_en}. "
-        f"{ART_STYLE}"
-    )
-    for model in IMAGE_MODELS:
-        for attempt in range(3):
-            try:
-                resp = client.models.generate_content(
-                    model=model,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_modalities=["IMAGE", "TEXT"]
-                    )
+            resp = client.models.generate_content(
+                model=model,
+                contents=[
+                    types.Part.from_bytes(data=img_data, mime_type=mime_type),
+                    types.Part.from_text(text=prompt),
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
                 )
-                for part in resp.candidates[0].content.parts:
-                    if part.inline_data:
-                        data = part.inline_data.data
-                        if isinstance(data, str):
-                            data = base64.b64decode(data)
-                        bkk = timezone(timedelta(hours=7))
-                        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-                        path = os.path.join(OUTPUT_DIR, f"panel{panel_num}_{ts}.png")
-                        with open(path, "wb") as f:
-                            f.write(data)
-                        print(f"Panel {panel_num} saved: {path} (model={model})")
-                        return path
-            except Exception as e:
-                err = str(e)[:120]
-                print(f"Panel {panel_num} [{model}] attempt {attempt+1} failed: {err}")
-                if "404" in err or "not found" in err.lower():
-                    break  # ไม่ต้อง retry — model ไม่มี
-                if attempt < 2:
-                    time.sleep(15)
-    raise RuntimeError(f"Panel {panel_num} generation failed — all models exhausted")
+            )
+            result_text = resp.text.strip()
+            data = json.loads(result_text)
+            return (
+                data.get("headline_accent", "").strip(),
+                data.get("headline_white", "").strip(),
+                data.get("caption", "").strip()
+            )
+        except Exception as e:
+            print(f"[{model}] vision analysis attempt failed: {e}")
+            time.sleep(5)
+            
+    raise RuntimeError("Meme vision analysis failed on all models")
 
-
-def stitch_panels(img1_path, img2_path, label1, label2):
-    """
-    ต่อ 2 panel แนวตั้ง → 1080x1080
-    วาด label box style จ้อง 8 รั้ว บนแต่ละ panel
-    """
-    W, H = 1080, 1080
-    panel_h = H // 2  # 540px ต่อ panel
-
-    canvas = Image.new("RGB", (W, H), (240, 240, 240))
-
-    bkk = timezone(timedelta(hours=7))
-    ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
-
-    for idx, (ipath, label) in enumerate([(img1_path, label1), (img2_path, label2)]):
-        img = Image.open(ipath).convert("RGB")
-        iw, ih = img.size
-
-        # Crop ให้เป็น 2:1 ratio — ตัดจากตรงกลาง
-        target_ratio = W / panel_h  # 2.0
-        if iw / ih > target_ratio:
-            # กว้างเกิน — crop ซ้ายขวา
-            new_w = int(ih * target_ratio)
-            left = (iw - new_w) // 2
-            img = img.crop((left, 0, left + new_w, ih))
-        else:
-            # สูงเกิน — crop บนล่าง (ใช้ offset ปานกลาง 2.5 เพื่อให้เหลือพื้นที่หัวและตัวด้านล่างสมดุลกัน)
-            new_h = int(iw / target_ratio)
-            top = int(max(0, (ih - new_h) // 2.5))
-            img = img.crop((0, top, iw, top + new_h))
-
-        img = img.resize((W, panel_h), Image.LANCZOS)
-        canvas.paste(img, (0, idx * panel_h))
-
-        # ─── วาด label text โดยตรงบน panel (style Jod 8riew) ────────
-        draw = ImageDraw.Draw(canvas)
-        try:
-            font = ImageFont.truetype(FONT_PATH, 42)
-        except Exception:
-            font = ImageFont.load_default()
-
-        MARGIN = 28
-        tx = MARGIN
-        ty = idx * panel_h + MARGIN
-        # 8-direction outline → อ่านได้บนทุกพื้นหลัง ไม่ต้องมี box
-        for dx, dy in [(-3,-3),(-3,0),(-3,3),(0,-3),(0,3),(3,-3),(3,0),(3,3)]:
-            draw.text((tx + dx, ty + dy), label, font=font, fill=(0, 0, 0))
-        draw.text((tx, ty), label, font=font, fill=(255, 255, 255))
-
-    # Divider ระหว่าง 2 panel
-    draw = ImageDraw.Draw(canvas)
-    draw.line([(0, panel_h), (W, panel_h)], fill=(20, 20, 20), width=4)
-
-    out_path = os.path.join(OUTPUT_DIR, f"meme_comic_{ts}.jpg")
-    canvas.save(out_path, "JPEG", quality=92)
-    print(f"Comic saved: {out_path}")
-    return out_path
-
-
-def generate_caption(label1, label2):
-    """Caption Facebook จาก label ทั้งสอง"""
-    prompt = (
-        f"เขียน Facebook caption ภาษาไทย 1-2 บรรทัด สำหรับการ์ตูน 2 panel:\n"
-        f"Panel 1: '{label1}'\n"
-        f"Panel 2: '{label2}'\n"
-        "สั้น ขำ relatable คนอายุ 30+ — ห้ามอธิบายว่ามีกี่ panel ไม่ต้องบอกว่า 'ในรูป'\n"
-        "ท้ายใส่ hashtag 2-3 อัน ตอบแค่ caption เท่านั้น"
-    )
-    caption = gemini_text(prompt)
-    print(f"Caption:\n{caption}\n")
-    return caption or f"{label1} → {label2}\n\n#ชีวิตคนทำงาน #Relatable #Rocket21"
-
-
+# ─── Facebook Post and Comments ──────────────────────────────────────
 def post_facebook(img_path, caption):
     print("Posting to Facebook...")
     with open(img_path, "rb") as f:
@@ -378,13 +202,12 @@ def post_facebook(img_path, caption):
     result = resp.json()
     if "id" in result:
         post_id = result.get("post_id") or result["id"]
-        print(f"Posted! ID: {post_id}")
+        print(f"Posted successfully! ID: {post_id}")
         add_comment(post_id)
         return post_id
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
-
 
 def add_comment(post_id):
     from affiliate_utils import get_all_comments
@@ -400,9 +223,11 @@ def add_comment(post_id):
                 data["attachment_url"] = pic
         else:
             data = {"access_token": PAGE_ACCESS_TOKEN, "message": msg}
+            
         if not data.get("message", "").strip():
             print(f"Comment {i} skipped (empty message)")
             continue
+            
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{post_id}/comments",
             data=data,
@@ -413,48 +238,82 @@ def add_comment(post_id):
             print(f"Comment {i} added! ID: {result['id']}")
         else:
             print(f"Comment {i} error: {result}")
+            
         if i < len(comments):
             delay = random.uniform(30, 90)
             print(f"Waiting {delay:.0f}s before next comment...")
             time.sleep(delay)
 
-
-if __name__ == "__main__":
+# ─── Main Execution ──────────────────────────────────────────────────
+def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dry-run", action="store_true", help="Run in dry-run mode without generating images or posting")
+    parser.add_argument("--dry-run", action="store_true", help="Run locally and render image without posting")
     args = parser.parse_args()
 
-    # Step 1: AI คิด scenario
-    label1, scene1, label2, scene2, category = generate_scenario_2panel()
-
-    if args.dry_run:
-        print("\n--- [DRY RUN RESULTS] ---")
-        print(f"Category: {category}")
-        print(f"Panel 1 Label: {label1}")
-        print(f"Panel 1 Image Prompt: {scene1}")
-        print(f"Panel 2 Label: {label2}")
-        print(f"Panel 2 Image Prompt: {scene2}")
-        caption = generate_caption(label1, label2)
-        print("\nDry run completed successfully (image generation and posting skipped).")
+    history = set(load_history())
+    
+    # Step 1: Scrape Reddit Meme
+    post = get_reddit_meme(history)
+    if not post:
+        print("No new memes found in Reddit feeds.")
         sys.exit(0)
+        
+    img_url = post["url"]
+    reddit_title = post["title"]
+    subreddit = post["subreddit"]
 
-    # Step 2: Generate 2 panels แยกกัน → ป้องกัน duplicate panel bug
-    img1 = generate_panel_image(scene1, panel_num=1)
-    img2 = generate_panel_image(scene2, panel_num=2)
+    # Step 2: Download Image
+    tmp_path = download_meme_image(img_url)
+    if not tmp_path:
+        print("Failed to download meme image.")
+        sys.exit(1)
 
-    # Step 3: Stitch + วาด label box
-    comic = stitch_panels(img1, img2, label1, label2)
+    try:
+        # Step 3: Analyze using Gemini
+        print("Analyzing meme with Gemini Vision...")
+        headline_accent, headline_white, caption = analyze_meme_image(tmp_path, reddit_title)
+        
+        caption_with_via = f"{caption}\n\n📷 via r/{subreddit}"
+        
+        print("\n--- [GEMINI LOCALIZATION RESULTS] ---")
+        print(f"Reddit Title: {reddit_title}")
+        print(f"Accent line:  {headline_accent}")
+        print(f"White line:   {headline_white}")
+        print(f"Caption:\n{caption_with_via}\n")
 
-    # Step 4: ลบ temp files
-    for p in [img1, img2]:
-        try:
-            os.unlink(p)
-        except Exception:
-            pass
+        # Step 4: Render Text Overlay Matichon Style
+        # Accent color = Gold (255, 215, 0)
+        GOLD_ACCENT = (255, 215, 0)
+        
+        bkk = timezone(timedelta(hours=7))
+        ts = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
+        rendered_jpg_path = os.path.join(OUTPUT_DIR, f"meme_overlay_{ts}.jpg")
+        
+        print("Rendering overlay on image...")
+        overlay_utils.add_overlay(
+            img_path=tmp_path,
+            line1=headline_accent,
+            line2=headline_white,
+            accent_color=GOLD_ACCENT,
+            out_path=rendered_jpg_path
+        )
+        print(f"Rendered image saved to: {rendered_jpg_path}")
 
-    # Step 5: Caption + Post
-    caption = generate_caption(label1, label2)
-    post_id = post_facebook(comic, caption)
-    if post_id and category != "Fallback":
-        save_to_history(category)
+        # Step 5: Post or Dry Run
+        if args.dry_run:
+            print("\nDry run completed successfully. Posting skipped.")
+        else:
+            post_facebook(rendered_jpg_path, caption_with_via)
+            save_to_history(img_url)
+            
+    finally:
+        # Clean up temp file
+        if tmp_path and os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+
+if __name__ == "__main__":
+    main()
