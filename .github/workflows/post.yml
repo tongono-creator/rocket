@@ -2,10 +2,8 @@ name: Post to Facebook
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 05:00 BKK
-    - cron: '0 5 * * *'   # 12:00 BKK
-    - cron: '0 10 * * *'  # 17:00 BKK
-    - cron: '0 14 * * *'  # 21:00 BKK
+    - cron: '0 1 * * *'   # 08:00 BKK
+    - cron: '0 13 * * *'  # 20:00 BKK
   workflow_dispatch:       # รันมือได้จาก GitHub UI
 
 jobs:

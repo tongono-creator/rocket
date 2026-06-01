@@ -2,10 +2,8 @@ name: Threads Post
 
 on:
   schedule:
-    - cron: '0 22 * * *'  # 05:00 BKK
-    - cron: '0 4 * * *'   # 11:00 BKK
-    - cron: '0 7 * * *'   # 14:00 BKK
-    - cron: '0 11 * * *'  # 18:00 BKK
+    - cron: '0 2 * * *'   # 09:00 BKK
+    - cron: '0 8 * * *'   # 15:00 BKK
     - cron: '0 14 * * *'  # 21:00 BKK
   workflow_dispatch:
 
