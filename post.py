@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, re, requests, time, random
+import sys, io, os, re, requests, time, random, xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
@@ -34,7 +34,7 @@ if not GOOGLE_API_KEY or GOOGLE_API_KEY in ("DUMMY_KEY", "DUMMY"):
     API_ENABLED = False
 else:
     try:
-        client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 15000.0})
+        client = genai.Client(api_key=GOOGLE_API_KEY, http_options={'timeout': 60000.0})
     except Exception as e:
         print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
         API_ENABLED = False
@@ -305,6 +305,36 @@ SLOT_INFO = {
     }
 }
 
+def fetch_reddit_discussion_titles():
+    """ดึงหัวข้อกระทู้ที่กำลังเป็นที่นิยมจาก Subreddits เพื่อนำมาใช้เป็นไอเดียตั้งต้น"""
+    subreddits = ["personalfinance", "antiwork", "relationship_advice", "AskReddit", "jobs", "confession"]
+    # สุ่มเลือกมา 2 ห้องเพื่อไม่ให้ใช้เวลาดึงข้อมูลนานเกินไป
+    selected = random.sample(subreddits, 2)
+    titles = []
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"}
+    
+    for sub in selected:
+        url = f"https://www.reddit.com/r/{sub}/hot.rss"
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 200:
+                root = ET.fromstring(resp.content)
+                ns = {"atom": "http://www.w3.org/2005/Atom"}
+                entries = root.findall("atom:entry", ns)
+                count = 0
+                for entry in entries:
+                    title = entry.findtext("atom:title", "", ns)
+                    if title:
+                        title_clean = re.sub(r'^\[.*?\]\s*', '', title).strip()
+                        if title_clean and title_clean not in titles:
+                            titles.append(f"r/{sub}: {title_clean}")
+                            count += 1
+                            if count >= 5:
+                                break
+        except Exception as e:
+            print(f"Error fetching Reddit titles from r/{sub}: {e}")
+    return titles
+
 def generate_dynamic_topic(slot, history_list):
     """สร้างหัวข้อประเด็นใหม่ล่าสุดแบบ dynamic โดยไม่ให้ซ้ำกับประวัติการโพสท์ที่ผ่านมา"""
     global API_ENABLED
@@ -314,6 +344,16 @@ def generate_dynamic_topic(slot, history_list):
     info = SLOT_INFO.get(slot)
     if not info:
         return None
+    
+    # ดึงข้อมูลหัวข้อฮิตจาก Reddit มาเป็นไอเดียตั้งต้น
+    reddit_inspirations = fetch_reddit_discussion_titles()
+    reddit_context = ""
+    if reddit_inspirations:
+        reddit_str = "\n".join([f"- {t}" for t in reddit_inspirations])
+        reddit_context = (
+            f"และนี่คือหัวข้อกระทู้ที่กำลังได้รับความนิยมบน Reddit ในต่างประเทศขณะนี้ (ใช้เป็นแรงบันดาลใจเพื่อนำมาประยุกต์หรือดัดแปลง):\n"
+            f"{reddit_str}\n\n"
+        )
     
     # กรองประวัติที่เป็น url หรือข้อความสั้นเกินไปออก
     recent_history = []
@@ -337,6 +377,7 @@ def generate_dynamic_topic(slot, history_list):
         f"คุณคือแอดมินเพจแนวความชวนถกเถียงเรื่องเงิน การงาน ครอบครัว และการสร้างตัวของคนวัย 30+\n"
         f"จงสร้างประเด็น/หัวข้อชวนเลือกฝั่งหรือคำถามดราม่าทางการเงินชวนตอบ สำหรับช่วงเวลา: {slot}\n\n"
         f"คำอธิบายแนวทางช่วง {slot}:\n{info['desc']}\n\n"
+        f"{reddit_context}"
         f"ตัวอย่างประเด็นแนวทางนี้:\n{examples_str}\n\n"
         f"**กฎเหล็กสำคัญมาก**:\n"
         f"1. ห้ามสร้างหัวข้อที่มีประเด็น ไอเดีย หรือคำถามที่ซ้ำหรือคล้ายคลึงกับรายการประเด็นที่โพสต์ไปแล้วด้านล่างนี้เด็ดขาด:\n"
