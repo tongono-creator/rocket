@@ -358,14 +358,15 @@ def generate_news_content(img_bytes, reddit_title, sub, original_link):
         f"This image is from the Reddit thread: '{reddit_title}' in r/{sub}.\n"
         "Analyze the Reddit title and the image together to understand the context. Then, generate highly engaging, informative tech/science news content in Thai.\n"
         "Output format must have exactly 3 sections separated by labels:\n"
-        "===HOOK1=== [Hook Line 1: very short, 3-5 Thai words, e.g. 'ที่แรกในโลก', 'เทคโนโลยีใหม่', 'สุดล้ำ', 'วิทยาศาสตร์พบ']\n"
-        "===HOOK2=== [Hook Line 2: very short, 4-7 Thai words, describing the core event/breakthrough, e.g. 'จีนตั้งศูนย์ข้อมูล AI ใต้น้ำ']\n"
-        "===CAPTION=== [Facebook Caption: A detailed, highly informative explanation structured in 2-3 paragraphs. Expand on the facts, science, background, or impact of this news. Write in a friendly, polite, and professional male persona using 'ครับ' and 'ผม' or 'พี่'. Ask a question at the end to invite discussion. No markdown like **. Include hashtags and citation.]\n\n"
+        "===HOOK1=== [Hook Line 1: very short, 3-5 Thai words, e.g. 'จะรอดไหม', 'เทคโนโลยีใหม่', 'สุดล้ำ', 'ความจริงวันนี้']\n"
+        "===HOOK2=== [Hook Line 2: very short, 4-7 Thai words, describing the core event or a dilemma, e.g. 'เอไอเตรียมแทนที่คน']\n"
+        "===CAPTION=== [Facebook Caption: A detailed, highly engaging explanation structured in 1-2 paragraphs. Reframe the news context around everyday adulting, work-life, productivity, job stability, or financial struggles of 30+ year olds (e.g., if it is AI news, highlight job replacement fears; if it is remote work, compare remote vs office work; if it is gadgets, discuss tech costs/worth). Write in a friendly, polite male persona using 'ครับ' and 'ผม' or 'พี่'. You MUST end the caption with a direct, reply-eliciting question to spark debate/discussion (e.g., 'กังวลกันไหมครับว่าจะโดนหุ่นยนต์แย่งงาน?', 'เป็นพี่ๆ จะยอมทนทำงานต่อไหมครับ?'). Absolutely NO markdown bolding (**), NO bullet points, lists, or symbols like ▪️ or - anywhere. Include hashtags and citation.]\n\n"
         "Requirements:\n"
         "- Write in natural, fluent Thai.\n"
         "- Maintain strict factual accuracy. Do not fabricate or speculate. Use real numbers or data if mentioned.\n"
         "- Hook lines and caption must be logical and consistent.\n"
         "- Do not use any markdown bolding (**) in the caption.\n"
+        "- Absolutely no bullet points or lists of any kind.\n"
     )
 
     part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
