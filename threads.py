@@ -115,8 +115,101 @@ LATE_TOPICS = [
     "ในวันที่เหนื่อยล้าที่สุด สิ่งที่อยากได้ไม่ใช่เงินล้าน แต่คือความสงบเงียบๆ สักชั่วโมง",
 ]
 
+SLOT_INFO = {
+    "morning": {
+        "desc": "การเงินและวินัยการสร้างตัว หรือความก้าวหน้าและการทำมาหากินในชีวิตคนทำงานวัยสร้างตัว 30+",
+        "examples": [
+            "มีเงินเก็บ 1 แสนแรก ควรซื้อทองเก็บไว้ หรือซื้อกองทุนรวมดัชนีดี?",
+            "ประกันชีวิตกับประกันสุขภาพจำเป็นจริงๆ ไหมสำหรับคนอายุ 30 ที่แข็งแรงดี?",
+            "ระหว่างการลงทุนในตัวเองเพื่อเพิ่มรายได้ VS การประหยัดเงินสุดขีดเพื่อเพิ่มเงินเก็บ ทางไหนรวยเร็วกว่า?",
+            "คิดยังไงกับการให้เงินพ่อแม่ตามหน้าที่กตัญญู จนตัวเองไม่มีเงินเก็บเลย?"
+        ]
+    },
+    "noon": {
+        "desc": "ดราม่า/ทางเลือกยากๆ ในชีวิตการเงิน ครอบครัว หรือความสัมพันธ์ในวัยทำงาน (แนวๆ กระทู้ดราม่าการเงิน/ความรักพันทิป)",
+        "examples": [
+            "อายุ 35 เงินเดือน 40,000 แต่ไม่มีเงินเก็บเลย แปลกและล้มเหลวไหม?",
+            "แฟนเงินเดือนน้อยกว่า 3 เท่า แต่หนี้เยอะกว่า 5 เท่า ควรคบต่อหรือพอแค่นี้?",
+            "ทำงานงกๆ เก็บเงินได้ 5 แสน แต่พ่อแม่ขอเอาไปให้ญาติกู้ ควรให้ไหม?",
+            "อายุ 28 ปี เงินเดือน 25k แต่แม่กดดันให้จัดงานแต่งงานงบ 3 แสนบาทเพื่อเอาหน้าตา ควรทำอย่างไร?"
+        ]
+    },
+    "evening": {
+        "desc": "ศึกเลือกทีม/เปรียบเทียบการเงินและการใช้ชีวิต (Financial Battle) ชวนคุยแบบเปรียบเทียบสองฝั่งชัดเจน",
+        "examples": [
+            "ผ่อนรถ 12,000/เดือน VS นั่ง BTS+Taxi อะไรเหนื่อยน้อยและคุ้มเงินกว่า?",
+            "ซื้อบ้านชานเมือง 3 ล้าน VS เช่าคอนโดติดรถไฟฟ้า 15,000/เดือน เลือกแบบไหน?",
+            "แต่งงานจัดงานหรูหราหมดไป 5 แสน VS จดทะเบียนสมรสแล้วเอาเงินไปเที่ยวรอบโลก?",
+            "ผ่อน iPhone รุ่นล่าสุดเดือนละ 3,000 VS เอาเงินไปออมทอง/ออมหุ้นทุกเดือน?"
+        ]
+    },
+    "late": {
+        "desc": "การแบกรับภาระ หนี้สิน สุขภาพพัง หรือความจริงอันเจ็บปวดตลกร้ายในวัย 30+ (Adulting Struggles / Life Truths)",
+        "examples": [
+            "คนวัย 35 ที่ตื่นมาพร้อมความรู้สึกว่า 'เรากำลังใช้ชีวิตเพื่อใครอยู่กันแน่'",
+            "ไม่มีอะไรน่ากลัวไปกว่าการเจ็บป่วยตอนอายุ 40 แล้วไม่มีประกันสุขภาพ",
+            "การเติบโตเป็นผู้ใหญ่ทำให้รู้ว่า เพื่อนแท้เหลือไม่ถึง 3 คนก็หรูแล้ว",
+            "เงินซื้อความสุขไม่ได้ แต่ช่วยให้เราไปนั่งร้องไห้บนรถหรูๆ แทนที่จะเป็นเบาะรถเมล์"
+        ]
+    }
+}
+
+def generate_dynamic_topic(slot, history_list):
+    """สร้างหัวข้อประเด็นใหม่ล่าสุดแบบ dynamic โดยไม่ให้ซ้ำกับประวัติการโพสท์ที่ผ่านมา"""
+    global API_ENABLED
+    if not API_ENABLED:
+        return None
+    
+    info = SLOT_INFO.get(slot)
+    if not info:
+        return None
+    
+    # กรองประวัติที่เป็น url หรือข้อความสั้นเกินไปออก
+    recent_history = []
+    for h in history_list:
+        h_clean = h.strip()
+        if not h_clean:
+            continue
+        if h_clean.startswith("http://") or h_clean.startswith("https://"):
+            continue
+        if len(h_clean) < 10:
+            continue
+        recent_history.append(h_clean)
+    
+    # เอาประวัติล่าสุด 150 รายการมาคุมไม่ให้ซ้ำ
+    recent_history = recent_history[-150:]
+    
+    examples_str = "\n".join([f"- {ex}" for ex in info["examples"]])
+    history_str = "\n".join([f"- {h}" for h in recent_history])
+    
+    prompt = (
+        f"คุณคือแอดมินเพจแนวความชวนถกเถียงเรื่องเงิน การงาน ครอบครัว และการสร้างตัวของคนวัย 30+\n"
+        f"จงสร้างประเด็น/หัวข้อชวนเลือกฝั่งหรือคำถามดราม่าทางการเงินชวนตอบ สำหรับช่วงเวลา: {slot}\n\n"
+        f"คำอธิบายแนวทางช่วง {slot}:\n{info['desc']}\n\n"
+        f"ตัวอย่างประเด็นแนวทางนี้:\n{examples_str}\n\n"
+        f"**กฎเหล็กสำคัญมาก**:\n"
+        f"1. ห้ามสร้างหัวข้อที่มีประเด็น ไอเดีย หรือคำถามที่ซ้ำหรือคล้ายคลึงกับรายการประเด็นที่โพสต์ไปแล้วด้านล่างนี้เด็ดขาด:\n"
+        f"{history_str}\n\n"
+        f"2. หัวข้อต้องเขียนเป็นภาษาไทยสั้นๆ 1 ประโยค (ห้ามเกิน 80 ตัวอักษร) ได้ใจความ กระชับ โดนใจคนวัยทำงาน\n"
+        f"3. ห้ามมีเครื่องหมายคำพูด (เช่น อัญประกาศ \", '), ห้ามมีคำอธิบายเพิ่มเติมใดๆ หรือข้อความเกริ่นนำ ตอบเฉพาะข้อความหัวข้อเพียวๆ เท่านั้น\n"
+        f"ตัวอย่างผลลัพธ์ที่ถูกต้อง: เงินเดือน 5 หมื่นขับรถหรูแต่ไม่มีเงินออม VS เงินเดือน 2 หมื่นเก็บได้หมื่นห้า แบบไหนมั่นคงกว่า?"
+    )
+    
+    for model in TEXT_MODELS:
+        for attempt in range(2):
+            try:
+                resp = client.models.generate_content(model=model, contents=prompt)
+                topic = resp.text.strip().strip('"\'“”‘’')
+                if topic:
+                    print(f"[Dynamic Topic - {slot} ({model})]: {topic}")
+                    return topic
+            except Exception as e:
+                print(f"[{model}] generate_dynamic_topic failed (attempt {attempt+1}): {e}")
+    return None
+
 def get_topic():
-    history = set(load_history())
+    history_list = load_history()
+    history = set(history_list)
     bkk = timezone(timedelta(hours=7))
     now = datetime.now(bkk)
     hour = now.hour
@@ -135,12 +228,21 @@ def get_topic():
         slot = "late"
 
     available = [t for t in topics if t not in history]
-    if not available:
-        print(f"All topics in {slot} slot have been posted. Resetting history for this slot.")
-        available = topics
-    
-    chosen = random.choice(available)
-    return chosen, slot
+    if available:
+        chosen = random.choice(available)
+        print(f"Using hardcoded topic for {slot} slot: {chosen}")
+        return chosen, slot
+    else:
+        print(f"All hardcoded topics in {slot} slot have been posted. Generating dynamic topic...")
+        dynamic_topic = generate_dynamic_topic(slot, history_list)
+        if dynamic_topic:
+            return dynamic_topic, slot
+        else:
+            # Fallback to resetting history for that slot if dynamic generation fails
+            print(f"Failed to generate dynamic topic. Resetting history for {slot} slot.")
+            available = topics
+            chosen = random.choice(available)
+            return chosen, slot
 
 # slot → style ที่เหมาะที่สุดตาม content matrix
 SLOT_STYLE = {
