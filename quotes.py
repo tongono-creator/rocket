@@ -46,7 +46,7 @@ TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
 GOLD        = (255, 215, 0)
 WHITE       = (255, 255, 255)
 SILVER      = (200, 200, 200)
-FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+FONT_PATH   = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 HEADERS     = {"User-Agent": "Mozilla/5.0 (compatible; RocketBot/1.0)"}
 
 HISTORY_FILE = "posted_history.txt"

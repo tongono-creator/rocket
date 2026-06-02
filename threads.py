@@ -405,7 +405,7 @@ def generate_quote(topic, slot="morning"):
         print(f"Fallback quote used:\n{quote}")
         return quote
 
-FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 IMG_SIZE  = 1080
 
 _LEADING_VOWELS  = set('เแโใไ')

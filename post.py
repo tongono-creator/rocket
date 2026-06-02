@@ -627,8 +627,8 @@ def generate_story(topic, slot="morning"):
     return ""  # fallback: empty → use quote as caption
 
 # ─── 2. สร้างรูป (PIL + Kanit-Bold — ข้อความถูกต้อง 100%) ────────
-FONT_PATH      = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
-FONT_HASH_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+FONT_PATH      = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
+FONT_HASH_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 IMG_SIZE = 1080
 
 def _wrap_char(draw, text, font, max_width):

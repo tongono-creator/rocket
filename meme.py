@@ -27,7 +27,7 @@ PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
 TEXT_MODELS       = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]
 OUTPUT_DIR        = "output"
-FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Kanit-Bold.ttf")
+FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 
 if not GOOGLE_API_KEY:
     try:
