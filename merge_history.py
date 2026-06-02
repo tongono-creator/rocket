@@ -2,7 +2,7 @@
 import os
 import subprocess
 
-HISTORY_FILES = ["posted_history.txt", "posted_photos.txt", "posted_recipes.txt", "replied_comments.txt"]
+HISTORY_FILES = ["posted_history.txt", "posted_photos.txt", "posted_recipes.txt", "replied_comments.txt", "posted_meme_topics.txt"]
 
 def main():
     # Find which files have local modifications

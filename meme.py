@@ -60,6 +60,29 @@ def save_to_history(item):
     except Exception as e:
         print(f"Error saving history: {e}")
 
+MEME_TOPICS_HISTORY_FILE = "posted_meme_topics.txt"
+
+def load_meme_topics_history():
+    if os.path.exists(MEME_TOPICS_HISTORY_FILE):
+        try:
+            with open(MEME_TOPICS_HISTORY_FILE, "r", encoding="utf-8") as f:
+                return [line.strip() for line in f if line.strip()]
+        except Exception:
+            return []
+    return []
+
+def save_to_meme_topics_history(topic):
+    items = load_meme_topics_history()
+    items.append(topic)
+    items = items[-100:] # Cap at 100 entries
+    try:
+        with open(MEME_TOPICS_HISTORY_FILE, "w", encoding="utf-8") as f:
+            for it in items:
+                f.write(it + "\n")
+    except Exception as e:
+        print(f"Error saving meme topics history: {e}")
+
+
 # ─── Reddit Meme Scraping ───────────────────────────────────────────
 MEME_SUBREDDITS = ["OfficeHumor", "workplaceculture", "memes", "dankmemes", "me_irl", "funny"]
 IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
@@ -133,7 +156,7 @@ def download_meme_image(url):
         return None
 
 # ─── Gemini Vision Joke-to-Scenario Mapping ─────────────────────────
-def analyze_meme_to_scenario(img_path, reddit_title):
+def analyze_meme_to_scenario(img_path, reddit_title, recent_topics=None):
     with open(img_path, "rb") as f:
         img_data = f.read()
         
@@ -145,17 +168,33 @@ def analyze_meme_to_scenario(img_path, reddit_title):
     elif img_path.lower().endswith(".gif"):
         mime_type = "image/gif"
 
+    recent_topics_str = ""
+    if recent_topics:
+        recent_topics_str = (
+            "\n[คำเตือนสำคัญ: ห้ามออกไอเดียหรือเขียนข้อความพาดหัวที่มีความหมายซ้ำหรือใกล้เคียงกับหัวข้อเหล่านี้อย่างเด็ดขาด เนื่องจากเป็นเรื่องที่เพิ่งโพสต์ไปแล้ว]:\n"
+            + "\n".join([f"- {t}" for t in recent_topics])
+            + "\n"
+        )
+
     prompt = (
         "นี่คือมีม (Meme) ภาษาอังกฤษจาก Reddit ของต่างประเทศ\n"
         f"ชื่อโพสต์ต้นฉบับ: \"{reddit_title}\"\n\n"
         "งานของคุณคือวิเคราะห์อารมณ์ขันและมุกตลกในมีมนี้ จากนั้นแปลงมุกนี้มาทำเป็นบทการ์ตูน 2 ช่องแนว 'ความคาดหวัง vs ความจริง' (Before vs After) หรือสถานการณ์หักมุมที่เข้ากับคนทำงานออฟฟิศ/ผู้ใหญ่ชาวไทย (อายุ 30+)\n\n"
         "บทการ์ตูนจะมีตัวละครหลักเป็นหนุ่มไทยอายุ 30 ปี ผมสั้นสีดำเรียบร้อย สวมแว่นตากรอบโลหะทรงสี่เหลี่ยมผืนผ้าบาง ใส่เสื้อเชิ้ตสีขาวมีรอยยับเล็กน้อย\n\n"
+        "**กฎเหล็กเพื่อความหลากหลายและป้องกันเนื้อหาซ้ำซาก**:\n"
+        "1. ห้ามเลือกใช้มุกหัวหน้าสั่งงานด่วน หรือทำงานในวันหยุด/วันพักร้อนโดยเด็ดขาด (เช่น 'วันหยุดแสนสุข' vs 'งานด่วนจากบอส', 'ตอนพักร้อน' vs 'บอสส่งอีเมลมาตาม' เป็นต้น) เพราะเราโพสต์เรื่องนี้ซ้ำบ่อยเกินไปแล้ว\n"
+        "2. พยายามเลือกใช้ประเด็นที่หลากหลายขึ้นของคนทำงานและผู้ใหญ่วัย 30+ ตัวอย่างหัวข้อที่ควรนำมาเล่น:\n"
+        "   - การเงินและหนี้สิน (เช่น การออมเงินแสนแรก, การผ่อนของ 0% 10 เดือน, ซื้อของฟุ่มเฟือยประชดชีวิต, กระเป๋าตังค์แบนปลายเดือน)\n"
+        "   - สุขภาพร่างกาย (เช่น ตื่นนอนแล้วปวดหลัง/คอเคล็ด, ปวดบ่าไหล่จากออฟฟิศซินโดรม, นอนไม่หลับ, กินของมันแล้วกรดไหลย้อน, ตรวจสุขภาพประจำปี)\n"
+        "   - ชีวิตประจำวันออฟฟิศทั่วไป (เช่น เมนูอาหารกลางวันที่คิดไม่ตก, ตื่นสายในวันรถติด, การหลบหน้าเพื่อนร่วมงาน, ประชุมที่คุยเรื่องเดิมซ้ำๆ, รอเวลาเลิกงาน)\n"
+        "   - ความสัมพันธ์และไลฟ์สไตล์ (เช่น การเปรียบเทียบตัวเองกับเพื่อนรุ่นเดียวกัน, การไปปาร์ตี้แล้วง่วงนอนตั้งแต่สามทุ่ม, การซื้อของลดราคามารกบ้าน)\n"
+        f"{recent_topics_str}\n"
         "กรุณาสร้างและอธิบายองค์ประกอบสำหรับการ์ตูน 2 ช่องนี้ โดยตอบกลับเป็นรูปแบบ JSON ที่มีคีย์ดังนี้:\n"
-        "1. label1_th: ข้อความพาดหัวภาษาไทยของช่องที่ 1 (สั้นกระชับ 3-7 คำ อธิบายบริบทความหวัง/ช่วงแรก) เช่น 'ตอนลาพักร้อนวันแรก'\n"
-        "2. scene1_en: คำอธิบายภาพช่องที่ 1 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้าผ่อนคลาย/มีความหวัง ทำกิจกรรมตามหัวข้อ เช่น Thai man in 30s lying relaxed on a beach chair, holding a coconut, smiling warmly)\n"
-        "3. label2_th: ข้อความพาดหัวภาษาไทยของช่องที่ 2 (สั้นกระชับ 3-7 คำ อธิบายความจริงอันโหดร้าย/จุดหักมุม) เช่น 'งานด่วนจากบอสเข้า'\n"
-        "4. scene2_en: คำอธิบายภาพช่องที่ 2 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้ากังวล/เหงื่อตก/ช็อกค้าง เช่น Same Thai man working on a laptop on the beach in panic, sweat drops, wide eyes of shock)\n"
-        "5. caption: แคปชั่นภาษาไทย 1 ย่อหน้าสั้นๆ (2-4 ประโยค) สไตล์แอดมินเพจผู้ชาย (ใช้หางเสียงครับ/ผม/พี่ เสมอ) ชวนให้คนกดคอมเมนต์แชร์เรื่องตัวเอง ท้ายข้อความใส่แฮชแท็ก 2-3 อัน\n\n"
+        "1. label1_th: ข้อความพาดหัวภาษาไทยของช่องที่ 1 (สั้นกระชับ 3-7 คำ อธิบายบริบทความหวัง/ช่วงแรก) เช่น 'ตอนตั้งใจจะเก็บเงิน' หรือ 'ตอนวางแผนจะตื่นมาออกกำลังกาย'\n"
+        "2. scene1_en: คำอธิบายภาพช่องที่ 1 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้าผ่อนคลาย/มีความหวัง ทำกิจกรรมตามหัวข้อ เช่น Thai man in 30s holding piggy bank with a bright smile)\n"
+        "3. label2_th: ข้อความพาดหัวภาษาไทยของช่องที่ 2 (สั้นกระชับ 3-7 คำ อธิบายความจริงอันโหดร้าย/จุดหักมุม) เช่น 'ช้อปปิ้งออนไลน์ตอนเที่ยงคืน' หรือ 'ตื่นมาปวดหลังคอเคล็ดจนลุกไม่ขึ้น'\n"
+        "4. scene2_en: คำอธิบายภาพช่องที่ 2 เป็นภาษาอังกฤษ (15-25 คำ) เพื่อใช้ป้อนให้ AI วาดรูป (ตัวละครหลักสีหน้ากังวล/เหงื่อตก/ช็อกค้าง เช่น Same Thai man staring at a massive stack of online shopping boxes in shock, sweat drops)\n"
+        "5. caption: แคปชั่นภาษาไทย 1 ย่อหน้าสั้นๆ (2-4 ประโยค) สไตล์แอดมินเพจผู้ชาย (ใช้หางเสียงครับ/ผม/พี่ เสมอ และห้ามใช้หัวข้อหรือเรื่องสั่งงานด่วนเป็นแก่นหลักของแคปชั่น) ชวนให้คนกดคอมเมนต์แชร์เรื่องตัวเอง ท้ายข้อความใส่แฮชแท็ก 2-3 อัน\n\n"
         "กรุณาตอบเป็น JSON ในรูปแบบนี้เท่านั้น (ห้ามมี markdown codeblock หรือคำนำหน้าใดๆ):\n"
         "{\n"
         "  \"label1_th\": \"...\",\n"
@@ -362,6 +401,7 @@ def main():
     args = parser.parse_args()
 
     history = set(load_history())
+    topics_history = load_meme_topics_history()
     
     # Step 1: Scrape Reddit Meme
     post = get_reddit_meme(history)
@@ -381,13 +421,15 @@ def main():
 
     try:
         # Step 3: Analyze and map to 2-panel cartoon scenario using Gemini
-        print("Analyzing meme with Gemini Vision...")
-        label1, scene1, label2, scene2, caption = analyze_meme_to_scenario(tmp_path, reddit_title)
+        print("Analyzing meme with Gemini Vision (passing topics history for negative constraints)...")
+        label1, scene1, label2, scene2, caption = analyze_meme_to_scenario(tmp_path, reddit_title, recent_topics=topics_history)
         
         caption_with_via = f"{caption}\n\n📷 via r/{subreddit}"
+        topic_summary = f"{label1} - {label2}"
         
         print("\n--- [GEMINI COMIC SCENARIO MAP] ---")
         print(f"Reddit Title: {reddit_title}")
+        print(f"Topic Summary:  {topic_summary}")
         print(f"Panel 1 Label:  {label1}")
         print(f"Panel 1 Prompt: {scene1}")
         print(f"Panel 2 Label:  {label2}")
@@ -421,6 +463,7 @@ def main():
         else:
             post_facebook(comic_path, caption_with_via)
             save_to_history(img_url)
+            save_to_meme_topics_history(topic_summary)
             
     finally:
         # Clean up downloaded temp file
