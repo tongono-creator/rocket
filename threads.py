@@ -14,7 +14,7 @@ GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
 IMAGE_MODEL          = "gemini-2.0-flash-preview-image-generation"  # unused (PIL renders)
-TEXT_MODELS          = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS          = ["gemini-2.5-flash", "gemini-2.5-pro"]
 OUTPUT_DIR           = "output"
 
 API_ENABLED = True
@@ -405,6 +405,118 @@ def generate_quote(topic, slot="morning"):
         print(f"Fallback quote used:\n{quote}")
         return quote
 
+
+def generate_threads_content(topic, slot):
+    global API_ENABLED
+    if not API_ENABLED:
+        print("Falling back to local quotes list due to disabled API.")
+        fb_quote = random.choice(FALLBACK_QUOTES)
+        lines = fb_quote.strip().split("\n")
+        clean_lines = [re.sub(r'#\S+', '', l).strip() for l in lines if l.strip()]
+        img_l1 = clean_lines[0] if clean_lines else "เรื่องชวนคิดวันนี้"
+        img_l2 = clean_lines[1] if len(clean_lines) > 1 else ""
+        cap = " ".join(clean_lines)
+        seed_c = "สำหรับเรื่องนี้ผมมองว่าความกตัญญูหรือความพยายามต้องมีขีดจำกัดนะ ไม่งั้นเราจะลำบากเองครับ"
+        return {
+            "image_line1": img_l1,
+            "image_line2": img_l2,
+            "caption": cap,
+            "seed_comment": seed_c
+        }
+
+    slot_contexts = {
+        "morning": "เกี่ยวกับชีวิตการทำงาน เจ้านาย หรือเพื่อนร่วมงานในออฟฟิศ",
+        "noon": "ดราม่า/ทางเลือกที่ยากในการเงิน ครอบครัว หรือความสัมพันธ์ในชีวิตคู่",
+        "evening": "การเปรียบเทียบสองทางเลือก หรือการเลือกข้างอย่างใดอย่างหนึ่งเกี่ยวกับการเงินและการใช้ชีวิต",
+        "late": "ความกดดัน ความจริงอันเจ็บปวดวัยสร้างตัว หรือสัจธรรมตลกร้ายของผู้ใหญ่วัย 30+"
+    }
+    context_desc = slot_contexts.get(slot, "ประเด็นดราม่าการทำงานหรือชีวิตคนวัยสร้างตัว")
+
+    prompt = (
+        f"วิเคราะห์หัวข้อ: '{topic}' สำหรับโพสต์ Threads ในช่วงเวลา {slot} (เน้นเรื่อง: {context_desc})\n"
+        "จงสร้างเนื้อหา 3 ส่วนดังต่อไปนี้ในรูปแบบ JSON เพื่อชวนคนมาคอมเมนต์เถียงและเลือกข้าง:\n\n"
+        "1. ข้อความสำหรับแสดงบนภาพ (image_line1 และ image_line2):\n"
+        "   - เป็นข้อความพาดหัวสั้นๆ คมๆ เจาะประเด็นหลักประเด็นเดียว\n"
+        "   - ห้ามใส่แฮชแท็กบนรูปเด็ดขาด\n"
+        "   - ความยาวบรรทัดละไม่เกิน 8-14 ตัวอักษรภาษาไทย\n"
+        "   - ตัวอย่างบรรทัดแรก: 'แฟนหนี้ท่วม' บรรทัดสอง: 'ยังควรไปต่อไหม?'\n\n"
+        "2. คำบรรยายโพสต์ (caption):\n"
+        "   - เขียนบริบทหรือเรื่องราวนำ 1-2 ประโยค เพื่อให้คนเข้าใจที่มาของปัญหามากขึ้น\n"
+        "   - ปิดท้ายด้วยคำถามที่ต้องเลือกข้างหรือตัดสินใจง่าย แต่ชวนให้คนเถียงกันยาว\n"
+        "   - ห้ามใช้แฮชแท็กเด็ดขาด\n"
+        "   - ความยาวรวมไม่เกิน 160 ตัวอักษร\n"
+        "   - ใช้ภาษาพูดเป็นกันเอง สุภาพ มีคำลงท้ายว่า 'ครับ' และแทนตัวเองว่า 'ผม/พี่' เท่าที่มีโอกาส\n\n"
+        "3. ความเห็นเปิดประเด็นคอมเมนต์ (seed_comment):\n"
+        "   - เป็นความเห็นของแอดมิน (ผู้ชาย แทนตัวว่า 'ผม' หรือ 'พี่' ลงท้ายด้วย 'ครับ/ผม')\n"
+        "   - ต้องแสดงจุดยืนเลือกข้างอย่างชัดเจนข้างใดข้างหนึ่งทันที เพื่อชวนเปิดศึก/ให้คนอื่นแย้งหรือสนับสนุน\n"
+        "   - ห้ามประนีประนอมหรือตอบกลางๆ เด็ดขาด เช่น 'ผมทีมคบต่อได้ แต่ต้องเห็นแผนใช้หนี้ชัดๆ ถ้ารักอย่างเดียวแล้วโยนภาระมาให้เรา อันนี้ไม่ไหวครับ' หรือ 'ผมว่าความกตัญญูมีขีดจำกัดนะ ถ้าให้จนตัวเองไม่มีเงินเก็บเลย ระยะยาวพังแน่นอนครับ'\n"
+        "   - ความยาว 1-2 ประโยคสั้นๆ\n"
+        "   - ห้ามมีแฮชแท็กเด็ดขาด\n\n"
+        "รูปแบบผลลัพธ์ที่ต้องการ (ตอบกลับเป็น JSON เพียวๆ เท่านั้น):\n"
+        "{\n"
+        '  "image_line1": "ข้อความบรรทัดที่ 1",\n'
+        '  "image_line2": "ข้อความบรรทัดที่ 2",\n'
+        '  "caption": "เนื้อหาโพสต์...",\n'
+        '  "seed_comment": "ความคิดเห็นแอดมิน..."\n'
+        "}"
+    )
+
+    for model in TEXT_MODELS:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                    )
+                )
+                import json
+                data = json.loads(resp.text.strip())
+                image_line1 = data.get("image_line1", "").strip()
+                image_line2 = data.get("image_line2", "").strip()
+                caption = data.get("caption", "").strip()
+                seed_comment = data.get("seed_comment", "").strip()
+
+                if image_line1 and caption and seed_comment:
+                    # Strip hashtags just in case
+                    image_line1 = re.sub(r'#\S+', '', image_line1).strip()
+                    image_line2 = re.sub(r'#\S+', '', image_line2).strip()
+                    caption = re.sub(r'#\S+', '', caption).strip()
+                    seed_comment = re.sub(r'#\S+', '', seed_comment).strip()
+
+                    print(f"Generated JSON successfully:")
+                    print(f"Image Line 1: {image_line1}")
+                    print(f"Image Line 2: {image_line2}")
+                    print(f"Caption: {caption}")
+                    print(f"Seed Comment: {seed_comment}")
+                    return {
+                        "image_line1": image_line1,
+                        "image_line2": image_line2,
+                        "caption": caption,
+                        "seed_comment": seed_comment
+                    }
+            except Exception as e:
+                print(f"[{model}] generate_threads_content failed (attempt {attempt+1}): {e}")
+                time.sleep(2)
+
+    # Fallback if API fails
+    print("Falling back to local quotes list due to generation failure.")
+    fb_quote = random.choice(FALLBACK_QUOTES)
+    lines = fb_quote.strip().split("\n")
+    clean_lines = [re.sub(r'#\S+', '', l).strip() for l in lines if l.strip()]
+    img_l1 = clean_lines[0] if clean_lines else "เรื่องชวนคิดวันนี้"
+    img_l2 = clean_lines[1] if len(clean_lines) > 1 else ""
+    cap = " ".join(clean_lines)
+    seed_c = "สำหรับเรื่องนี้ผมมองว่าความกตัญญูหรือความพยายามต้องมีขีดจำกัดนะ ไม่งั้นเราจะลำบากเองครับ"
+    return {
+        "image_line1": img_l1,
+        "image_line2": img_l2,
+        "caption": cap,
+        "seed_comment": seed_c
+    }
+
+
 FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 IMG_SIZE  = 1080
 
@@ -641,11 +753,14 @@ def run_meme_mode():
 def run_quote_mode():
     """โหมดคำคม — PIL image + quote"""
     topic, slot = get_topic()
-    quote    = generate_quote(topic, slot)
-    quote    = segment_thai_text(quote, client)
-    img_path = generate_image(quote)
+    content = generate_threads_content(topic, slot)
+    
+    line1 = segment_thai_text(content["image_line1"], client)
+    line2 = segment_thai_text(content["image_line2"], client)
+    
+    img_path = generate_image(line1, line2)
     img_url  = upload_image_to_imgur(img_path)
-    post_threads(img_url, quote, img_path=img_path)
+    post_threads(img_url, content["caption"], seed_comment=content["seed_comment"], img_path=img_path)
     save_to_history(topic)
     if img_path and os.path.exists(img_path):
         os.unlink(img_path)
@@ -688,7 +803,7 @@ def _build_lines(quote, font_main, font_hash, draw, max_w):
             all_lines.append((l, font_hash))
     return all_lines
 
-def generate_image(quote):
+def generate_image(line1, line2=""):
     print("Generating image (PIL)...")
     bkk = timezone(timedelta(hours=7))
     ts  = datetime.now(bkk).strftime("%Y%m%d_%H%M%S")
@@ -700,50 +815,51 @@ def generate_image(quote):
     PAD      = 100
     max_w    = IMG_SIZE - PAD * 2
     max_h    = IMG_SIZE - PAD * 2
-    LINE_GAP = 18
+    LINE_GAP = 24
 
     # auto-fit: หา font size ใหญ่ที่สุดที่พอดีกรอบ
-    font_size = 124
+    font_size = 100
+    lines = [line1]
+    if line2:
+        lines.append(line2)
+
     while font_size >= 36:
-        font_main = ImageFont.truetype(FONT_PATH, font_size)
-        font_hash = ImageFont.truetype(FONT_PATH, int(font_size * 0.65))
-        all_lines = _build_lines(quote, font_main, font_hash, draw, max_w)
-        total_h = sum(
-            # actual rendered height = bottom - top (bbox[1] is negative for Thai tone marks)
-            ((draw.textbbox((0, 0), t, font=f)[3] - draw.textbbox((0, 0), t, font=f)[1]) + LINE_GAP)
-            if t else
-            ((draw.textbbox((0, 0), "ก", font=f)[3] - draw.textbbox((0, 0), "ก", font=f)[1]) // 2 + LINE_GAP)
-            for t, f in all_lines
-        )
-        width_ok = all(
-            (not t) or draw.textbbox((0, 0), t, font=f)[2] <= max_w
-            for t, f in all_lines
-        )
+        font = ImageFont.truetype(FONT_PATH, font_size)
+        total_h = 0
+        width_ok = True
+        for l in lines:
+            bbox = draw.textbbox((0, 0), l, font=font)
+            h = bbox[3] - bbox[1]
+            w = bbox[2] - bbox[0]
+            if w > max_w:
+                width_ok = False
+            total_h += h
+        total_h += LINE_GAP * (len(lines) - 1)
         if total_h <= max_h and width_ok:
             break
-        font_size -= 2
+        font_size -= 4
 
     print(f"Font size: {font_size}")
-    # y = actual top pixel of text block (accounting for negative bbox[1])
+    font = ImageFont.truetype(FONT_PATH, font_size)
+
+    # Calculate start y to center vertically
     y = (IMG_SIZE - total_h) // 2
 
-    for text, font in all_lines:
-        if not text:
-            # empty line spacer — use full actual height of reference char
-            ref = draw.textbbox((0, 0), "ก", font=font)
-            y += (ref[3] - ref[1]) // 2
-            continue
-        bbox = draw.textbbox((0, 0), text, font=font)
-        w    = bbox[2] - bbox[0]
-        x    = (IMG_SIZE - w) // 2
-        # draw_y: shift down by -bbox[1] so actual top pixel = y
-        # (bbox[1] is negative for Thai tone marks above baseline)
+    # Draw text lines centered
+    for i, l in enumerate(lines):
+        bbox = draw.textbbox((0, 0), l, font=font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
+        x = (IMG_SIZE - w) // 2
         draw_y = y - bbox[1]
-        color  = (150, 150, 150) if font == font_hash else (255, 255, 255)
-        draw.text((x + 2, draw_y + 2), text, font=font, fill=(30, 30, 30))
-        draw.text((x,     draw_y),     text, font=font, fill=color)
-        # advance by actual rendered height (top to bottom inclusive)
-        y += (bbox[3] - bbox[1]) + LINE_GAP
+
+        # Color: First line is Gold (#FFD700), second line is White
+        color = (255, 215, 0) if i == 0 else (255, 255, 255)
+        # Drop shadow for clean look
+        draw.text((x + 3, draw_y + 3), l, font=font, fill=(30, 30, 30))
+        draw.text((x, draw_y), l, font=font, fill=color)
+
+        y += h + LINE_GAP
 
     img.save(path)
     print(f"Image saved: {path}")
@@ -820,7 +936,7 @@ def generate_seed_comment(caption):
             print(f"[{model}] generate_seed_comment failed: {e}")
     return ""
 
-def post_threads(image_url, caption, img_path=None):
+def post_threads(image_url, caption, seed_comment=None, img_path=None):
     print("Posting to Threads...")
     # Step 1: Create image container
     resp = requests.post(
@@ -855,9 +971,10 @@ def post_threads(image_url, caption, img_path=None):
     print(f"Threads Posted! ID: {post_id}")
 
     # Seed comment integration
-    seed_comment = generate_seed_comment(caption)
+    if not seed_comment:
+        seed_comment = generate_seed_comment(caption)
     if seed_comment:
-        print(f"Generating and posting seed comment: {seed_comment}")
+        print(f"Posting seed comment: {seed_comment}")
         time.sleep(random.uniform(5, 10))
         seed_reply_id = _create_and_publish(seed_comment, reply_to_id=post_id)
         print(f"Seed reply added! ID: {seed_reply_id}")
