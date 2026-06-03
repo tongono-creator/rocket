@@ -9,6 +9,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
 from google.genai import types
+from overlay_utils import add_overlay
 
 GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
@@ -722,35 +723,162 @@ def _wrap_words(draw, text, font, max_width):
         lines.append(current)
     return lines
 
-def run_meme_mode():
-    """โหมดสุ่มรูปตลกมาโพส"""
-    print("Mode: MEME")
+def analyze_reddit_image_for_threads(img_path, reddit_title):
+    """วิเคราะห์รูปและหัวข้อ Reddit เพื่อดัดแปลงเป็นประเด็นคนทำงาน/ชีวิตผู้ใหญ่"""
+    global API_ENABLED
+    if not API_ENABLED:
+        return None
+        
+    try:
+        with open(img_path, "rb") as f:
+            img_data = f.read()
+    except Exception as read_err:
+        print(f"Error reading image file for analysis: {read_err}")
+        return None
+        
+    mime_type = "image/jpeg"
+    if img_path.lower().endswith(".png"):
+        mime_type = "image/png"
+    elif img_path.lower().endswith(".webp"):
+        mime_type = "image/webp"
+    elif img_path.lower().endswith(".gif"):
+        mime_type = "image/gif"
+
+    prompt = (
+        "วิเคราะห์ภาพนี้ร่วมกับหัวข้อกระทู้ Reddit: '" + reddit_title + "'\n"
+        "งานของคุณคือแปลงโพสต์นี้ให้กลายเป็นประเด็นตลกร้าย/ประเด็นชวนเถียงในชีวิตจริงของคนทำงาน/ผู้ใหญ่วัยสร้างตัว 30+ (Rocket21 Persona) โดยปฏิบัติตามกฎอย่างเคร่งครัด:\n\n"
+        "1. การกรองเนื้อหา (Strict Filtering):\n"
+        "   - รูปนี้ต้องนำมาเชื่อมโยงกับเรื่องการงาน, เงิน, ครอบครัว หรือความสัมพันธ์ได้\n"
+        "   - หากรูปเป็นของแปลก/ธรรมชาติ/สัตว์/ดอกไม้ (เช่น ดอกไม้มีหนามข่วนมือ) ให้เปรียบเปรยหรือแปลงเป็นสถานการณ์ในออฟฟิศทันที (เช่น 'แค่จัดดอกไม้ ยังมีแผล' -> เปรียบกับการทำงานที่เบื้องหลังเต็มไปด้วยความยากลำบาก คำแก้งาน)\n"
+        "   - หากรูปไม่สามารถเชื่อมโยงกับชีวิตการทำงานหรือเรื่องปากท้องได้อย่างเป็นธรรมชาติ หรือไม่เหมาะสมอย่างสิ้นเชิง ให้ระบุว่า 'invalid'\n\n"
+        "2. องค์ประกอบที่ต้องเจน (หากนำมาปรับใช้ได้):\n"
+        "   - image_line1: พาดหัวสั้นกระชับบรรทัดที่ 1 สำหรับใส่บนรูปภาพ (ความยาว 8-14 ตัวอักษรไทย ห้ามมีแฮชแท็ก)\n"
+        "   - image_line2: รายละเอียดสั้นบรรทัดที่ 2 สำหรับใส่บนรูปภาพ (ความยาว 8-14 ตัวอักษรไทย ห้ามมีแฮชแท็ก)\n"
+        "   - caption: คำบรรยายอธิบายประเด็นเชื่อมโยงกับชีวิตทำงาน/ชีวิตจริง 1-2 ประโยค ปิดท้ายด้วยคำถามปลายปิดหรือชวนเลือกข้างเพื่อดึงคนมาตอบคอมเมนต์ (ห้ามมีแฮชแท็กเด็ดขาด, ความยาวไม่เกิน 160 ตัวอักษร)\n"
+        "   - seed_comment: ความเห็นของแอดมินในฐานะผู้ชาย (แทนตัว 'ผม/พี่' ลงท้ายด้วย 'ครับ/ผม') ที่เลือกข้างหรือแสดงจุดยืนชัดเจนข้างใดข้างหนึ่งทันที เพื่อกระตุ้นให้เกิดคอมเมนต์เถียงกันต่อ (ห้ามมีแฮชแท็กเด็ดขาด)\n\n"
+        "กรุณาตอบกลับเป็น JSON รูปแบบนี้เท่านั้น (หากไม่เหมาะสม ให้ตอบคำว่า 'invalid' ในค่า status และปล่อยคีย์อื่นว่าง):\n"
+        "{\n"
+        '  "status": "valid",\n'
+        '  "image_line1": "พาดหัวบรรทัด 1",\n'
+        '  "image_line2": "พาดหัวบรรทัด 2",\n'
+        '  "caption": "แคปชั่นโพสต์...",\n'
+        '  "seed_comment": "คอมเมนต์แอดมิน..."\n'
+        "}\n\n"
+        "กรณีไม่ผ่านเกณฑ์:\n"
+        "{\n"
+        '  "status": "invalid"\n'
+        "}"
+    )
+
+    for model in TEXT_MODELS:
+        for attempt in range(2):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=[
+                        types.Part.from_bytes(data=img_data, mime_type=mime_type),
+                        types.Part.from_text(text=prompt)
+                    ],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json"
+                    )
+                )
+                import json
+                data = json.loads(resp.text.strip())
+                if data.get("status") == "invalid":
+                    print(f"[{model}] Vision filter: post marked as invalid for Rocket21 persona.")
+                    return None
+                
+                # Verify we have the required keys
+                if data.get("image_line1") and data.get("caption") and data.get("seed_comment"):
+                    # Strip any potential hashtags
+                    data["image_line1"] = re.sub(r'#\S+', '', data["image_line1"]).strip()
+                    data["image_line2"] = re.sub(r'#\S+', '', data.get("image_line2", "")).strip()
+                    data["caption"] = re.sub(r'#\S+', '', data["caption"]).strip()
+                    data["seed_comment"] = re.sub(r'#\S+', '', data["seed_comment"]).strip()
+                    return data
+            except Exception as e:
+                print(f"[{model}] analyze_reddit_image_for_threads failed (attempt {attempt+1}): {e}")
+                time.sleep(2)
+    return None
+
+def run_meme_mode(dry_run=False):
+    """โหมดสุ่มรูปตลกมาโพส — ปรับปรุงสไตล์คนทำงานออฟฟิศ"""
+    print("Mode: MEME (Reddit/Meme localization to Rocket21 persona)")
     history = set(load_history())
-    for attempt in range(4):
-        img_url, subreddit = get_meme_image(history)
+    
+    posted = False
+    for attempt in range(6):
+        img_url, title, subreddit = get_meme_image(history)
         if not img_url:
             continue
         img_path = download_image(img_url)
         if not img_path:
             continue
-        desc = analyze_meme(img_path)
-        if not desc or "ไม่น่าสนใจ" in desc:
+            
+        print(f"Attempt {attempt+1}: Analyzing {img_url} with title '{title}'...")
+        analysis = analyze_reddit_image_for_threads(img_path, title)
+        if not analysis:
+            print("Post is invalid or cannot be connected to work/life persona. Skipping.")
             os.unlink(img_path)
             continue
-        caption = generate_funny_caption(desc, subreddit)
-        caption += f"\n📷 via r/{subreddit}"
-        print(f"Funny caption:\n{caption}\n")
-        # upload ผ่าน ImgBB
-        hosted_url = upload_image_to_imgur(img_path)
-        post_threads(hosted_url, caption, img_path=img_path)
-        save_to_history(img_url)
-        os.unlink(img_path)
-        return
-    print("Meme mode failed after 4 attempts, fallback to quote mode")
-    run_quote_mode()
+            
+        line1 = segment_thai_text(analysis["image_line1"], client)
+        line2 = segment_thai_text(analysis.get("image_line2", ""), client)
+        caption = analysis["caption"]
+        seed_comment = analysis["seed_comment"]
+        
+        # Draw overlay on the image using overlay_utils
+        out_path = os.path.join(OUTPUT_DIR, f"threads_meme_overlay_{int(time.time())}.jpg")
+        try:
+            from overlay_utils import add_overlay
+            # Quote mode uses Gold (#FFD700) for line1, White for line2.
+            # add_overlay accepts accent_color. Let's pass "#FFD700" to make it look matching.
+            add_overlay(img_path, line1, line2, accent_color="#FFD700", out_path=out_path)
+        except Exception as oe:
+            print(f"Error drawing overlay: {oe}. Using raw image.")
+            out_path = img_path
+            
+        print("\n--- [THREADS MEME DETECTED & MAPPED] ---")
+        print(f"Subreddit:   r/{subreddit}")
+        print(f"Original:    {title}")
+        print(f"Line 1:      {line1}")
+        print(f"Line 2:      {line2}")
+        print(f"Caption:     {caption}")
+        print(f"Seed Comment: {seed_comment}")
+        print(f"Image path:  {out_path}\n")
+        
+        if dry_run:
+            print("[Dry-run] Skipping upload and post.")
+            if out_path != img_path and os.path.exists(out_path):
+                # keep for user inspection, do not unlink
+                pass
+            os.unlink(img_path)
+            return True
+            
+        try:
+            hosted_url = upload_image_to_imgur(out_path)
+            post_threads(hosted_url, caption, seed_comment=seed_comment, img_path=out_path)
+            save_to_history(img_url)
+            posted = True
+            
+            # Clean up files
+            if out_path != img_path and os.path.exists(out_path):
+                os.unlink(out_path)
+            os.unlink(img_path)
+            break
+        except Exception as pe:
+            print(f"Posting failed: {pe}")
+            if out_path != img_path and os.path.exists(out_path):
+                os.unlink(out_path)
+            os.unlink(img_path)
+            continue
+            
+    if not posted:
+        print("Meme mode failed to find a valid post or post it. Falling back to quote mode.")
+        run_quote_mode(dry_run=dry_run)
 
-
-def run_quote_mode():
+def run_quote_mode(dry_run=False):
     """โหมดคำคม — PIL image + quote"""
     topic, slot = get_topic()
     content = generate_threads_content(topic, slot)
@@ -759,11 +887,26 @@ def run_quote_mode():
     line2 = segment_thai_text(content["image_line2"], client)
     
     img_path = generate_image(line1, line2)
-    img_url  = upload_image_to_imgur(img_path)
-    post_threads(img_url, content["caption"], seed_comment=content["seed_comment"], img_path=img_path)
-    save_to_history(topic)
-    if img_path and os.path.exists(img_path):
-        os.unlink(img_path)
+    
+    print("\n--- [THREADS QUOTE POST] ---")
+    print(f"Topic:       {topic}")
+    print(f"Line 1:      {line1}")
+    print(f"Line 2:      {line2}")
+    print(f"Caption:     {content['caption']}")
+    print(f"Seed Comment: {content['seed_comment']}")
+    print(f"Image path:  {img_path}\n")
+    
+    if dry_run:
+        print("[Dry-run] Skipping upload and post.")
+        return
+        
+    try:
+        img_url  = upload_image_to_imgur(img_path)
+        post_threads(img_url, content["caption"], seed_comment=content["seed_comment"], img_path=img_path)
+        save_to_history(topic)
+    finally:
+        if img_path and os.path.exists(img_path):
+            os.unlink(img_path)
 
 def wrap_thai(text, font, draw, max_width):
     """ตัดบรรทัดให้พอดีความกว้าง โดยพยายามรักษาคำ/วลีไทยไว้ก่อน"""
@@ -1018,19 +1161,20 @@ def get_meme_image(history=None):
         entries = root.findall("atom:entry", ns)
         posts = []
         for entry in entries:
+            title = entry.findtext("atom:title", "", ns)
             content   = entry.findtext("atom:content", "", ns)
             img_urls  = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content or "")
             good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
             if good_imgs:
-                posts.append({"url": good_imgs[0], "subreddit": subreddit})
+                posts.append({"url": good_imgs[0], "title": title, "subreddit": subreddit})
         if not posts:
-            return None, None
+            return None, None, None
         post = random.choice(posts[:10])
         print(f"Meme: r/{subreddit} | {post['url'][:60]}")
-        return post["url"], subreddit
+        return post["url"], post.get("title", ""), subreddit
     except Exception as e:
         print(f"Reddit error: {e}")
-        return None, None
+        return None, None, None
 
 
 def download_image(url):
@@ -1104,5 +1248,17 @@ def generate_funny_caption(image_desc, subreddit):
 
 
 if __name__ == "__main__":
-    print("Mode: QUOTE (Meme mode is deactivated to maintain Rocket21 persona focus)")
-    run_quote_mode()
+    import argparse
+    parser = argparse.ArgumentParser(description="Threads Post Script")
+    parser.add_argument("--mode", choices=["quote", "meme"], default="quote", help="Content mode to run (default: quote)")
+    parser.add_argument("--dry-run", action="store_true", help="Run script locally without posting to Threads or ImgBB")
+    args = parser.parse_args()
+    
+    print(f"Running Threads bot in mode: {args.mode.upper()}")
+    if args.dry_run:
+        print("Dry-run mode activated. No posts will be published.")
+        
+    if args.mode == "quote":
+        run_quote_mode(dry_run=args.dry_run)
+    elif args.mode == "meme":
+        run_meme_mode(dry_run=args.dry_run)
