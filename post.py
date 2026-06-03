@@ -819,45 +819,6 @@ def generate_image(quote):
 
 # ─── 3. โพส Facebook ────────────────────────────────────────────
 def post_facebook(img_path, caption):
-    from affiliate_utils import get_next_scheduled_time, get_all_comments
-    
-    slots = ["08:00", "20:00"]
-    scheduled_time = get_next_scheduled_time(slots)
-    
-    if scheduled_time:
-        comments = get_all_comments(caption=caption, img_path=img_path)
-        comment_texts = []
-        for msg in comments:
-            if isinstance(msg, dict):
-                comment_texts.append(msg["message"])
-            else:
-                comment_texts.append(msg)
-        if comment_texts:
-            caption += "\n\n📌 ชี้เป้าของดีน่าสนใจ:\n" + "\n".join(comment_texts)
-            
-        print(f"Scheduling to Facebook for timestamp {scheduled_time}...")
-        with open(img_path, "rb") as f:
-            resp = requests.post(
-                f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos",
-                data={
-                    "access_token": PAGE_ACCESS_TOKEN,
-                    "caption": caption,
-                    "published": "false",
-                    "unpublished_content_type": "SCHEDULED",
-                    "scheduled_publish_time": scheduled_time
-                },
-                files={"source": ("quote.png", f, "image/png")},
-                timeout=60
-            )
-        result = resp.json()
-        if "id" in result:
-            photo_id = result["id"]
-            print(f"Scheduled successfully! Photo ID: {photo_id}")
-            return photo_id
-        else:
-            print(f"FB Error: {result}")
-            raise SystemExit(1)
-
     print("Posting to Facebook...")
     with open(img_path, "rb") as f:
         resp = requests.post(
@@ -875,7 +836,6 @@ def post_facebook(img_path, caption):
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
-
 
 # ─── 4. Auto-comment ลิงก์เว็บ + product rotation ──────────────
 def add_comment(post_id, caption=None, img_path=None):
