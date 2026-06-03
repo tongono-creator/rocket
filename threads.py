@@ -1104,9 +1104,5 @@ def generate_funny_caption(image_desc, subreddit):
 
 
 if __name__ == "__main__":
-    if random.random() < 0.5:
-        print("Mode: MEME")
-        run_meme_mode()
-    else:
-        print("Mode: QUOTE")
-        run_quote_mode()
+    print("Mode: QUOTE (Meme mode is deactivated to maintain Rocket21 persona focus)")
+    run_quote_mode()
