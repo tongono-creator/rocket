@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
-import sys, io, os, re, requests, time, random, xml.etree.ElementTree as ET
+import sys, io, os, re, json, requests, time, random, xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 from google import genai
+from google.genai import types
 
 # === CONFIG (รับจาก env vars — GitHub Actions ใส่ใน Secrets) ===
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
@@ -533,36 +534,130 @@ FALLBACK_QUOTES = [
     "อย่าเอา\u200bสุขภาพ\u200bทั้งชีวิต\nไปแลก\u200bกับ\u200bเงิน\u200bเดือนหลัก\u200bหมื่น\u200bที่\u200bหมดไป\u200bกับ\u200bค่าหมอตอนแก่\u200bเลย\u200bครับ\n#ถนอม\u200bตัว\u200bด้วย\u200bนะ"
 ]
 
+def validate_quote(line1, line2, line3):
+    line1 = line1.strip()
+    line2 = line2.strip()
+    line3 = line3.strip()
+    
+    # Must have at least line1 and line2
+    if not line1 or not line2:
+        print("[Validation Failed] line1 or line2 is empty")
+        return False
+        
+    all_text = f"{line1} {line2} {line3}"
+    
+    # มี # หรือ hashtag
+    if "#" in all_text or "hashtag" in all_text.lower():
+        print("[Validation Failed] Hook contains hashtag")
+        return False
+        
+    # มีคำว่า ตปท.
+    if "ตปท" in all_text:
+        print("[Validation Failed] Hook contains 'ตปท'")
+        return False
+        
+    # รวมทั้ง 3 บรรทัดยาวเกิน 45 ตัวอักษร
+    total_len = len(line1) + len(line2) + len(line3)
+    if total_len > 45:
+        print(f"[Validation Failed] Total length is {total_len} (max 45)")
+        return False
+        
+    # มีตัวเลขมากกว่า 1 ชุด
+    cleaned_text = all_text.replace(",", "")
+    numbers = re.findall(r'\d+', cleaned_text)
+    if len(numbers) > 1:
+        print(f"[Validation Failed] Multiple sets of numbers detected: {numbers}")
+        return False
+        
+    # ป้องกันคำฟุ่มเฟือย/ประโยคยาวเกินไป
+    if len(line1) > 20 or len(line2) > 20 or len(line3) > 20:
+        print("[Validation Failed] A single line is too long (> 20 chars)")
+        return False
+        
+    return True
+
 def generate_quote(topic, slot="morning"):
     global API_ENABLED
     try:
         if not API_ENABLED or not client:
             raise RuntimeError("Gemini API is disabled or client is not initialized.")
-        style_idx = SLOT_STYLE.get(slot, 0)
-        style = CONTENT_STYLES[style_idx]
-        prompt = style.format(topic=topic)
-        print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
+            
+        prompt = (
+            "สร้างพาดหัวสำหรับใส่บนรูป Facebook จากเรื่องนี้\n\n"
+            f"เรื่อง/หัวข้อ: {topic}\n\n"
+            "เป้าหมาย: ให้คนหยุดเลื่อนและเข้าใจประเด็นภายใน 1 วินาที\n\n"
+            "โครงสร้างพาดหัวบนรูปให้ใช้สูตรนี้เสมอ:\n"
+            "บรรทัดที่ 1: [ใครทำอะไร] (เช่น เพื่อนยืมเงิน, แฟนแอบกู้เงิน, เจ้านายสั่งงาน)\n"
+            "บรรทัดที่ 2: [ปัญหาคืออะไร] (เช่น แต่ไม่คืน, ซื้อของหรูหมด, ตามงานตอนเที่ยงคืน)\n"
+            "บรรทัดที่ 3: [ควรทำยังไง? / ปมคำถามชวนคิด] (เช่น ควรทวงไหม?, เลิกดีไหม?, ทนต่อไหม?)\n\n"
+            "กฎสำคัญ:\n"
+            "- พาดหัวต้องสั้นมาก ไม่ใช่สรุปเรื่องทั้งหมด\n"
+            "- ใช้ได้สูงสุด 3 บรรทัด (หาก 2 บรรทัดเพียงพอ ให้ใส่ line3 เป็นค่าว่าง \"\")\n"
+            "- แต่ละบรรทัดควรมีประมาณ 8-14 ตัวอักษรไทย (หรือ 3-7 คำไทยสั้นๆ)\n"
+            "- ห้ามใส่แฮชแท็ก (#) บนรูปเด็ดขาด\n"
+            "- ห้ามใช้คำย่อ เช่น ตปท., บ., ล. ให้ใช้คำเต็มหรือไม่ต้องใส่เลย\n"
+            "- ห้ามใส่ตัวเลขหลายชุดบนรูป (เช่น มีทั้ง 50,000 และ 2 ปี ห้ามเด็ดขาด)\n"
+            "- ห้ามใช้ภาษาข่าวแข็งๆ\n"
+            "- ห้ามใช้คำเว่อร์/คำพาดหัวข่าว Clickbait เช่น ช็อก, ดราม่าเดือด, หักเหลี่ยมโหด ถ้าเรื่องไม่ได้แรงจริง\n"
+            "- ต้องอ่านแล้วรู้ทันทีว่า “ปัญหาคืออะไร”\n"
+            "- ต้องจบด้วยคำถามหรือปมค้างที่คนอยากตอบและคอมเมนต์แชร์\n\n"
+            "ให้ตอบกลับเป็น JSON เท่านั้น มีรูปแบบดังนี้:\n"
+            "{\n"
+            "  \"line1\": \"...\",\n"
+            "  \"line2\": \"...\",\n"
+            "  \"line3\": \"...\"\n"
+            "}"
+        )
+        
+        print(f"Topic: {topic} | Slot: {slot}")
+        
         for model in TEXT_MODELS:
-            for attempt in range(2):
+            # We will attempt up to 5 validation retries per model
+            for attempt in range(5):
+                if not API_ENABLED:
+                    break
                 try:
-                    resp = client.models.generate_content(model=model, contents=prompt)
-                    quote = clean_hook_lines(resp.text)
-                    print(f"Quote [{model}]:\n{quote}\n")
-                    return quote
+                    resp = client.models.generate_content(
+                        model=model,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.7,
+                        )
+                    )
+                    
+                    result_text = resp.text.strip()
+                    print(f"[{model}] Raw Hook JSON response:\n{result_text}")
+                    
+                    data = json.loads(result_text)
+                    line1 = data.get("line1", "").strip()
+                    line2 = data.get("line2", "").strip()
+                    line3 = data.get("line3", "").strip()
+                    
+                    if validate_quote(line1, line2, line3):
+                        lines = [l for l in [line1, line2, line3] if l]
+                        quote = "\n".join(lines)
+                        print(f"[{model}] Hook validation PASSED:\n{quote}\n")
+                        return quote
+                    else:
+                        print(f"[{model}] Hook validation failed (attempt {attempt+1}/5). Retrying...")
+                        time.sleep(2)
                 except Exception as e:
                     err_msg = str(e)
-                    print(f"[{model}] attempt {attempt+1} failed: {err_msg[:100]}")
+                    print(f"[{model}] hook generation error (attempt {attempt+1}/5): {err_msg[:120]}")
                     if "API key" in err_msg or "INVALID_ARGUMENT" in err_msg or "API_KEY" in err_msg:
                         print("Persistent API key issue detected. Disabling API calls immediately.")
                         API_ENABLED = False
-                        raise RuntimeError("Invalid/Expired API Key")
-                    if attempt < 1 and API_ENABLED:
-                        time.sleep(10)
-            print(f"[{model}] unavailable, trying next model...")
-        raise RuntimeError("Quote generation failed on all models and attempts")
+                        break
+                    time.sleep(5)
+            
+            if not API_ENABLED:
+                break
+                
+        raise RuntimeError("Hook generation/validation failed on all models and attempts")
     except Exception as outer_e:
-        print(f"Error during quote generation: {str(outer_e)}")
-        print("Using random fallback quote from the local Thai/Office/Work/Life list.")
+        print(f"Error during hook generation: {str(outer_e)}")
+        print("Using random fallback quote from local list.")
         quote = random.choice(FALLBACK_QUOTES)
         print(f"Fallback quote used:\n{quote}")
         return quote
