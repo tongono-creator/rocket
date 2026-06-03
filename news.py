@@ -430,6 +430,50 @@ def generate_news_content(img_bytes, reddit_title, sub, original_link):
 
 def post_facebook(img_path, caption):
     """โพสต์รูปภาพข่าวพร้อมแคปชั่นลงเพจ Facebook"""
+    from affiliate_utils import get_next_scheduled_time, get_all_comments
+    
+    slots = ["14:00"]
+    scheduled_time = get_next_scheduled_time(slots)
+    
+    if scheduled_time:
+        comments = get_all_comments(caption=caption, img_path=img_path)
+        comment_texts = []
+        for msg in comments:
+            if isinstance(msg, dict):
+                comment_texts.append(msg["message"])
+            else:
+                comment_texts.append(msg)
+        if comment_texts:
+            caption += "\n\n📌 ชี้เป้าของดีน่าสนใจ:\n" + "\n".join(comment_texts)
+            
+        print(f"Scheduling to Facebook for timestamp {scheduled_time}...")
+        try:
+            api_url = f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos"
+            with open(img_path, "rb") as f:
+                resp = requests.post(
+                    api_url,
+                    data={
+                        "access_token": PAGE_ACCESS_TOKEN,
+                        "caption": caption,
+                        "published": "false",
+                        "unpublished_content_type": "SCHEDULED",
+                        "scheduled_publish_time": scheduled_time
+                    },
+                    files={"source": ("news.png", f, "image/png")},
+                    timeout=60,
+                )
+            result = resp.json()
+            if "id" in result:
+                photo_id = result["id"]
+                print(f"Scheduled successfully! Photo ID: {photo_id}")
+                return photo_id
+            else:
+                print(f"Post failed: {result}")
+                return None
+        except Exception as e:
+            print(f"Facebook API error: {e}")
+            return None
+
     print("Posting to Facebook...")
     try:
         api_url = f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos"
@@ -452,6 +496,7 @@ def post_facebook(img_path, caption):
     except Exception as e:
         print(f"Facebook API error: {e}")
         return None
+
 
 def add_comment(post_id, caption=None, img_path=None):
     """คอมเมนต์ลิงก์สินค้าแนะนำหรือข้อมูลสมาชิกร่วมกันหลังจากโพสต์"""

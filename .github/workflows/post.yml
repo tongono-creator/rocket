@@ -2,8 +2,8 @@ name: Post to Facebook
 
 on:
   schedule:
-    - cron: '0 1 * * *'   # 08:00 BKK
-    - cron: '0 13 * * *'  # 20:00 BKK
+    - cron: '30 0 * * *'   # 07:30 BKK (target 08:00)
+    - cron: '30 12 * * *'  # 19:30 BKK (target 20:00)
   workflow_dispatch:       # รันมือได้จาก GitHub UI
 
 jobs:
@@ -29,6 +29,7 @@ jobs:
           GOOGLE_API_KEY:    ${{ secrets.GOOGLE_API_KEY }}
           PAGE_ACCESS_TOKEN: ${{ secrets.PAGE_ACCESS_TOKEN }}
           PAGE_ID:           ${{ secrets.PAGE_ID }}
+          IMMEDIATE:         ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
         run: python post.py
 
       - name: Commit and push if history updated

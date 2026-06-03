@@ -98,6 +98,35 @@ def generate_promo_image(angle):
 
 def post_facebook(img_path, caption):
     print("Posting promo to Facebook...")
+    from affiliate_utils import get_next_scheduled_time
+    
+    slots = ["19:00"]
+    scheduled_time = get_next_scheduled_time(slots)
+    
+    if scheduled_time:
+        print(f"Scheduling promo to Facebook for timestamp {scheduled_time}...")
+        with open(img_path, "rb") as f:
+            resp = requests.post(
+                f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos",
+                data={
+                    "access_token": PAGE_ACCESS_TOKEN,
+                    "caption": caption,
+                    "published": "false",
+                    "unpublished_content_type": "SCHEDULED",
+                    "scheduled_publish_time": scheduled_time
+                },
+                files={"source": ("promo.png", f, "image/png")},
+                timeout=60
+            )
+        result = resp.json()
+        if "id" in result:
+            photo_id = result.get("post_id") or result["id"]
+            print(f"Promo Scheduled! Photo ID: {photo_id}")
+            return photo_id
+        else:
+            print(f"FB Error: {result}")
+            raise SystemExit(1)
+
     with open(img_path, "rb") as f:
         resp = requests.post(
             f"https://graph.facebook.com/v25.0/{PAGE_ID}/photos",
@@ -111,6 +140,7 @@ def post_facebook(img_path, caption):
     else:
         print(f"FB Error: {result}")
         raise SystemExit(1)
+
 
 if __name__ == "__main__":
     angle   = get_promo_angle()
