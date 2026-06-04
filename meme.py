@@ -11,6 +11,7 @@ import time
 import random
 import tempfile
 import json
+import hashlib
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from PIL import Image, ImageDraw, ImageFont
@@ -59,6 +60,14 @@ def save_to_history(item):
                 f.write(it + "\n")
     except Exception as e:
         print(f"Error saving history: {e}")
+
+def reddit_title_key(title):
+    """Stable dedup key for a Reddit post's identity (prefix 'title:').
+    Catches reposts that reuse the same title/image under a new URL or headline."""
+    norm = re.sub(r"[^\w฀-๿]+", "", (title or "").strip().lower())
+    if not norm:
+        return ""
+    return "title:" + hashlib.md5(norm.encode("utf-8")).hexdigest()[:16]
 
 MEME_TOPICS_HISTORY_FILE = "posted_meme_topics.txt"
 
@@ -112,9 +121,9 @@ def get_reddit_meme(history=None):
                 img_urls = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content)
                 good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
                 
-                if good_imgs and title:
+                if good_imgs and title and reddit_title_key(title) not in history:
                     posts.append({
-                        "url": good_imgs[0], 
+                        "url": good_imgs[0],
                         "title": title,
                         "subreddit": subreddit
                     })
@@ -495,6 +504,7 @@ def main():
         else:
             post_facebook(comic_path, caption_with_via)
             save_to_history(img_url)
+            save_to_history(reddit_title_key(reddit_title))
             save_to_meme_topics_history(topic_summary)
             
     finally:

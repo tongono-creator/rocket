@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """threads.py — โพสรูปคำคม + caption ลง Threads อัตโนมัติ"""
 
-import sys, io, os, re, base64, requests, time, random, tempfile
+import sys, io, os, re, base64, requests, time, random, tempfile, hashlib
 import xml.etree.ElementTree as ET
 from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime, timezone, timedelta
@@ -50,6 +50,14 @@ def save_to_history(item):
                 f.write(it + "\n")
     except Exception as e:
         print(f"Error saving history: {e}")
+
+def reddit_title_key(title):
+    """Stable dedup key for a Reddit post's identity (prefix 'title:').
+    Catches reposts that reuse the same title/image under a new URL or headline."""
+    norm = re.sub(r"[^\w฀-๿]+", "", (title or "").strip().lower())
+    if not norm:
+        return ""
+    return "title:" + hashlib.md5(norm.encode("utf-8")).hexdigest()[:16]
 
 
 # ─── Topics (เหมือน post.py) ─────────────────────────────────────
@@ -860,6 +868,7 @@ def run_meme_mode(dry_run=False):
             hosted_url = upload_image_to_imgur(out_path)
             post_threads(hosted_url, caption, seed_comment=seed_comment, img_path=out_path)
             save_to_history(img_url)
+            save_to_history(reddit_title_key(title))
             posted = True
             
             # Clean up files
@@ -1165,7 +1174,7 @@ def get_meme_image(history=None):
             content   = entry.findtext("atom:content", "", ns)
             img_urls  = re.findall(r'https?://[^\s"<>]+\.(?:jpg|jpeg|png|gif|webp)', content or "")
             good_imgs = [u for u in img_urls if ("i.redd.it" in u or "imgur.com" in u) and u not in history]
-            if good_imgs:
+            if good_imgs and reddit_title_key(title) not in history:
                 posts.append({"url": good_imgs[0], "title": title, "subreddit": subreddit})
         if not posts:
             return None, None, None
