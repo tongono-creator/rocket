@@ -59,11 +59,12 @@ def generate_promo_caption(angle):
 def generate_promo_image(angle):
     print("Generating promo image...")
     prompt = (
-        f"Square social media promotional image for Shopee product ranking website. "
+        f"Square social media promotional image for a product ranking website. "
         f"Dark background with orange/coral Shopee-style accent colors. "
-        f"Bold modern design, shopping icons or product ranking visual. "
-        f"Thai text concept: {angle}. "
-        f"Eye-catching, viral Facebook post style. No actual text needed."
+        f"Bold modern graphic design, shopping icons or product ranking visual (e.g., chart, ranking list, trophies, shopping carts). "
+        f"Purely visual design. "
+        f"ABSOLUTELY NO text, no letters, no characters, no words of any language on the image. "
+        f"No labels. Only visual icons and clean shapes."
     )
     for model in IMAGE_MODELS:
         for attempt in range(3):
