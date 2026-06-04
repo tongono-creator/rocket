@@ -6,8 +6,10 @@ import random
 import time
 import requests
 import tempfile
+import json
 from PIL import Image, ImageDraw, ImageFont
 from google import genai
+from google.genai import types
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
@@ -332,6 +334,64 @@ def get_quote():
     return None, None
 
 
+def generate_engaging_quote():
+    """ใช้ Gemini สร้างประเด็นคำคมขยี้ใจคนทำงาน/ดราม่าการเงิน/ชีวิตจริงวัย 30+
+    คืนค่า (quote_en, author_en, quote_thai, author_thai)
+    """
+    global API_ENABLED
+    if not API_ENABLED or not client:
+        return None
+        
+    prompt = (
+        "คุณคือทีมสร้างคอนเทนต์ระดับมืออาชีพของเพจ Rocket21 (เพจแนวคนทำงาน วัยสร้างตัว 30+ เรื่องเงิน ครอบครัว และออฟฟิศ)\\n"
+        "จงจำลองหรือเลือกคำคม/คำกล่าวสั้นๆ ที่มีความคิดเห็นขัดแย้ง (Controversial), สัจธรรมตลกร้าย (Brutal Truth), "
+        "หรือความท้าทายในชีวิตคนทำงาน (Career/Finance Dilemma) จากบุคคลที่มีชื่อเสียงระดับโลก (เช่น Steve Jobs, Elon Musk, Warren Buffett, Bill Gates, Jack Ma, Jeff Bezos, Tim Cook) "
+        "หรือบุคคลจำลองที่เป็นกระบอกเสียงของคนทำงาน (เช่น 'หัวหน้างานคนหนึ่ง', 'พนักงานออฟฟิศวัย 30', 'มนุษย์เงินเดือนท่านหนึ่ง')\\n\\n"
+        "กฎเหล็ก:\\n"
+        "- ประเด็นต้องคมคาย จี้ใจ ดึงดูดความสนใจให้อยากแชร์หรือคอมเมนต์เถียงทันที\\n"
+        "- คำกล่าวภาษาไทยต้องสั้นกระชับ (ไม่เกิน 60 ตัวอักษร) ตัดเป็น 2-3 วลีสั้นๆ ได้สวยงามสไตล์โปสเตอร์\\n"
+        "- คืนค่ากลับมาเป็นรูปแบบ JSON เท่านั้น\\n\\n"
+        "รูปแบบ JSON ที่ต้องการ:\\n"
+        "{\\n"
+        "  \"author_en\": \"Steve Jobs\",\\n"
+        "  \"author_thai\": \"สตีฟ จอบส์\",\\n"
+        "  \"quote_thai\": \"ทำงานหนักแล้วรวยเป็นเรื่องโกหก\",\\n"
+        "  \"quote_en\": \"Working hard to get rich is a lie\"\\n"
+        "}"
+    )
+    
+    history = set(load_history())
+    
+    for model in TEXT_MODELS:
+        for attempt in range(3):
+            try:
+                resp = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.8,
+                    )
+                )
+                res_text = resp.text.strip()
+                data = json.loads(res_text)
+                quote_en = data.get("quote_en", "").strip()
+                author_en = data.get("author_en", "").strip()
+                quote_thai = data.get("quote_thai", "").strip()
+                author_thai = data.get("author_thai", "").strip()
+                
+                if quote_en and author_en and quote_thai and author_thai:
+                    if quote_en in history:
+                        print(f"[{model}] Generated quote already in history: {quote_en[:40]}... Retrying.")
+                        continue
+                    print(f"[{model}] Generated engaging quote successfully: {author_thai} - {quote_thai}")
+                    return quote_en, author_en, quote_thai, author_thai
+            except Exception as e:
+                print(f"[{model}] generate_engaging_quote error (attempt {attempt+1}): {e}")
+                time.sleep(2)
+    return None
+
+
 # -- Gemini helpers --
 def clean_text(text):
     text = text.replace("\\n", "\n")
@@ -432,14 +492,20 @@ def transliterate_author(author):
 def make_caption(quote_thai, author):
     global API_ENABLED
     if not API_ENABLED or not client:
-        return f'"{quote_thai}"\n— {author}\n#คำคม #แรงบันดาลใจ'
+        return f'"{quote_thai}"\n— {author}\n#คำคม #ชีวิตคนทำงาน #แชร์ความเห็น'
     prompt = (
-        f'เขียน Facebook caption ภาษาไทยสำหรับโพสคำคมของ {author}\n'
-        f'คำคม: {quote_thai}\n'
-        f'บรรทัด 1: hook ชวนอ่าน\n'
-        f'บรรทัด 2: บริบทของคนพูด 1 ประโยค\n'
-        f'บรรทัด 3: hashtag 2-3 อัน\n'
-        f'ห้าม ** ตอบแค่ caption'
+        f'เขียน Facebook caption ภาษาไทยสำหรับโพสต์ภาพคำคมของ {author}\n'
+        f'คำคม: "{quote_thai}"\n\n'
+        f'เป้าหมาย: เขียนให้พนักงานออฟฟิศและคนทำงานสร้างตัววัย 30+ รู้สึกอินและอยากเข้ามาคอมเมนต์แสดงความเห็นหรือถกเถียงเรื่องนี้กันทันที\n\n'
+        f'กฎเหล็ก:\n'
+        f'- ใช้ภาษาสไตล์แอดมินเพจผู้ชาย สรรพนามแทนตัวว่า "ผม" หรือ "พี่" และใช้คำลงท้าย "ครับ/ผม/ครับพี่" หรือทักทาย "พี่ๆ" อย่างเป็นธรรมชาติ\n'
+        f'- เชื่อมโยงประเด็นคำคมนี้กับโลกความเป็นจริงของการทำงาน การเก็บเงิน หรือความสัมพันธ์ในครอบครัวในสังคมไทยยุคปัจจุบัน (มีแง่มุมไหนจริง มีแง่มุมไหนที่ทำยาก หรือเจอบ่อยในชีวิตจริง)\n'
+        f'- ห้ามเขียนในรูปแบบข้อตกลง หัวข้อย่อย หรือขีดเขียนสัญลักษณ์นำหน้าบรรทัด เช่น ▪️ หรือ - เด็ดขาด ให้เขียนเป็นย่อหน้าสั้นปกติ 2-3 ย่อหน้า\n'
+        f'- ห้ามใช้ตัวหนา (**)\n'
+        f'- ย่อหน้าสุดท้ายต้องยิงคำถามเพื่อกระตุ้นคอมเมนต์และความเห็นเห็นพ้องหรือเห็นต่างอย่างเจาะประเด็น (เช่น "พี่ๆ เห็นด้วยไหมครับ หรือคิดว่าการทำงานหนักมันไม่ได้ตอบโจทย์เสมอไป?", "ในฐานะคนทำงาน พี่ๆ คิดว่าสิ่งนี้ทำได้จริงไหมครับ?")\n'
+        f'- ห้ามเขียนสรุปสอนศีลธรรม คติเตือนใจ หรือสอนบทเรียนให้ผู้อ่าน\n'
+        f'- ท้ายโพสต์ใส่ hashtag 2-3 อัน\n'
+        f'ตอบเฉพาะข้อความโพสต์แคปชั่นเพียวๆ เท่านั้น ห้ามใส่ข้อความอธิบายใดๆ'
     )
     for model in TEXT_MODELS:
         try:
@@ -447,7 +513,7 @@ def make_caption(quote_thai, author):
             return clean_text(resp.text.strip())
         except Exception as e:
             print(f"[{model}] caption failed: {e}")
-    return f'"{quote_thai}"\n— {author}\n#คำคม #แรงบันดาลใจ'
+    return f'"{quote_thai}"\n— {author}\n#คำคม #ชีวิตคนทำงาน #แชร์ความเห็น'
 
 
 # -- Pexels --
@@ -665,19 +731,24 @@ def main(dry_run=False):
     for attempt in range(5):
         print(f"Attempt {attempt + 1}/5")
 
-        quote_en, author_en = get_quote()
-        if not quote_en:
-            continue
-
-        quote_thai  = translate_quote(quote_en, author_en)
-        if not quote_thai or not contains_thai(quote_thai):
-            print("Translation returned no Thai text. Using a local famous Thai quote fallback...")
-            fallback = random.choice(FALLBACK_QUOTES)
-            quote_thai = fallback["quote"]
-            author_en = fallback["author_en"]
-            author_thai = fallback["author_thai"]
+        # พยายามใช้ระบบเจนเนอเรทคำคมชวนดีเบตก่อน
+        engaging_data = generate_engaging_quote()
+        if engaging_data:
+            quote_en, author_en, quote_thai, author_thai = engaging_data
         else:
-            author_thai = transliterate_author(author_en)
+            # Fallback ไประบบเดิม ZenQuotes
+            quote_en, author_en = get_quote()
+            if not quote_en:
+                continue
+            quote_thai  = translate_quote(quote_en, author_en)
+            if not quote_thai or not contains_thai(quote_thai):
+                print("Translation returned no Thai text. Using a local famous Thai quote fallback...")
+                fallback = random.choice(FALLBACK_QUOTES)
+                quote_thai = fallback["quote"]
+                author_en = fallback["author_en"]
+                author_thai = fallback["author_thai"]
+            else:
+                author_thai = transliterate_author(author_en)
             
         lines       = split_quote_lines(quote_thai)
         lines       = [segment_thai_text(l, client) for l in lines]
