@@ -8,6 +8,30 @@ FONT_PATH = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.
 _LEADING_VOWELS  = set('เแโใไ')
 _COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
 
+def draw_thai_clean(draw, text, pos, font, fill):
+    UPPER_VOWELS = set("ิีึืั")
+    TONE_MARKS = set("่้๊๋์")
+    x, y_base = pos
+    current_x = x
+    i = 0
+    n = len(text)
+    while i < n:
+        char = text[i]
+        if i + 2 < n and text[i+1] in UPPER_VOWELS and text[i+2] in TONE_MARKS:
+            base = text[i:i+2]
+            tone = text[i+2]
+            draw.text((current_x, y_base), base, font=font, fill=fill)
+            offset_x = int(font.size * 0.25)
+            shift_y = int(font.size * 0.18)
+            draw.text((current_x + offset_x, y_base - shift_y), tone, font=font, fill=fill)
+            current_x += draw.textlength(base, font=font)
+            i += 3
+        else:
+            draw.text((current_x, y_base), char, font=font, fill=fill)
+            current_x += draw.textlength(char, font=font)
+            i += 1
+
+
 
 def _wrap_text(draw, text, font, max_width):
     """แบ่ง text เป็นหลาย line ให้พอดีกับ max_width (รองรับภาษาไทยที่ไม่มี space)"""
@@ -142,8 +166,8 @@ def _draw_lines(draw, lines, font, line_h, gap, y_start, W, fill, shadow=(0, 0, 
         x  = (W - bw) // 2
         # 8-direction outline — ทำให้อ่านได้แม้พื้นหลังสีใกล้เคียงตัวอักษร
         for dx, dy in [(-3,-3),(-3,0),(-3,3),(0,-3),(0,3),(3,-3),(3,0),(3,3)]:
-            draw.text((x + dx, y + dy), clean_line, font=font, fill=shadow)
-        draw.text((x, y), clean_line, font=font, fill=fill)
+            draw_thai_clean(draw, clean_line, (x + dx, y + dy), font, fill=shadow)
+        draw_thai_clean(draw, clean_line, (x, y), font, fill=fill)
         y += line_h + gap
     return y  # y หลังบรรทัดสุดท้าย
 
