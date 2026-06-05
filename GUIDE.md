@@ -244,3 +244,27 @@ IMGBB_API_KEY = "..."
 | โพสสินค้าซ้ำ | Excel local ≠ repo | push Excel ขึ้น GitHub ทุกครั้ง |
 | Image gen fail | Gemini API quota/error | retry 3 ครั้งอัตโนมัติ |
 | Quote gen fail | Gemini model unavailable | fallback gemini-2.5-flash อัตโนมัติ |
+
+---
+
+## พรอมต์สร้างภาพรีวิวสินค้าจาก AI (AI Product Review Prompt Template)
+
+พรอมต์ที่ได้รับอนุมัติสำหรับการเจนรูปภาพรีวิวสินค้า:
+
+```plaintext
+Act as a professional e-commerce visual content creator. Create a high-quality promotional image for [PRODUCT NAME] inspired by the combined composition and text aesthetic of images_1.png through images_5.png. 
+
+Key Visual Elements:
+- Background: Minimalist, clean desk setup or styled nook with soft, bright light, and a shallow depth of field (blurred background elements).
+- Subject: A prominent, central placement of [PRODUCT NAME] based on the photo you provided.
+- Graphics: Incorporate playful, stylized *Thai* text overlays using both free-floating text and text within outlined boxes (similar to the examples in the reference images). 
+- Decorative Elements: Include floating sparkles, small ingredient-relevant icons (like tiny fruits, flowers, clouds), and subtle sizing indicators, but NO prices.
+
+Text Content Strategy (Generate ONE unique Thai perspective per render):
+1. "Problem Solver/Result-Focused": Focus on a key problem the product solves (e.g., dry skin, messy desk). Use clean, professional Thai fonts.
+2. "Lifestyle/Emotional Benefit": Focus on how the product makes you feel (e.g., "Elevate Your Space", "Feel Luxurious"). Use playful Thai fonts.
+3. "Functional/Tech Feature Callout": Pick ONE unique benefit (e.g., specific sizing, a technology). Use bold Thai fonts.
+
+[PASTE DETAILED PRODUCT DESCRIPTION HERE]
+```
+
