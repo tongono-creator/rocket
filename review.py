@@ -783,6 +783,113 @@ def draw_infographic(img, meta):
         # Draw text inside box
         draw.text((cx, cy - c_bbox[1] - c_h // 2), text, font=font_callout, fill=(0, 0, 0), anchor="mm")
 
+def upload_image_to_imgbb(img_path):
+    IMGBB_API_KEY = os.environ.get("IMGBB_API_KEY", "")
+    if not IMGBB_API_KEY:
+        try:
+            from config import IMGBB_API_KEY
+        except ImportError:
+            pass
+    if not IMGBB_API_KEY:
+        print("[Threads] IMGBB_API_KEY not found. Skipping Threads post.")
+        return None
+    try:
+        with open(img_path, "rb") as f:
+            img_data = base64.b64encode(f.read()).decode("utf-8")
+        resp = requests.post(
+            "https://api.imgbb.com/1/upload",
+            data={"key": IMGBB_API_KEY, "image": img_data},
+            timeout=60
+        )
+        result = resp.json()
+        if result.get("success"):
+            url = result["data"]["url"]
+            print(f"[Threads] Image uploaded to ImgBB: {url}")
+            return url
+        else:
+            print(f"[Threads] ImgBB upload failed: {result}")
+    except Exception as e:
+        print(f"[Threads] Exception during ImgBB upload: {e}")
+    return None
+
+def post_to_threads(image_url, caption, shopee, lazada, promo):
+    THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
+    THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
+    if not THREADS_ACCESS_TOKEN or not THREADS_USER_ID:
+        try:
+            from config import THREADS_ACCESS_TOKEN, THREADS_USER_ID
+        except ImportError:
+            pass
+    if not THREADS_ACCESS_TOKEN or not THREADS_USER_ID:
+        print("[Threads] THREADS_ACCESS_TOKEN or THREADS_USER_ID not configured.")
+        return
+
+    print("[Threads] Creating Threads media container...")
+    try:
+        resp = requests.post(
+            f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
+            data={
+                "media_type": "IMAGE",
+                "image_url": image_url,
+                "text": caption,
+                "access_token": THREADS_ACCESS_TOKEN,
+            },
+            timeout=60
+        )
+        result = resp.json()
+        if "id" not in result:
+            print(f"[Threads] Error creating media container: {result}")
+            return
+        container_id = result["id"]
+        print(f"[Threads] Media container created: {container_id}")
+        time.sleep(5)
+
+        print("[Threads] Publishing Threads post...")
+        resp2 = requests.post(
+            f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
+            data={"creation_id": container_id, "access_token": THREADS_ACCESS_TOKEN},
+            timeout=60
+        )
+        result2 = resp2.json()
+        if "id" not in result2:
+            print(f"[Threads] Error publishing post: {result2}")
+            return
+        post_id = result2["id"]
+        print(f"[Threads] Published successfully! Post ID: {post_id}")
+        
+        # Post the links as a reply comment
+        comments = []
+        promo_line = f" 🔥 โปร: {promo}" if promo else ""
+        if shopee and "xxx" not in shopee:
+            comments.append(f"👉 ซื้อได้ที่ Shopee → {shopee}{promo_line}")
+        if lazada and "xxx" not in lazada:
+            comments.append(f"🛍️ หรือสั่งทาง Lazada → {lazada}")
+            
+        for idx, comment_text in enumerate(comments, 1):
+            time.sleep(5)
+            print(f"[Threads] Posting reply comment {idx}...")
+            resp_c = requests.post(
+                f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
+                data={
+                    "media_type": "TEXT",
+                    "text": comment_text,
+                    "reply_to_id": post_id,
+                    "access_token": THREADS_ACCESS_TOKEN,
+                },
+                timeout=60
+            )
+            c_container_id = resp_c.json().get("id")
+            if c_container_id:
+                time.sleep(3)
+                requests.post(
+                    f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
+                    data={"creation_id": c_container_id, "access_token": THREADS_ACCESS_TOKEN},
+                    timeout=60
+                )
+                print(f"[Threads] Reply comment {idx} published.")
+    except Exception as e:
+        print(f"[Threads] Exception during Threads post: {e}")
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -857,6 +964,24 @@ if __name__ == "__main__":
         print(f"Link comment would be: 👉 Shopee → {product['shopee']}")
     else:
         post_id, was_scheduled = post_to_page(review_img, caption, product["shopee"], product["lazada"], promo_clean)
+        
+        # ─── Post to Threads if credentials are present ───────────────────────
+        try:
+            threads_token = os.environ.get("THREADS_ACCESS_TOKEN", "")
+            if not threads_token:
+                try:
+                    from config import THREADS_ACCESS_TOKEN as threads_token
+                except ImportError:
+                    pass
+            if threads_token:
+                print("[Threads] Found Threads access token. Preparing to post to Threads...")
+                img_url = upload_image_to_imgbb(review_img)
+                if img_url:
+                    post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean)
+        except Exception as th_err:
+            print(f"[Warning] Failed to post to Threads: {th_err}")
+        # ──────────────────────────────────────────────────────────────────────
+
         if os.path.exists(review_img):
             os.unlink(review_img)
         if not was_scheduled:
