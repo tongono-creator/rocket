@@ -690,6 +690,21 @@ def post_to_threads(image_url, caption, shopee, lazada, promo):
     except Exception as e:
         print(f"[Threads] Exception during Threads post: {e}")
 
+
+def extract_badge_text(promo):
+    if not promo:
+        return None
+    pct_match = re.search(r'(ลด\s*\d+\s*%)|(\d+\s*%\s*OFF)', promo, re.IGNORECASE)
+    if pct_match:
+        val = pct_match.group(0)
+        val = re.sub(r'\s+', ' ', val)
+        return val
+    price_match = re.search(r'฿\s*\d+', promo)
+    if price_match:
+        return price_match.group(0).replace(" ", "")
+    return None
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -727,7 +742,13 @@ if __name__ == "__main__":
     
     # PIL Overlay
     try:
-        review_img = add_overlay(product_img, line1, line2, ACCENT_COLOR, font_name="Itim-Regular.ttf")
+        badge_text = extract_badge_text(product.get("promo"))
+        review_img = add_overlay(
+            product_img, line1, line2, ACCENT_COLOR,
+            font_name="Itim-Regular.ttf",
+            badge_text=badge_text,
+            watermark="Rocket 21"
+        )
         if product_img and os.path.exists(product_img):
             os.unlink(product_img)
         print(f"Review image overlaid: {review_img}")
