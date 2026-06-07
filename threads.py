@@ -969,48 +969,47 @@ def generate_image(line1, line2=""):
     max_h    = IMG_SIZE - PAD * 2
     LINE_GAP = 24
 
-    # auto-fit: หา font size ใหญ่ที่สุดที่พอดีกรอบ
-    font_size = 100
-    lines = [line1]
+    input_lines = [line1]
     if line2:
-        lines.append(line2)
+        input_lines.append(line2)
 
+    # auto-fit: หา font ใหญ่สุดที่ wrap แล้วพอดีกรอบ
+    font_size = 110
+    wrapped = []   # list of (clean_text, is_first_block)
     while font_size >= 36:
         font = ImageFont.truetype(FONT_PATH, font_size)
+        wrapped = []
+        for idx, l in enumerate(input_lines):
+            for w in wrap_thai(l, font, draw, max_w):
+                clean = w.replace('​', '').replace('\\u200b', '')
+                wrapped.append((clean, idx == 0))
         total_h = 0
         width_ok = True
-        for l in lines:
-            bbox = draw.textbbox((0, 0), l, font=font)
-            h = bbox[3] - bbox[1]
-            w = bbox[2] - bbox[0]
-            if w > max_w:
+        for t, _ in wrapped:
+            bbox = draw.textbbox((0, 0), t, font=font)
+            total_h += bbox[3] - bbox[1]
+            if bbox[2] - bbox[0] > max_w:
                 width_ok = False
-            total_h += h
-        total_h += LINE_GAP * (len(lines) - 1)
+        total_h += LINE_GAP * (len(wrapped) - 1)
         if total_h <= max_h and width_ok:
             break
         font_size -= 4
 
-    print(f"Font size: {font_size}")
+    print(f"Font size: {font_size} | lines: {len(wrapped)}")
     font = ImageFont.truetype(FONT_PATH, font_size)
 
-    # Calculate start y to center vertically
+    # center vertically
     y = (IMG_SIZE - total_h) // 2
 
-    # Draw text lines centered
-    for i, l in enumerate(lines):
-        bbox = draw.textbbox((0, 0), l, font=font)
+    for text, is_first in wrapped:
+        bbox = draw.textbbox((0, 0), text, font=font)
         w = bbox[2] - bbox[0]
         h = bbox[3] - bbox[1]
         x = (IMG_SIZE - w) // 2
         draw_y = y - bbox[1]
-
-        # Color: First line is Gold (#FFD700), second line is White
-        color = (255, 215, 0) if i == 0 else (255, 255, 255)
-        # Drop shadow for clean look
-        draw.text((x + 3, draw_y + 3), l, font=font, fill=(30, 30, 30))
-        draw.text((x, draw_y), l, font=font, fill=color)
-
+        color = (255, 215, 0) if is_first else (255, 255, 255)
+        draw.text((x + 3, draw_y + 3), text, font=font, fill=(30, 30, 30))
+        draw.text((x, draw_y), text, font=font, fill=color)
         y += h + LINE_GAP
 
     img.save(path)
