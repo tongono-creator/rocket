@@ -525,6 +525,17 @@ def main():
             news["subreddit"],
             news["link"]
         )
+        # ถ้า Gemini ล้มเหลวจนต้องใช้ static canned news -> ข้าม candidate นี้
+        # ไม่โพส (เพราะจะได้รูปดำ + caption ที่ไม่ตรงกับ ที่มา reddit link) ลองตัวถัดไปแทน
+        if is_static_fallback:
+            print("[Skip] Gemini content generation failed (static fallback). Skipping this candidate to avoid posting a black canned card with a mismatched source link.")
+            if os.path.exists(temp_path):
+                try:
+                    os.unlink(temp_path)
+                except Exception:
+                    pass
+            candidates.remove(news)
+            continue
         line1 = segment_thai_text(line1, client)
         line2 = segment_thai_text(line2, client)
         print(f"Hook generated: {line1} | {line2}")
