@@ -11,9 +11,101 @@ from google import genai
 from google.genai import types
 from overlay_utils import add_overlay
 
+def get_threads_token():
+    token = os.environ.get("THREADS_ACCESS_TOKEN", "")
+    if token:
+        return token
+    token_path = os.path.join(os.path.dirname(__file__), "threads_token.txt")
+    if os.path.exists(token_path):
+        try:
+            with open(token_path, "r", encoding="utf-8") as f:
+                token = f.read().strip()
+                if token:
+                    return token
+        except Exception:
+            pass
+    try:
+        from config import THREADS_ACCESS_TOKEN
+        if THREADS_ACCESS_TOKEN:
+            return THREADS_ACCESS_TOKEN
+    except ImportError:
+        pass
+    return ""
+
+def get_threads_user_id():
+    uid = os.environ.get("THREADS_USER_ID", "")
+    if uid:
+        return uid
+    try:
+        from config import THREADS_USER_ID
+        if THREADS_USER_ID:
+            return THREADS_USER_ID
+    except ImportError:
+        pass
+    return ""
+
+def is_duplicate_threads_post(proposed_text, access_token, user_id, threshold_hours=24):
+    if not access_token or not user_id:
+        return False
+    
+    def normalize(t):
+        if not t:
+            return ""
+        t = re.sub(r'[\s\u200b\u200c\u200d#]', '', t)
+        t = re.sub(r'[^\w]', '', t)
+        return t.strip().lower()
+
+    norm_proposed = normalize(proposed_text)
+    if not norm_proposed:
+        return False
+
+    url = f"https://graph.threads.net/v1.0/{user_id}/threads"
+    params = {
+        "fields": "id,text,timestamp",
+        "access_token": access_token,
+        "limit": 15
+    }
+    
+    try:
+        resp = requests.get(url, params=params, timeout=20)
+        if resp.status_code == 200:
+            data = resp.json().get("data", [])
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            
+            for item in data:
+                text = item.get("text", "")
+                timestamp_str = item.get("timestamp")
+                if not text or not timestamp_str:
+                    continue
+                
+                try:
+                    ts_clean = timestamp_str.replace("+0000", "+00:00")
+                    dt = datetime.fromisoformat(ts_clean)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    else:
+                        dt = dt.astimezone(timezone.utc)
+                    
+                    age_seconds = (now - dt).total_seconds()
+                    age_hours = age_seconds / 3600.0
+                    
+                    if age_hours <= threshold_hours:
+                        if normalize(text) == norm_proposed:
+                            print(f"[Dedup] Found duplicate Threads post (age: {age_hours:.1f} hours): {text[:60]}...")
+                            return True
+                except Exception as parse_err:
+                    print(f"[Dedup] Error parsing timestamp '{timestamp_str}': {parse_err}")
+        else:
+            print(f"[Warning] Failed to fetch Threads posts for dedup (status {resp.status_code}): {resp.text}")
+    except Exception as e:
+        print(f"[Warning] Exception in Threads dedup check: {e}")
+        
+    return False
+
 GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
-THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
-THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
+THREADS_ACCESS_TOKEN = get_threads_token()
+THREADS_USER_ID      = get_threads_user_id()
 IMAGE_MODEL          = "gemini-2.0-flash-preview-image-generation"  # unused (PIL renders)
 TEXT_MODELS          = ["gemini-2.5-flash", "gemini-2.5-pro"]
 OUTPUT_DIR           = "output"
@@ -22,7 +114,7 @@ API_ENABLED = True
 
 if not GOOGLE_API_KEY:
     try:
-        from config import GOOGLE_API_KEY, THREADS_ACCESS_TOKEN, THREADS_USER_ID
+        from config import GOOGLE_API_KEY
     except ImportError:
         pass
 
@@ -836,6 +928,14 @@ def run_meme_mode(dry_run=False):
         caption = analysis["caption"]
         seed_comment = analysis["seed_comment"]
         
+        # Check for duplicates before processing further
+        if THREADS_ACCESS_TOKEN and THREADS_USER_ID:
+            print("[Threads] Checking for duplicate meme post...")
+            if is_duplicate_threads_post(caption, THREADS_ACCESS_TOKEN, THREADS_USER_ID):
+                print(f"[Threads] Duplicate meme detected. Skipping meme: {title}")
+                os.unlink(img_path)
+                continue
+        
         # Draw overlay on the image using overlay_utils
         out_path = os.path.join(OUTPUT_DIR, f"threads_meme_overlay_{int(time.time())}.jpg")
         try:
@@ -891,6 +991,13 @@ def run_quote_mode(dry_run=False):
     """โหมดคำคม — PIL image + quote"""
     topic, slot = get_topic()
     content = generate_threads_content(topic, slot)
+    
+    # Check for duplicates before processing further
+    if THREADS_ACCESS_TOKEN and THREADS_USER_ID:
+        print("[Threads] Checking for duplicate quote post...")
+        if is_duplicate_threads_post(content["caption"], THREADS_ACCESS_TOKEN, THREADS_USER_ID):
+            print(f"[Threads] Duplicate quote detected. Skipping quote: {content['caption'][:60]}...")
+            return
     
     line1 = segment_thai_text(content["image_line1"], client)
     line2 = segment_thai_text(content["image_line2"], client)

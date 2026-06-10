@@ -38,6 +38,98 @@ else:
         print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
         API_ENABLED = False
 
+def get_threads_token():
+    token = os.environ.get("THREADS_ACCESS_TOKEN", "")
+    if token:
+        return token
+    token_path = os.path.join(os.path.dirname(__file__), "threads_token.txt")
+    if os.path.exists(token_path):
+        try:
+            with open(token_path, "r", encoding="utf-8") as f:
+                token = f.read().strip()
+                if token:
+                    return token
+        except Exception:
+            pass
+    try:
+        from config import THREADS_ACCESS_TOKEN
+        if THREADS_ACCESS_TOKEN:
+            return THREADS_ACCESS_TOKEN
+    except ImportError:
+        pass
+    return ""
+
+def get_threads_user_id():
+    uid = os.environ.get("THREADS_USER_ID", "")
+    if uid:
+        return uid
+    try:
+        from config import THREADS_USER_ID
+        if THREADS_USER_ID:
+            return THREADS_USER_ID
+    except ImportError:
+        pass
+    return ""
+
+def is_duplicate_threads_post(proposed_text, access_token, user_id, threshold_hours=24):
+    if not access_token or not user_id:
+        return False
+    
+    def normalize(t):
+        if not t:
+            return ""
+        t = re.sub(r'[\s\u200b\u200c\u200d#]', '', t)
+        t = re.sub(r'[^\w]', '', t)
+        return t.strip().lower()
+
+    norm_proposed = normalize(proposed_text)
+    if not norm_proposed:
+        return False
+
+    url = f"https://graph.threads.net/v1.0/{user_id}/threads"
+    params = {
+        "fields": "id,text,timestamp",
+        "access_token": access_token,
+        "limit": 15
+    }
+    
+    try:
+        resp = requests.get(url, params=params, timeout=20)
+        if resp.status_code == 200:
+            data = resp.json().get("data", [])
+            from datetime import datetime, timezone
+            now = datetime.now(timezone.utc)
+            
+            for item in data:
+                text = item.get("text", "")
+                timestamp_str = item.get("timestamp")
+                if not text or not timestamp_str:
+                    continue
+                
+                try:
+                    ts_clean = timestamp_str.replace("+0000", "+00:00")
+                    dt = datetime.fromisoformat(ts_clean)
+                    if dt.tzinfo is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    else:
+                        dt = dt.astimezone(timezone.utc)
+                    
+                    age_seconds = (now - dt).total_seconds()
+                    age_hours = age_seconds / 3600.0
+                    
+                    if age_hours <= threshold_hours:
+                        if normalize(text) == norm_proposed:
+                            print(f"[Dedup] Found duplicate Threads post (age: {age_hours:.1f} hours): {text[:60]}...")
+                            return True
+                except Exception as parse_err:
+                    print(f"[Dedup] Error parsing timestamp '{timestamp_str}': {parse_err}")
+        else:
+            print(f"[Warning] Failed to fetch Threads posts for dedup (status {resp.status_code}): {resp.text}")
+    except Exception as e:
+        print(f"[Warning] Exception in Threads dedup check: {e}")
+        
+    return False
+
 _LEADING_VOWELS  = set('เแโใไ')
 _COMBINING_CHARS = set('่้๊๋์ิีึืุูัํ็')
 
@@ -522,11 +614,22 @@ def generate_caption(detail, shopee, lazada, promo, highlights):
         _seed = int(_hs.md5(detail.encode()).hexdigest()[:8], 16)
         _price_m = re.search(r'ราคา\s*([\d,]+(?:\.\d+)?)\s*บาท', detail)
         _price_str = f"\n\nราคาแค่ {_price_m.group(1)} บาท" if _price_m else ""
+        
+        title_lines = [l.strip() for l in detail.splitlines() if l.strip()]
+        title_raw = title_lines[0] if title_lines else ""
+        title_clean = re.sub(r'^[•\-\*\d\.\s\u2013\(\[\{\)\|\}]+', '', title_raw).strip()
+        title_clean = title_clean[:50]
+        
+        if title_clean:
+            title_prefix = f"สำหรับ {title_clean} "
+        else:
+            title_prefix = ""
+            
         _fallback_templates = [
-            f"เจอของดีมาบอกต่อ ลองใช้แล้วชอบครับ{_price_str}\n\nดูลิ้งในคอมเมนต์แรก 👇",
-            f"มีปัญหาแบบนี้อยู่เหมือนกัน เพิ่งหาทางออกเจอครับ{_price_str}\n\nรายละเอียดในคอมเมนต์แรก 👇",
-            f"นานๆ จะเจอของดีราคานี้ แปะไว้ก่อนครับ{_price_str}\n\nดูในคอมเมนต์แรก 👇",
-            f"ใช้มาพักนึงแล้ว ดีกว่าที่คิดไว้ครับ{_price_str}\n\nดูลิ้งในคอมเมนต์แรก 👇",
+            f"เจอของดีมาบอกต่อ {title_prefix}ลองใช้แล้วชอบครับ{_price_str}\n\nดูลิ้งในคอมเมนต์แรก 👇",
+            f"มีปัญหาแบบนี้อยู่เหมือนกัน {title_prefix}เพิ่งหาทางออกเจอครับ{_price_str}\n\nรายละเอียดในคอมเมนต์แรก 👇",
+            f"นานๆ จะเจอ {title_clean or 'ของดี'} ราคานี้ แปะไว้ก่อนครับ{_price_str}\n\nดูในคอมเมนต์แรก 👇",
+            f"ใครหาตัวนี้อยู่ {title_prefix}ใช้มาพักนึงแล้ว ดีกว่าที่คิดไว้ครับ{_price_str}\n\nดูลิ้งในคอมเมนต์แรก 👇",
         ]
         caption = _fallback_templates[_seed % 4]
     else:
@@ -656,13 +759,8 @@ def upload_image_to_imgbb(img_path):
     return None
 
 def post_to_threads(image_url, caption, shopee, lazada, promo):
-    THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
-    THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
-    if not THREADS_ACCESS_TOKEN or not THREADS_USER_ID:
-        try:
-            from config import THREADS_ACCESS_TOKEN, THREADS_USER_ID
-        except ImportError:
-            pass
+    THREADS_ACCESS_TOKEN = get_threads_token()
+    THREADS_USER_ID      = get_threads_user_id()
     if not THREADS_ACCESS_TOKEN or not THREADS_USER_ID:
         print("[Threads] THREADS_ACCESS_TOKEN or THREADS_USER_ID not configured.")
         return
@@ -846,17 +944,16 @@ if __name__ == "__main__":
 
             # ─── Post to Threads if credentials are present ─────────────────
             try:
-                threads_token = os.environ.get("THREADS_ACCESS_TOKEN", "")
-                if not threads_token:
-                    try:
-                        from config import THREADS_ACCESS_TOKEN as threads_token
-                    except ImportError:
-                        pass
-                if threads_token:
+                threads_token = get_threads_token()
+                threads_user_id = get_threads_user_id()
+                if threads_token and threads_user_id:
                     print("[Threads] Preparing to post to Threads...")
-                    img_url = upload_image_to_imgbb(review_img)
-                    if img_url:
-                        post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean)
+                    if is_duplicate_threads_post(caption, threads_token, threads_user_id):
+                        print("[Threads] Duplicate post detected. Skipping Threads posting for this product.")
+                    else:
+                        img_url = upload_image_to_imgbb(review_img)
+                        if img_url:
+                            post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean)
             except Exception as th_err:
                 print(f"[Warning] Failed to post to Threads: {th_err}")
             # ────────────────────────────────────────────────────────────────
