@@ -1359,19 +1359,29 @@ if __name__ == "__main__":
             print(f"Link: 👉 Shopee → {product['shopee']}")
             posted_this_run.add(product.get("shopee"))
         else:
-            post_id, was_scheduled = post_to_page(
-                review_img, caption,
-                product["shopee"], product["lazada"], promo_clean, 
-                scheduled_timestamp=sched_ts
-            )
+            try:
+                threads_token = get_threads_token()
+                threads_user_id = get_threads_user_id()
+                if threads_token and threads_user_id:
+                    print("[Threads] Preparing to post to Threads...")
+                    try:
+                        u_resp = requests.get(f"https://graph.threads.net/v1.0/me?fields=username&access_token={threads_token}", timeout=10)
+                        u_name = u_resp.json().get("username", "Unknown")
+                        print(f"[Threads] Posting to Threads account: @{u_name}")
+                    except Exception as ue:
+                        print(f"[Threads] Could not fetch username: {ue}")
+                    if is_duplicate_threads_post(caption, threads_token, threads_user_id):
+                        print("[Threads] Duplicate post detected. Skipping Threads posting for this product.")
+                    else:
+                        img_url = upload_image_to_imgbb(review_img)
+                        if img_url:
+                            post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean)
+            except Exception as th_err:
+                print(f"[Warning] Failed to post to Threads: {th_err}")
+
             posted_this_run.add(product.get("shopee"))
-
-
-
             if os.path.exists(review_img):
                 os.unlink(review_img)
-            if not was_scheduled:
-                post_link_comment(post_id, product["shopee"], product["lazada"], promo_clean)
             if not affiliate_mode:
                 mark_posted(wb, ws, product["row"], state=state)
             else:
