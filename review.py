@@ -1372,6 +1372,12 @@ if __name__ == "__main__":
                 threads_user_id = get_threads_user_id()
                 if threads_token and threads_user_id:
                     print("[Threads] Preparing to post to Threads...")
+                    try:
+                        u_resp = requests.get(f"https://graph.threads.net/v1.0/me?fields=username&access_token={threads_token}", timeout=10)
+                        u_name = u_resp.json().get("username", "Unknown")
+                        print(f"[Threads] Posting to Threads account: @{u_name}")
+                    except Exception as ue:
+                        print(f"[Threads] Could not fetch username: {ue}")
                     if is_duplicate_threads_post(caption, threads_token, threads_user_id):
                         print("[Threads] Duplicate post detected. Skipping Threads posting for this product.")
                     else:
