@@ -1285,7 +1285,7 @@ if __name__ == "__main__":
             candidate_caption = generate_caption(
                 product_json, selected_persona, selected_hook, selected_style,
                 product["shopee"], product["lazada"], promo_clean,
-                selected_role, in_post_body=(sched_ts is not None)
+                selected_role
             )
 
             recent_caps = state.get("recent_captions", [])[-20:]
@@ -1361,7 +1361,7 @@ if __name__ == "__main__":
         else:
             post_id, was_scheduled = post_to_page(
                 review_img, caption,
-                product["shopee"], product["lazada"], promo_clean, in_post_body=(sched_ts is not None),
+                product["shopee"], product["lazada"], promo_clean, 
                 scheduled_timestamp=sched_ts
             )
             posted_this_run.add(product.get("shopee"))
@@ -1377,7 +1377,7 @@ if __name__ == "__main__":
                     else:
                         img_url = upload_image_to_imgbb(review_img)
                         if img_url:
-                            post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean, in_post_body=(sched_ts is not None))
+                            post_to_threads(img_url, caption, product["shopee"], product["lazada"], promo_clean)
             except Exception as th_err:
                 print(f"[Warning] Failed to post to Threads: {th_err}")
             # ────────────────────────────────────────────────────────────────
@@ -1385,7 +1385,7 @@ if __name__ == "__main__":
             if os.path.exists(review_img):
                 os.unlink(review_img)
             if not was_scheduled:
-                post_link_comment(post_id, product["shopee"], product["lazada"], promo_clean, in_post_body=(sched_ts is not None))
+                post_link_comment(post_id, product["shopee"], product["lazada"], promo_clean)
             if not affiliate_mode:
                 mark_posted(wb, ws, product["row"], state=state)
             else:
