@@ -265,14 +265,96 @@ def post_reply_comment(comment_id, text, attachment_url=None):
 
 def has_affiliate_comment(comments, page_id):
     """ตรวจสอบว่าแอดมินเคยโพสต์ลิงก์ affiliate ในโพสต์นี้แล้วหรือยัง"""
+    has_shopee, has_lazada, has_shopeefood = check_existing_links(comments, page_id)
+    return has_shopee or has_lazada or has_shopeefood
+
+def check_existing_links(comments, page_id):
+    """ตรวจสอบว่าแอดมินเคยคอมเมนต์ Shopee, Lazada หรือ ShopeeFood ในโพสต์นี้แล้วบ้าง"""
+    has_shopee = False
+    has_lazada = False
+    has_shopeefood = False
+    if comments is None:
+        return False, False, False
     for c in comments:
         commenter_info = c.get("from", {})
         commenter_id = commenter_info.get("id", "")
         if commenter_id == page_id:
             msg = c.get("message", "").lower()
-            if "shopee" in msg or "lazada" in msg or "http" in msg or "พิกัด" in msg:
-                return True
-    return False
+            if "shopeefood" in msg or "shopee food" in msg:
+                has_shopeefood = True
+            elif "shopee" in msg:
+                has_shopee = True
+            if "lazada" in msg:
+                has_lazada = True
+    return has_shopee, has_lazada, has_shopeefood
+
+def filter_affiliate_message(aff_msg, target_platform="shopee"):
+    """กรองข้อความคอมเมนต์ affiliate ให้เหลือเพียงแพลตฟอร์มเดียวตามที่ต้องการ (shopee หรือ lazada)"""
+    if isinstance(aff_msg, dict):
+        msg_text = aff_msg.get("message", "")
+        pic_url = aff_msg.get("picture_url")
+        url = aff_msg.get("url", "")
+        # ถ้าลิงก์ใน dict ไม่ตรงกับแพลตฟอร์มเป้าหมาย อาจจะไม่อยากส่งข้าม แต่ถ้ามีแค่นี้ก็ส่งไป
+        return {"message": msg_text, "picture_url": pic_url, "url": url}
+
+    # ถ้าเป็นข้อความสตริงทั่วไปที่มีลิงก์ Shopee / Lazada รวมกันอยู่
+    lines = aff_msg.splitlines()
+    filtered_lines = []
+    
+    shopee_line = None
+    lazada_line = None
+    for line in lines:
+        if "shopee:" in line.lower() or "shopee.ee" in line.lower():
+            shopee_line = line
+        elif "lazada:" in line.lower() or "s.lazada" in line.lower():
+            lazada_line = line
+        elif "พิกัดของชิ้นนี้" not in line and "shopee" not in line.lower() and "lazada" not in line.lower():
+            filtered_lines.append(line)
+            
+    # นำมาประกอบใหม่ตามเป้าหมาย
+    if target_platform == "shopee" and shopee_line:
+        filtered_lines.append("\n📌 พิกัดของชิ้นนี้จิ้มได้เลยน้า:")
+        filtered_lines.append(shopee_line)
+    elif target_platform == "lazada" and lazada_line:
+        filtered_lines.append("\n📌 พิกัดของชิ้นนี้จิ้มได้เลยน้า:")
+        filtered_lines.append(lazada_line)
+    else:
+        # fallback ถ้าไม่มีอันที่ระบุ ให้ใช้เท่าที่มี
+        if shopee_line:
+            filtered_lines.append("\n📌 พิกัดของชิ้นนี้จิ้มได้เลยน้า:")
+            filtered_lines.append(shopee_line)
+        elif lazada_line:
+            filtered_lines.append("\n📌 พิกัดของชิ้นนี้จิ้มได้เลยน้า:")
+            filtered_lines.append(lazada_line)
+            
+    return "\n".join(filtered_lines)
+
+def get_reply_affiliate_message(post_text, has_shopee, has_lazada, has_shopeefood):
+    """เลือกข้อความคอมเมนต์พิกัดที่เหมาะสม โดยกรองเอาเฉพาะแพลตฟอร์มที่ยังไม่เคยโพสต์ เพื่อป้องกันการสแปม"""
+    from affiliate_utils import get_all_comments, get_food_comment
+    
+    # 1. ถ้ายังไม่มี Shopee -> โพสต์ Shopee
+    if not has_shopee:
+        aff_comments = get_all_comments(caption=post_text)
+        if aff_comments:
+            return filter_affiliate_message(aff_comments[0], "shopee")
+            
+    # 2. ถ้ามี Shopee แล้ว แต่ยังไม่มี Lazada -> โพสต์ Lazada (ถ้าสินค้ามีลิงก์ Lazada)
+    if has_shopee and not has_lazada:
+        aff_comments = get_all_comments(caption=post_text)
+        if aff_comments:
+            msg = aff_comments[0]
+            msg_text = msg.get("message", "") if isinstance(msg, dict) else msg
+            if "lazada" in msg_text.lower():
+                return filter_affiliate_message(msg, "lazada")
+                
+    # 3. ถ้าไม่มีลิงก์ Lazada หรือมีแล้ว แต่ยังไม่มี ShopeeFood -> โพสต์ ShopeeFood
+    if not has_shopeefood:
+        food_comment = get_food_comment()
+        if food_comment:
+            return food_comment
+            
+    return None
 
 if __name__ == "__main__":
     import argparse
@@ -321,11 +403,13 @@ if __name__ == "__main__":
                 aff_comments = get_all_comments(caption=post_text)
                 if aff_comments:
                     aff_msg = aff_comments[0]
-                    if isinstance(aff_msg, dict):
-                        aff_msg_text = aff_msg.get("message", "")
-                        aff_pic = aff_msg.get("picture_url")
+                    # กรองข้อความให้เหลือแค่ลิงก์ Shopee (แปะโพสละ 1 อันพอ)
+                    filtered_msg = filter_affiliate_message(aff_msg, "shopee")
+                    if isinstance(filtered_msg, dict):
+                        aff_msg_text = filtered_msg.get("message", "")
+                        aff_pic = filtered_msg.get("picture_url")
                     else:
-                        aff_msg_text = aff_msg
+                        aff_msg_text = filtered_msg
                         aff_pic = None
                     print(f"  Posting separate affiliate comment: {aff_msg_text[:50]}...")
                     if not args.dry_run:
@@ -397,12 +481,14 @@ if __name__ == "__main__":
                     history.add(comment_id)
                     reply_count += 1
                     
-                    # 8. ถ้าลูกค้าขอพิกัด ให้แอดมินแปะพิกัด Shopee ในคอมเมนต์ตอบกลับแยกอีกคอมเมนต์หนึ่งทันที
+                    # 8. ถ้าลูกค้าขอพิกัด ให้แอดมินแปะพิกัดเพิ่มเติมในคอมเมนต์ตอบกลับแยกอีกคอมเมนต์หนึ่งทันที (ตามความเหมาะสม)
                     if is_asking_link:
-                        from affiliate_utils import get_all_comments
-                        aff_comments = get_all_comments(caption=post_text)
-                        if aff_comments:
-                            aff_msg = aff_comments[0]
+                        # อัปเดตข้อมูลคอมเมนต์ล่าสุด เพื่อเช็คลิงก์ที่ถูกโพสต์ไปแล้ว
+                        latest_comments = get_post_comments(post_id)
+                        has_shopee, has_lazada, has_shopeefood = check_existing_links(latest_comments, PAGE_ID)
+                        
+                        aff_msg = get_reply_affiliate_message(post_text, has_shopee, has_lazada, has_shopeefood)
+                        if aff_msg:
                             if isinstance(aff_msg, dict):
                                 aff_msg_text = aff_msg.get("message", "")
                                 aff_pic = aff_msg.get("picture_url")
@@ -412,7 +498,7 @@ if __name__ == "__main__":
                             print(f"    Posting separate affiliate link reply: {aff_msg_text[:50]}...")
                             post_reply_comment(comment_id, aff_msg_text, attachment_url=aff_pic)
                         else:
-                            print("    Could not find matching affiliate product for this post.")
+                            print("    No new link comments needed (already posted all available links).")
                 else:
                     print("    Failed to post reply.")
             
