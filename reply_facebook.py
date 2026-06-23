@@ -269,9 +269,25 @@ def post_reply_comment(comment_id, text, attachment_url=None):
     return None
 
 def has_affiliate_comment(comments, page_id):
-    """ตรวจสอบว่าแอดมินเคยโพสต์ลิงก์ affiliate ในโพสต์นี้แล้วหรือยัง"""
+    """ตรวจสอบว่าแอดมินเคยโพสต์ลิงก์ affiliate หรือลิงก์ชี้เป้าใดๆ ในโพสต์นี้แล้วหรือยัง"""
+    if comments is None:
+        return False
+    
+    # 1. เช็คพิกัดหลัก Shopee, Lazada, ShopeeFood
     has_shopee, has_lazada, has_shopeefood = check_existing_links(comments, page_id)
-    return has_shopee or has_lazada or has_shopeefood
+    if has_shopee or has_lazada or has_shopeefood:
+        return True
+        
+    # 2. เช็คเพิ่มเติมหากแอดมินเคยเม้นลิงก์หรือพิกัดอื่นใดที่เป็นลิงก์ชี้เป้า
+    for c in comments:
+        commenter_info = c.get("from", {})
+        commenter_id = commenter_info.get("id", "")
+        if commenter_id == page_id:
+            msg = c.get("message", "").lower()
+            if "http://" in msg or "https://" in msg or "พิกัด" in msg or "จิ้ม" in msg:
+                return True
+                
+    return False
 
 def check_existing_links(comments, page_id):
     """ตรวจสอบว่าแอดมินเคยคอมเมนต์ Shopee, Lazada หรือ ShopeeFood ในโพสต์นี้แล้วบ้าง"""
