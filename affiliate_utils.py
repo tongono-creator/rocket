@@ -118,6 +118,38 @@ def _load_excel():
                     except Exception as extra_err:
                         print(f"Error loading extra excel {file_name}: {extra_err}")
 
+        # Load from review_products.xlsx too (especially for review post comment lookups)
+        review_path = os.path.join(os.path.dirname(__file__), "review_products.xlsx")
+        if os.path.exists(review_path):
+            try:
+                review_wb = openpyxl.load_workbook(review_path, data_only=True)
+                review_ws = review_wb.active
+                for row in review_ws.iter_rows(min_row=2, values_only=True):
+                    if len(row) < 4:
+                        continue
+                    detail = row[1]
+                    shopee = row[2]
+                    lazada = row[3]
+                    
+                    if detail and shopee:
+                        shopee_str = str(shopee).strip()
+                        if shopee_str.startswith("http") and "xxx" not in shopee_str:
+                            lazada_str = str(lazada).strip() if lazada else ""
+                            if not lazada_str.startswith("http"):
+                                lazada_str = ""
+                            
+                            detail_str = str(detail).strip()
+                            name = detail_str.split("\n")[0][:60]
+                            products.append({
+                                "name":   name,
+                                "shopee": shopee_str,
+                                "lazada": lazada_str,
+                                "desc":   detail_str,
+                                "image":  "",
+                            })
+            except Exception as review_err:
+                print(f"Error loading review excel in affiliate_utils: {review_err}")
+
         return products, food_entries, promos
     except Exception as e:
         print(f"Excel read error: {e}")

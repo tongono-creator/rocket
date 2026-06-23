@@ -1165,7 +1165,10 @@ def post_to_page(img_path, caption, shopee=None, lazada=None, promo=None, schedu
         slots = ["08:00"]
         scheduled_time = get_next_scheduled_time(slots)
     
-    if scheduled_time:
+    path_norm = __file__.replace("\\", "/").lower()
+    is_rocket = "rocket" in path_norm or PAGE_ID == "111830598532037"
+
+    if scheduled_time and not is_rocket:
         comment_texts = []
         promo_line = f"\n🔥 โปร: {promo}" if promo else ""
         if shopee and "xxx" not in shopee:
