@@ -37,11 +37,9 @@ def parse_captions(file_path):
         captions[ep] = text
     return captions
 
-def get_scheduled_timestamp(day_offset):
-    # EP09 is 2026-07-01 at 17:00:00 BKK (UTC+7)
-    # BKK timezone: UTC+7
+def get_scheduled_timestamp(time_str):
     bkk_tz = timezone(timedelta(hours=7))
-    dt = datetime(2026, 7, 1, 17, 0, 0, tzinfo=bkk_tz) + timedelta(days=day_offset)
+    dt = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=bkk_tz)
     return int(dt.timestamp()), dt.strftime("%Y-%m-%d %H:%M:%S BKK")
 
 def upload_and_schedule_reel(episode_num, file_path, caption, timestamp, formatted_time):
@@ -128,12 +126,20 @@ def main():
     captions = parse_captions(CAPTIONS_FILE)
     
     episodes = [
-        {"name": "EP09", "file": "EP09.mp4", "offset": 0},
-        {"name": "EP10", "file": "EP10.mp4", "offset": 1},
-        {"name": "EP11", "file": "EP11.mp4", "offset": 2},
-        {"name": "EP12", "file": "EP12.mp4", "offset": 3},
-        {"name": "EP13", "file": "EP13.mp4", "offset": 4},
-        {"name": "EP14", "file": "EP14.mp4", "offset": 5},
+        {"name": "EP02", "file": "EP02.mp4", "time_str": "2026-06-24 09:00:00"},
+        {"name": "EP03", "file": "EP03.mp4", "time_str": "2026-06-24 11:30:00"},
+        {"name": "EP04", "file": "EP04.mp4", "time_str": "2026-06-24 14:00:00"},
+        {"name": "EP05", "file": "EP05.mp4", "time_str": "2026-06-24 16:30:00"},
+        {"name": "EP06", "file": "EP06.mp4", "time_str": "2026-06-24 19:00:00"},
+        {"name": "EP07", "file": "EP07.mp4", "time_str": "2026-06-24 21:30:00"},
+        
+        {"name": "EP08", "file": "EP08.mp4", "time_str": "2026-06-25 09:00:00"},
+        {"name": "EP09", "file": "EP09.mp4", "time_str": "2026-06-25 11:00:00"},
+        {"name": "EP10", "file": "EP10.mp4", "time_str": "2026-06-25 13:00:00"},
+        {"name": "EP11", "file": "EP11.mp4", "time_str": "2026-06-25 15:00:00"},
+        {"name": "EP12", "file": "EP12.mp4", "time_str": "2026-06-25 17:00:00"},
+        {"name": "EP13", "file": "EP13.mp4", "time_str": "2026-06-25 19:00:00"},
+        {"name": "EP14", "file": "EP14.mp4", "time_str": "2026-06-25 21:00:00"},
     ]
     
     results = {}
@@ -147,7 +153,7 @@ def main():
             print(f"Error: Caption for {ep_name} not found in caption_facebook.txt")
             continue
             
-        timestamp, formatted_time = get_scheduled_timestamp(ep["offset"])
+        timestamp, formatted_time = get_scheduled_timestamp(ep["time_str"])
         
         success = upload_and_schedule_reel(ep_name, file_path, caption, timestamp, formatted_time)
         if success:
@@ -166,8 +172,8 @@ def main():
             print(f"\nScheduling halted due to failure on {ep_name}.")
             break
             
-        print("Waiting 10 seconds before next upload...")
-        time.sleep(10)
+        print("Waiting 15 seconds before next upload to prevent rate limits...")
+        time.sleep(15)
 
     print("\n==============================================")
     print("Scheduling Summary:")
