@@ -16,6 +16,98 @@ def _rotate(items, extra_salt=0):
         return None
     return random.choice(items)
 
+def parse_thai_date(date_str):
+    """
+    พยายามแปลงวันที่ไทยเป็น date object เช่น '25 พ.ค. 69', '2026-05-29'
+    ปี พ.ศ. 2569 / 69 จะถูกแปลงเป็น ค.ศ. 2026
+    """
+    if not date_str:
+        return None
+    date_str = str(date_str).strip().lower()
+    
+    # 1. Check YYYY-MM-DD standard format FIRST before splitting!
+    match = re.match(r'^(\d{4})-(\d{1,2})-(\d{1,2})', date_str)
+    if match:
+        try:
+            return datetime(int(match.group(1)), int(match.group(2)), int(match.group(3))).date()
+        except ValueError:
+            pass
+
+    # 2. range splitting: split by any hyphen or slash representing range and take the end date
+    parts = re.split(r'[-–ถึง]', date_str)
+    if len(parts) > 1:
+        date_str = parts[-1].strip()
+
+    # Check YYYY-MM-DD again in case it was a range of ISO dates
+    match = re.match(r'^(\d{4})-(\d{1,2})-(\d{1,2})', date_str)
+    if match:
+        try:
+            return datetime(int(match.group(1)), int(match.group(2)), int(match.group(3))).date()
+        except ValueError:
+            pass
+
+    # Check DD/MM/YYYY
+    match_slash = re.match(r'^(\d{1,2})/(\d{1,2})/(\d{2,4})', date_str)
+    if match_slash:
+        try:
+            d = int(match_slash.group(1))
+            m = int(match_slash.group(2))
+            y = int(match_slash.group(3))
+            if y > 2500: y -= 543
+            elif y > 2400: y -= 543
+            elif y < 100:
+                if y >= 50:
+                    y = y + 1957
+                else:
+                    y = y + 2000
+            return datetime(y, m, d).date()
+        except ValueError:
+            pass
+        
+    # Thai months dictionary
+    thai_months = {
+        'ม.ค.': 1, 'มกราคม': 1,
+        'ก.พ.': 2, 'กุมภาพันธ์': 2,
+        'มี.ค.': 3, 'มีนาคม': 3,
+        'เม.ย.': 4, 'เมษายน': 4,
+        'พ.ค.': 5, 'พฤษภาคม': 5,
+        'มิ.ย.': 6, 'มิถุนายน': 6,
+        'ก.ค.': 7, 'กรกฎาคม': 7,
+        'ส.ค.': 8, 'สิงหาคม': 8,
+        'ก.ย.': 9, 'กันยายน': 9,
+        'ต.ค.': 10, 'ตุลาคม': 10,
+        'พ.ย.': 11, 'พฤศจิกายน': 11,
+        'ธ.ค.': 12, 'ธันวาคม': 12
+    }
+    
+    # Match Thai date format with optional spaces
+    match_thai = re.search(r'(\d{1,2})\s*([ก-๙\.]+)\s*(\d{2,4})', date_str)
+    if match_thai:
+        try:
+            d = int(match_thai.group(1))
+            m_name = match_thai.group(2)
+            y = int(match_thai.group(3))
+            
+            m = None
+            for k, v in thai_months.items():
+                if k in m_name or m_name in k:
+                    m = v
+                    break
+                    
+            if m and y:
+                if y > 2500: y -= 543
+                elif y > 2400: y -= 543
+                elif y < 100:
+                    if y >= 50:
+                        y = y + 1957
+                    else:
+                        y = y + 2000
+                return datetime(y, m, d).date()
+        except ValueError:
+            pass
+            
+    return None
+
 # ─── อ่าน Excel ──────────────────────────────────────────────────
 def _load_excel():
     try:
@@ -56,16 +148,20 @@ def _load_excel():
             promo_ok = str(promo_active or "").strip().lower() == "yes"
             if promo_ok and expiry_raw:
                 try:
-                    from datetime import date as _date
                     if hasattr(expiry_raw, "date"):
                         exp = expiry_raw.date()
                     else:
-                        exp = datetime.strptime(str(expiry_raw).strip()[:10], "%Y-%m-%d").date()
-                    if today > exp:
+                        exp = parse_thai_date(expiry_raw)
+                    if exp:
+                        if today > exp:
+                            promo_ok = False
+                            print(f"Promo expired ({exp}): {str(promo_msg or '')[:40]}")
+                    else:
                         promo_ok = False
-                        print(f"Promo expired ({exp}): {str(promo_msg or '')[:40]}")
-                except Exception:
-                    pass  # parse ไม่ได้ → ไม่ block
+                        print(f"Promo expiry date unparseable ('{expiry_raw}'), defaulting to expired: {str(promo_msg or '')[:40]}")
+                except Exception as parse_err:
+                    promo_ok = False
+                    print(f"Promo expiry parse error ('{expiry_raw}'), defaulting to expired: {parse_err}")
 
             if promo_msg and promo_ok:
                 promos.append({

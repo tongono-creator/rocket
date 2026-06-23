@@ -109,7 +109,7 @@ if not PAGE_ACCESS_TOKEN:
 try:
     import config
     if not GEMINI_API_KEY:
-        GEMINI_API_KEY = getattr(config, "GEMINI_API_KEY", "")
+        GEMINI_API_KEY = getattr(config, "GEMINI_API_KEY", "") or getattr(config, "GOOGLE_API_KEY", "")
     if not PAGE_ACCESS_TOKEN:
         PAGE_ACCESS_TOKEN = getattr(config, "PAGE_ACCESS_TOKEN", PAGE_ACCESS_TOKEN)
         # Check specific config tokens
@@ -121,6 +121,11 @@ try:
             PAGE_ACCESS_TOKEN = getattr(config, "KRAM_PAGE_ACCESS_TOKEN", PAGE_ACCESS_TOKEN)
 except ImportError:
     pass
+
+# Ensure API key is set in environment for imports like affiliate_utils
+if GEMINI_API_KEY:
+    os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
+    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
 PAGE_ID = cfg["page_id"]
 TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
@@ -294,8 +299,11 @@ def filter_affiliate_message(aff_msg, target_platform="shopee"):
         msg_text = aff_msg.get("message", "")
         pic_url = aff_msg.get("picture_url")
         url = aff_msg.get("url", "")
-        # ถ้าลิงก์ใน dict ไม่ตรงกับแพลตฟอร์มเป้าหมาย อาจจะไม่อยากส่งข้าม แต่ถ้ามีแค่นี้ก็ส่งไป
         return {"message": msg_text, "picture_url": pic_url, "url": url}
+
+    # If it is a website rank/promo link, or doesn't have markdown prefix links like Shopee: or Lazada:
+    if "shopee:" not in aff_msg.lower() and "lazada:" not in aff_msg.lower() and "shopee.ee" not in aff_msg.lower() and "s.lazada" not in aff_msg.lower():
+        return aff_msg
 
     # ถ้าเป็นข้อความสตริงทั่วไปที่มีลิงก์ Shopee / Lazada รวมกันอยู่
     lines = aff_msg.splitlines()
@@ -308,7 +316,7 @@ def filter_affiliate_message(aff_msg, target_platform="shopee"):
             shopee_line = line
         elif "lazada:" in line.lower() or "s.lazada" in line.lower():
             lazada_line = line
-        elif "พิกัดของชิ้นนี้" not in line and "shopee" not in line.lower() and "lazada" not in line.lower():
+        elif "พิกัดของชิ้นนี้" not in line and "shopee:" not in line.lower() and "lazada:" not in line.lower() and "shopee.ee" not in line.lower() and "s.lazada" not in line.lower():
             filtered_lines.append(line)
             
     # นำมาประกอบใหม่ตามเป้าหมาย
@@ -327,7 +335,10 @@ def filter_affiliate_message(aff_msg, target_platform="shopee"):
             filtered_lines.append("\n📌 พิกัดของชิ้นนี้จิ้มได้เลยน้า:")
             filtered_lines.append(lazada_line)
             
-    return "\n".join(filtered_lines)
+    result_text = "\n".join(filtered_lines).strip()
+    if not result_text:
+        return aff_msg
+    return result_text
 
 def get_reply_affiliate_message(post_text, has_shopee, has_lazada, has_shopeefood):
     """เลือกข้อความคอมเมนต์พิกัดที่เหมาะสม โดยกรองเอาเฉพาะแพลตฟอร์มที่ยังไม่เคยโพสต์ เพื่อป้องกันการสแปม"""
