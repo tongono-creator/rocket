@@ -302,10 +302,40 @@ PROMO_INTROS = [
     "🛒 ส่วนลดพิเศษสุดๆ ของ {name} แนะนำช้อปด่วนก่อนหมดโปร → {url}",
 ]
 
+def get_website_with_product_comment():
+    """ดึงข้อความแนะนำเว็บ shopee-ranking และสุ่มต่อท้ายด้วยสินค้าแนะนำที่กำลังแอคทีฟ 1 ชิ้นเพื่อเพิ่มโอกาสขาย"""
+    web_base = _rotate(WEBSITE_VARS)
+    if not web_base:
+        web_base = f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee เข้าไปดูอันดับได้เลยนะ → {WEBSITE_URL}"
+        
+    try:
+        products, _, _ = _load_excel()
+        active = [p for p in products if p.get("shopee") and "xxx" not in p.get("shopee")]
+        if active:
+            p = random.choice(active)
+            shopee_url = p.get("shopee", "").strip()
+            lazada_url = p.get("lazada", "").strip()
+            if "xxx" in shopee_url: shopee_url = ""
+            if "xxx" in lazada_url: lazada_url = ""
+            
+            links = []
+            if shopee_url:
+                links.append(f"🧡 Shopee: {shopee_url}")
+            if lazada_url:
+                links.append(f"💙 Lazada: {lazada_url}")
+                
+            if links:
+                link_section = "\n".join(links)
+                web_base += f"\n\n📌 ชี้เป้าของดีแนะนำวันนี้ - {p.get('name', 'สินค้าแนะนำ')}:\n{link_section}"
+    except Exception as e:
+        print(f"Error appending product to website comment: {e}")
+        
+    return web_base
+
 # ─── Public API ───────────────────────────────────────────────────
 def get_standard_comments():
     """comment เว็บ shopee-ranking (หมุน variations)"""
-    return [_rotate(WEBSITE_VARS)]
+    return [get_website_with_product_comment()]
 
 def get_persona():
     """ตรวจจับว่ากำลังรันอยู่ในโฟลเดอร์ของเพจไหนเพื่อเลือกบุคลิกภาพที่ถูกต้อง"""
@@ -577,7 +607,7 @@ def get_all_comments(caption=None, img_path=None):
     choices = []
     
     # website comment
-    web = _rotate(WEBSITE_VARS)
+    web = get_website_with_product_comment()
     if web:
         choices.append(web)
         
@@ -591,7 +621,7 @@ def get_all_comments(caption=None, img_path=None):
         return [random.choice(choices)]
         
     # backup
-    return [_rotate(WEBSITE_VARS)]
+    return [get_website_with_product_comment()]
 
 def get_next_scheduled_time(slots):
     """
