@@ -537,9 +537,9 @@ def get_product_comments(caption=None, img_path=None):
         selected_p = select_product_with_ai(active, caption=caption, img_path=img_path)
         
     if not selected_p:
-        # หาก AI เลือกไม่ได้ หรือคีย์หมดโควตา — ห้ามสุ่มสินค้ามั่วเด็ดขาด!
-        print("AI Selector: No relevant product matched. Skipping product comments.")
-        return []
+        # หาก AI เลือกไม่ได้ หรือคีย์หมดโควตา — สุ่มเลือกสินค้าที่แอคทีฟมาแนะนำแทน
+        print("AI Selector: No relevant product matched. Falling back to random active product.")
+        selected_p = random.choice(active)
     else:
         print(f"AI Selector: Selected product -> {selected_p['name']}")
 
@@ -591,37 +591,24 @@ def get_product_comments(caption=None, img_path=None):
 def get_all_comments(caption=None, img_path=None):
     """
     คืนค่าคอมเมนต์สูงสุดเพียง 1 คอมเมนต์เท่านั้น เพื่อไม่ให้ดูเป็นสแปม/สแกม
-    โดยจะเลือกลงตามลำดับความสำคัญ: Promo -> Product (ถ้าจับคู่ได้) -> Web / Food (ถ้าไม่มีอะไรเลย)
+    โดยจะเลือกลงตามลำดับความสำคัญ: Promo -> Product (ถ้าจับคู่ได้ หรือสุ่มเลือก) -> Food (ถ้าไม่มีสินค้าเลย)
     """
     # 1. ถ้ามีโปรโมชั่นพิเศษ (Promo) ที่ยังไม่หมดอายุและระบุใน Excel
     promo = get_promo_comment()
     if promo:
         return [promo]
 
-    # 2. พยายามจับคู่สินค้าด้วย AI (Product)
+    # 2. พยายามจับคู่สินค้าด้วย AI หรือสุ่มเลือกสินค้าที่กำลังแอคทีฟ (Product)
     prod_comments = get_product_comments(caption=caption, img_path=img_path)
     if prod_comments:
         return prod_comments
 
-    # 3. ถ้าไม่มีสินค้าจับคู่ได้เลย หรือคีย์หมดโควตา ให้สุ่มเลือกระหว่าง Website หรือ Food เพียงอย่างเดียว
-    choices = []
-    
-    # website comment
-    web = get_website_with_product_comment()
-    if web:
-        choices.append(web)
+    # 3. ถ้าไม่มีสินค้าในระบบเหลือเลย ให้ใช้ลิงก์อาหารเดลิเวอรี่ (Food)
+    food = get_food_comment()
+    if food:
+        return [food]
         
-    # food comment (โอกาส 40%)
-    if random.random() < 0.40:
-        food = get_food_comment()
-        if food:
-            choices.append(food)
-            
-    if choices:
-        return [random.choice(choices)]
-        
-    # backup
-    return [get_website_with_product_comment()]
+    return []
 
 def get_next_scheduled_time(slots):
     """
