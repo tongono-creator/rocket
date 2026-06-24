@@ -1,10 +1,10 @@
 name: Lotto Bot
 
 on:
-  schedule:
-    # 14:00 - 16:45 BKK (BKK is UTC+7) => 07:00 - 09:45 UTC
-    # Runs every 15 minutes on the 1st and 16th of each month
-    - cron: '*/15 7-9 1,16 * *'
+  # schedule:
+  #   # 14:00 - 16:45 BKK (BKK is UTC+7) => 07:00 - 09:45 UTC
+  #   # Runs every 15 minutes on the 1st and 16th of each month
+  #   - cron: '*/15 7-9 1,16 * *'
   workflow_dispatch:
 
 jobs:

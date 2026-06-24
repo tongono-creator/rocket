@@ -1,8 +1,8 @@
 name: Post News to Facebook
 
 on:
-  schedule:
-    - cron: '0 7 * * 1,3,5'  # 14:00 BKK (Mon, Wed, Fri)
+  # schedule:
+  #   - cron: '0 7 * * 1,3,5'  # 14:00 BKK (Mon, Wed, Fri)
   workflow_dispatch:       # รันมือได้จาก GitHub UI
 
 jobs:

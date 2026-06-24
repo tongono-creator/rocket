@@ -1,9 +1,9 @@
 name: Product Review to Threads
 
 on:
-  schedule:
-    # 04:50 Bangkok (21:50 UTC) Tue, Thu, Sat
-    - cron: '50 21 * * 2,4,6'
+  # schedule:
+  #   # 04:50 Bangkok (21:50 UTC) Tue, Thu, Sat
+  #   - cron: '50 21 * * 2,4,6'
   workflow_dispatch:
 
 jobs:

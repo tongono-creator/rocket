@@ -1,8 +1,8 @@
 name: Quotes Bot
 
 on:
-  schedule:
-    - cron: '0 4 * * *'   # 11:00 BKK
+  # schedule:
+  #   - cron: '0 4 * * *'   # 11:00 BKK
   workflow_dispatch:
 
 jobs:

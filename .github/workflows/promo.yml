@@ -1,11 +1,11 @@
 name: Promo Post (Shopee Ranking)
 
 on:
-  schedule:
-    # จันทร์ / พุธ / ศุกร์ เวลา 19:00 Bangkok (12:00 UTC)
-    - cron: '0 12 * * 1'   # Monday
-    - cron: '0 12 * * 3'   # Wednesday
-    - cron: '0 12 * * 5'   # Friday
+  # schedule:
+  #   # จันทร์ / พุธ / ศุกร์ เวลา 19:00 Bangkok (12:00 UTC)
+  #   - cron: '0 12 * * 1'   # Monday
+  #   - cron: '0 12 * * 3'   # Wednesday
+  #   - cron: '0 12 * * 5'   # Friday
   workflow_dispatch:
 
 jobs:
