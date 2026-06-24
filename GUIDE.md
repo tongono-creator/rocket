@@ -31,7 +31,21 @@ GitHub Actions (cron)
 
 ### 3. ระบบตรวจผลสลากกินแบ่งรัฐบาลไทยอัตโนมัติ (Thai Lottery Auto Poster)
 * **การปรับปรุง**: เพิ่มบอทรายงานผลหวยอัตโนมัติ ทุกวันที่ 1 และ 16 ของเดือน ดึงข้อมูล Real-time ทันทีหลังจากประกาศผล
-* **การทำงาน**: สคริปต์ `lotto_poster.py` จะถูกเรียกทำงานและดึงข้อมูลผลรางวัลจาก Sanook Lotto ตรวจสอบความถูกต้องอย่างละเอียด แล้วโพสต์ประกาศบนหน้า Facebook Page ทันทีพร้อมแคปชั่นที่เข้ากับคาแรคเตอร์เพจ
+* **การทำงาน**: สคริปต์ [lotto_poster.py](file:///D:/Projects/rocket-facebook-page/lotto_poster.py) จะถูกเรียกทำงานและดึงข้อมูลผลรางวัลจาก Sanook Lotto ตรวจสอบความถูกต้องอย่างละเอียด แล้วโพสต์ประกาศบนหน้า Facebook Page ทันทีพร้อมแคปชั่นที่เข้ากับคาแรคเตอร์เพจ
+
+### 4. ระบบโพสต์ขายสินค้าผ่านคอมเมนต์แรกเท่านั้นสำหรับเพจ Rocket (Rocket Page Comment-Only Strategy)
+* **การปรับปรุง**: หลีกเลี่ยงการถูกลดค่าการเข้าถึงโพสต์ของเพจ Rocket จาก Meta (Meta Reach Penalty) โดยการนำลิงก์ affiliate ออกจากแคปชั่นของโพสต์ตั้งเวลาทั้งหมด แล้วใช้บอทคอมเมนต์แรกและตอบกลับเพื่อขายแทน
+* **การทำงาน**: 
+  * ใน [review.py](file:///D:/Projects/rocket-facebook-page/review.py) ระบบจะลบลิงก์และช่องทางโปรโมตออกจากแคปชั่นของโพสต์ตั้งเวลาสำหรับเพจ Rocket โดยเฉพาะ ทำให้หน้าฟีดมีแต่แคปชั่นเนื้อเรื่องที่คลีน สะอาด และชวนคุย
+  * บอทคอมเมนต์ [reply_facebook.py](file:///D:/Projects/rocket-facebook-page/reply_facebook.py) จะคอยตรวจสอบหากเพจมีโพสต์ใหม่ และจะเข้าคอมเมนต์ลิงก์และรายละเอียดการขายแทนในคอมเมนต์แรก
+  * มีระบบตรวจสอบการสแปมที่ทนทาน (Robust Duplicate Comment Detection) โดย [has_affiliate_comment](file:///D:/Projects/rocket-facebook-page/reply_facebook.py#L271) จะตรวจสอบว่าแอดมินหรือเพจเคยคอมเมนต์ลิงก์ชี้เป้า หรือใช้คำอย่าง "พิกัด", "จิ้ม", หรือมีโปรโตคอล `http`/`https` ไปแล้วหรือยัง หากมีแล้วระบบจะไม่โพสต์ซ้ำเพื่อป้องกันโพสต์โดนแบนเป็นสแปม
+  * มีระบบ local fallback ไปใช้ `GOOGLE_API_KEY` และกำหนดให้เป็น Env variable เพื่อให้บอทเรียกใช้งาน Gemini ได้ไม่มีสะดุดเมื่อนำมารันแบบแมนนวลในระบบโลคอล
+
+### 5. ระบบจับคู่สินค้าและแปลงวันที่ภาษาไทยของโปรโมชัน (Thai Date Parser & Dynamic Product Comment)
+* **การปรับปรุง**: เพิ่มโอกาสในการขายโดยจับคู่ลิงก์สินค้าเข้ากับลิงก์จัดอันดับ และเพิ่มความสามารถในการทำงานร่วมกับไฟล์ Excel รายการโปรโมชันของไทย
+* **การทำงาน**:
+  * ตัวแปลงวันที่ใน [affiliate_utils.py](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py) ที่ฟังก์ชัน [parse_thai_date](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py#L19) ได้รับการปรับปรุงให้รองรับช่วงวันที่ของไทยที่เป็นปี พ.ศ. (พ.ศ. 2569 ย่อเป็น 69) และรูปแบบช่วง เช่น `1-15 มิ.ย. 69` ทำให้บอทสามารถคัดกรองวันที่หมดอายุของสินค้าโปรโมชันได้อย่างถูกต้อง แม่นยำ
+  * ระบบจับคู่สินค้าแนะนำ [get_website_with_product_comment](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py#L302) จะทำการดึงข้อมูลสินค้าที่ตั้งค่า Active ในไฟล์ Excel และสุ่มเลือกสินค้าพร้อมสร้างลิงก์ Shopee/Lazada มาต่อท้ายการแชร์ลิงก์จัดอันดับเว็บ Shopee Rank เสมอ เพื่อช่วยดึงดูดลูกค้าและเพิ่มประสิทธิภาพในการทำเงิน
 
 ---
 
@@ -134,18 +148,23 @@ GitHub Actions (cron)
 
 ---
 
-## affiliate_utils.py — ระบบ Comment
+## [affiliate_utils.py](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py) — ระบบ Comment
 
 ### ทำงานยังไง
-ทุกครั้งที่โพส ระบบจะ comment ลิงก์ affiliate โดยอัตโนมัติ
+ทุกครั้งที่โพสต์โพสต์ใหม่ ระบบจะคอมเมนต์ลิงก์ affiliate โดยอัตโนมัติ
 
-**พฤติกรรมสุ่ม (ดูเหมือนคนโพสเอง):**
+**พฤติกรรมสุ่ม (ดูเหมือนคนโพสต์เอง):**
 | ประเภท | โอกาสออก | รายละเอียด |
 |--------|----------|------------|
-| website link | 85% | ลิงก์ shopee-ranking.vercel.app |
+| website link | 85% | ลิงก์ shopee-ranking.vercel.app (จะมีการดึงสินค้าแนะนำที่ active จาก Excel มาต่อท้ายโดย [get_website_with_product_comment](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py#L302) อัตโนมัติ) |
 | food | 60% | ลิงก์ Shopee Food จาก Excel |
 | product | 70% | ลิงก์ Shopee/Lazada จาก Excel |
-| ลำดับ | shuffle ทุกครั้ง | ไม่เรียงเดิม |
+| ลำดับ | shuffle ทุกครั้ง | ไม่เรียงกันซ้ำซาก |
+
+**ฟีเจอร์สำคัญเพิ่มเติม:**
+* **ระบบตัดลิงก์ในเพจ Rocket (Caption Cleaning)**: ตรวจจับหากโพสต์นั้นมาจากเพจ Rocket จะทำการเคลียร์ลิงก์ออกจากแคปชั่น (รักษาความสะอาดบนฟีด) เพื่อมารันขายในคอมเมนต์แรกแทน
+* **ระบบแปลงช่วงวันที่ของไทย (Thai Date Range Parser)**: แปลงวันที่ พ.ศ. ช่วงของไทย เช่น `1-15 มิ.ย. 69` ผ่าน [parse_thai_date](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py#L19) เพื่ออัปเดตสถานะของโปรโมชันใน Excel ได้แม่นยำ ไม่ให้โพสต์สินค้าหมดโปร
+* **ระบบเช็คคอมเมนต์ซ้ำของแอดมิน (Robust Anti-Spam Check)**: ใน [reply_facebook.py](file:///D:/Projects/rocket-facebook-page/reply_facebook.py) ก่อนตอบกลับจะเรียกใช้ฟังก์ชัน [has_affiliate_comment](file:///D:/Projects/rocket-facebook-page/reply_facebook.py#L271) เพื่อตรวจสอบประวัติคอมเมนต์ที่แอดมินหรือเพจตอบไปแล้วว่ามี ลิงก์ (`http`/`https`) หรือคำว่า `"พิกัด"` หรือ `"จิ้ม"` หรือยัง เพื่อความปลอดภัยจากการโดน Meta ตรวจพบพฤติกรรมสแปม
 
 **Delay:**
 - รอ 60–180s ก่อน comment แรก

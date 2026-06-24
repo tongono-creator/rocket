@@ -25,11 +25,16 @@
 - upload ผ่าน ImgBB → Threads API
 - comment เป็น reply thread
 
-### ✅ affiliate_utils.py — comment ระบบ
+### ✅ [affiliate_utils.py](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py) — comment ระบบ
 - อ่านสินค้า/อาหารจาก `affiliate_products.xlsx`
 - สุ่มลำดับ + สุ่มว่าจะโพส comment แต่ละ type ไหม (85%/60%/70%)
 - Delay สุ่ม 60-180s ก่อน comment แรก, 30-90s ระหว่าง comment
 - ดูเหมือนคนโพสเอง ไม่ใช่ bot
+- **ฟีเจอร์เด่นที่เพิ่มล่าสุด**:
+  - ลบลิงก์ affiliate ออกจากแคปชั่นตั้งเวลาเฉพาะของเพจ Rocket (Caption Cleaning) แล้วให้บอท [reply_facebook.py](file:///D:/Projects/rocket-facebook-page/reply_facebook.py) วางลิงก์แทนในคอมเมนต์แรก เพื่อป้องกันการถูกลดการมองเห็น (Meta Reach Penalty)
+  - พัฒนาฟังก์ชัน [parse_thai_date](file:///D:/Projects/rocket-facebook-page/affiliate_utils.py#L19) รองรับการแปลงปี พ.ศ. และรูปแบบช่วงวันที่ของไทย เช่น `1-15 มิ.ย. 69` (ปี พ.ศ. 69 -> 2026 ค.ศ.) ทำให้เช็ควันหมดอายุของโปรโมชันได้แม่นยำ
+  - นำลิงก์สินค้าขายดีที่ยัง Active จาก Excel มาจับคู่และแนบต่อท้ายคอมเมนต์ลิงก์จัดอันดับเว็บ Shopee Rank อัตโนมัติ เพื่อเพิ่มโอกาสขาย
+  - ระบบป้องกันสแปม [has_affiliate_comment](file:///D:/Projects/rocket-facebook-page/reply_facebook.py#L271) ตรวจจับลิงก์หรือคำเชิญชวนอย่าง พิกัด/จิ้ม ที่เคยคอมเมนต์ไปแล้ว เพื่อเลี่ยงคอมเมนต์ซ้ำซ้อน
 
 ### ✅ GitHub Actions only
 - ไม่ใช้ cron-job.org หรือ external scheduler ใดๆ
@@ -69,6 +74,9 @@ repo: tongono-creator/rocket (GitHub)
 | GitHub Actions ไม่ใช้ cron-job.org | ลดความยุ่งยาก จัดการที่เดียว |
 | Gemini image gen ใช้กับ meme เท่านั้น | meme ต้องการ AI สร้างภาพ ไม่มี text overlay |
 | 4-slot content matrix | match กับ mindset คนอ่านแต่ละเวลา |
+| Rocket Caption Cleaning | หลีกเลี่ยงการโดนลดการเข้าถึงเมื่อโพสต์ลิงก์ในแคปชั่น โดยย้ายมาขายผ่านคอมเมนต์แรกแทน |
+| Thai BE Date Parser | รองรับวันที่ พ.ศ. ของไทยและรูปแบบช่วง (เช่น 1-15 มิ.ย. 69) ป้องกันข้อผิดพลาดของสินค้าหมดโปร |
+| Web-Product Comment Pairing | สุ่มนำลิงก์สินค้า Active มาจับคู่และโพสต์ต่อท้ายลิงก์อันดับสินค้าเพื่อช่วยเพิ่มการมองเห็นและยอดขาย |
 
 ---
 
