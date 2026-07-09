@@ -351,7 +351,7 @@ def get_persona():
     else:
         return "rocket"
 
-def generate_comment_with_ai(p, platform, persona):
+def generate_comment_with_ai(p, platform, persona, caption=None):
     """ใช้ Gemini-2.5-flash เขียนคอมเมนต์ 3 ขั้นตอนสไตล์แอดมินตามเพจ"""
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
@@ -371,9 +371,14 @@ def generate_comment_with_ai(p, platform, persona):
     prompt = (
         f"คุณคือแอดมินเพจโซเชียลมีเดียที่เป็น: {persona_inst}\n\n"
         f"ช่วยเขียนคอมเมนต์แนะนำสินค้าเพื่อโปรโมทลิงก์แอฟฟิลิเอต (Affiliate) บน {platform} โดยใช้เทคนิค 3 ขั้นตอนในการเขียน:\n"
-        f"1. เปิดให้น่าสนใจ (Hook): ประโยคเปิดหัวสั้นๆ กระชับ น่าสนใจ ดึงดูดให้อยากอ่านต่อ\n"
-        f"2. เล่าให้เห็นภาพ (Vivid Storytelling): บรรยายให้คนอ่านเห็นภาพการใช้งานจริง หรือประโยชน์เด่นๆ ของสินค้า\n"
-        f"3. ปิดจบต้องบอกว่า 'ควรทำอะไร' (Call to Action): บอกให้กดสั่งซื้อในตะกร้า หรือย้ำว่ามีโปรเด็ด/ลดราคาพิเศษอยู่ บังคับมีคำลงท้ายตามบุคลิกภาพของคุณ\n\n"
+        f"1. เปิดให้น่าสนใจ (Hook): ประโยคเปิดหัวสั้นๆ กระชับ โดยพยายามเชื่อมโยงหรือเปรียบเทียบเนื้อหาของโพสต์หลัก (ถ้ามี) เข้ากับสินค้าอย่างเนียนๆ ตลกขบขัน หรือเปรียบเปรยประเด็นชีวิตคนทำงาน/ศึกสงครามให้ดึงดูดใจ\n"
+        f"2. เล่าให้เห็นภาพ (Vivid Storytelling): บรรยายสั้นๆ ให้คนเห็นภาพประโยชน์การใช้งานสินค้า\n"
+        f"3. ปิดจบต้องบอกว่า 'ควรทำอะไร' (Call to Action): ชี้เป้าให้กดตะกร้าสั่งซื้อ บังคับมีคำลงท้ายตามบุคลิกภาพของคุณ\n\n"
+    )
+    if caption:
+        prompt += f"ข้อความแคปชั่นโพสต์หลักเพื่อใช้ในการเชื่อมโยงมุก:\n\"\"\"\n{caption}\n\"\"\"\n\n"
+        
+    prompt += (
         f"รายละเอียดสินค้า:\n"
         f"- ชื่อสินค้า: {name}\n"
         f"- ข้อมูลเด่น: {desc}\n\n"
@@ -562,8 +567,8 @@ def get_product_comments(caption=None, img_path=None):
     if not shopee_url and not lazada_url:
         return []
 
-    # 1. พยายามใช้ AI เขียนข้อความโปรโมทสินค้าแบบธรรมชาติ
-    ai_comment = generate_comment_with_ai(p, "Shopee & Lazada", persona)
+    # 1. พยายามใช้ AI เขียนข้อความโปรโมทสินค้าแบบธรรมชาติโดยมี caption ช่วยเชื่อมโยง
+    ai_comment = generate_comment_with_ai(p, "Shopee & Lazada", persona, caption=caption)
     
     if ai_comment:
         msg = ai_comment
