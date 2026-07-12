@@ -9,9 +9,9 @@ def main():
     modified_files = []
     for f in HISTORY_FILES:
         if os.path.exists(f):
-            # Check if git detects modifications
-            res = subprocess.run(["git", "diff", "--quiet", f])
-            if res.returncode != 0:
+            # Check if git detects modifications or untracked files
+            res = subprocess.run(["git", "status", "--porcelain", f], capture_output=True, text=True)
+            if res.stdout.strip():
                 modified_files.append(f)
 
     if not modified_files:
