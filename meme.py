@@ -26,7 +26,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
-TEXT_MODELS       = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.5-pro", "gemini-1.5-pro"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 OUTPUT_DIR        = "output"
 FONT_PATH         = os.path.join(os.path.dirname(__file__), "fonts", "Sarabun-ExtraBold.ttf")
 
@@ -244,7 +244,9 @@ def analyze_meme_to_scenario(img_path, reddit_title, recent_topics=None):
         "}"
     )
 
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,

@@ -14,7 +14,7 @@ PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 WEBSITE_URL       = "https://shopee-ranking.vercel.app/"
 IMAGE_MODELS      = ["gemini-2.5-flash-image", "gemini-3.1-flash-image-preview", "gemini-2.0-flash-preview-image-generation"]
-TEXT_MODEL        = "gemini-2.5-flash"
+TEXT_MODEL = "gemini-1.5-flash"
 OUTPUT_DIR        = "output"
 
 if not GOOGLE_API_KEY:

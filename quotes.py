@@ -44,7 +44,7 @@ else:
         print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
         API_ENABLED = False
 
-TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 GOLD        = (255, 215, 0)
 WHITE       = (255, 255, 255)
 SILVER      = (200, 200, 200)
@@ -167,7 +167,9 @@ def segment_thai_text(text, client_obj=None):
         "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
         f"Text to segment:\n{text}"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -362,7 +364,9 @@ def generate_engaging_quote():
     
     history = set(load_history())
     
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(3):
             try:
                 resp = client.models.generate_content(
@@ -413,7 +417,9 @@ def translate_quote(content, author):
         f'Author: {author}\n'
         f'Return ONLY the Thai translation. No markdown, no quotes around it.'
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = clean_text(resp.text.strip())
@@ -446,7 +452,9 @@ def split_quote_lines(quote_thai):
         f'กฎ: แต่ละบรรทัดสั้น 3-8 คำ ตัดที่จุดหยุดธรรมชาติ ได้ 2-5 บรรทัด\n'
         f'ตอบแค่วลีที่ตัดแล้ว แต่ละบรรทัดคั่นด้วย newline ไม่มีเลข ไม่มี -'
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             lines = [l.strip() for l in clean_text(resp.text).split("\n") if l.strip()]
@@ -478,7 +486,9 @@ def transliterate_author(author):
         f'เขียนชื่อนี้เป็นภาษาไทยตามการออกเสียง: {author}\n'
         f'ตอบแค่ชื่อภาษาไทย ไม่มีอะไรอื่น'
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = clean_text(resp.text.strip())
@@ -507,7 +517,9 @@ def make_caption(quote_thai, author):
         f'- ท้ายโพสต์ใส่ hashtag 2-3 อัน\n'
         f'ตอบเฉพาะข้อความโพสต์แคปชั่นเพียวๆ เท่านั้น ห้ามใส่ข้อความอธิบายใดๆ'
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             return clean_text(resp.text.strip())

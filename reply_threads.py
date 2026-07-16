@@ -10,7 +10,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
 GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
-TEXT_MODELS          = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 HISTORY_FILE         = os.path.join(os.path.dirname(__file__), "replied_comments.txt")
 
 # fallback รันบน local ใช้ config.py
@@ -132,7 +132,9 @@ def generate_reply(post_text, username, comment_text):
         "4. ห้ามใช้ markdown ** ตัวหนา หรือเครื่องหมายอัญประกาศครอบข้อความ\n"
         "5. สามารถใส่อีโมจิตลกๆ สู้ชีวิต ที่เข้ากับเรื่องได้ 1-2 ตัวอย่างเป็นธรรมชาติ"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = resp.text.strip()

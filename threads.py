@@ -107,7 +107,7 @@ GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = get_threads_token()
 THREADS_USER_ID      = get_threads_user_id()
 IMAGE_MODEL          = "gemini-2.0-flash-preview-image-generation"  # unused (PIL renders)
-TEXT_MODELS          = ["gemini-2.5-flash", "gemini-2.5-pro"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 OUTPUT_DIR           = "output"
 
 API_ENABLED = True
@@ -337,7 +337,9 @@ def generate_dynamic_topic(slot, history_list):
         f"ตัวอย่างผลลัพธ์ที่ถูกต้อง: เงินเดือน 5 หมื่นขับรถหรูแต่ไม่มีเงินออม VS เงินเดือน 2 หมื่นเก็บได้หมื่นห้า แบบไหนมั่นคงกว่า?"
     )
     
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
@@ -484,7 +486,9 @@ def generate_quote(topic, slot="morning"):
         style = CONTENT_STYLES[style_idx]
         prompt = style.format(topic=topic)
         print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             for attempt in range(2):
                 try:
                     resp = client.models.generate_content(model=model, contents=prompt)
@@ -562,7 +566,9 @@ def generate_threads_content(topic, slot):
         "}"
     )
 
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(3):
             try:
                 resp = client.models.generate_content(
@@ -737,7 +743,9 @@ def segment_thai_text(text, client):
         "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
         f"Text to segment:\n{text}"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -870,7 +878,9 @@ def analyze_reddit_image_for_threads(img_path, reddit_title):
         "}"
     )
 
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(
@@ -1184,7 +1194,9 @@ def generate_seed_comment(caption):
         "คอมเมนต์นี้ควรแสดงจุดยืนหรือแสดงความเห็นข้างใดข้างหนึ่งแบบกวนๆ หรือเป็นกันเอง เพื่อเริ่มการถกเถียง "
         "ห้ามใช้ markdown, ห้ามใส่ hashtag, ตอบเฉพาะตัวข้อความคอมเมนต์เท่านั้น"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             comment = clean_text(resp.text)
@@ -1324,7 +1336,9 @@ def analyze_meme(img_path):
         "ดูรูปนี้แล้วอธิบายสั้นๆ ภาษาไทยว่าเห็นอะไร หรือสถานการณ์ตลกอะไรในรูป 1-2 ประโยค "
         "ถ้าไม่มีอะไรน่าสนใจเลย ตอบว่า 'ไม่น่าสนใจ'"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,
@@ -1350,7 +1364,9 @@ def generate_funny_caption(image_desc, subreddit):
         "ท้ายใส่ hashtag 2-3 อัน\n"
         "ห้ามใช้ ** ตอบแค่ caption เลย"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             return clean_text(resp.text.strip())

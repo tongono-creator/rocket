@@ -128,7 +128,7 @@ if GEMINI_API_KEY:
     os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
 PAGE_ID = cfg["page_id"]
-TEXT_MODELS = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "replied_fb_comments.txt")
 
 if not PAGE_ACCESS_TOKEN:
@@ -237,7 +237,9 @@ def generate_reply(post_text, commenter_name, comment_text, is_asking_link=False
         "5. สามารถใส่อีโมจิตลกๆ สู้ชีวิต ที่เข้ากับเรื่องได้ 1-2 ตัวอย่างเป็นธรรมชาติ"
     )
     
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = resp.text.strip()

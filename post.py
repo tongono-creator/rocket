@@ -14,7 +14,7 @@ GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID",           "111830598532037")
 IMAGE_MODEL       = "gemini-2.0-flash-preview-image-generation"  # unused in post.py (PIL renders text)
-TEXT_MODELS       = ["gemini-2.5-flash", "gemini-3.5-flash"]  # fallback order
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]  # fallback order
 OUTPUT_DIR        = "output"
 
 # fallback รันบน local ใช้ config.py
@@ -157,7 +157,9 @@ def segment_thai_text(text, client_obj=None):
         "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
         f"Text to segment:\n{text}"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -388,7 +390,9 @@ def generate_dynamic_topic(slot, history_list):
         f"ตัวอย่างผลลัพธ์ที่ถูกต้อง: เงินเดือน 5 หมื่นขับรถหรูแต่ไม่มีเงินออม VS เงินเดือน 2 หมื่นเก็บได้หมื่นห้า แบบไหนมั่นคงกว่า?"
     )
     
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
@@ -611,7 +615,9 @@ def generate_quote(topic, slot="morning"):
         
         print(f"Topic: {topic} | Slot: {slot}")
         
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             # We will attempt up to 5 validation retries per model
             for attempt in range(5):
                 if not API_ENABLED:
@@ -704,7 +710,9 @@ def generate_story(topic, slot="morning"):
         "ตอบกลับเฉพาะตัวแคปชั่นเพียวๆ เท่านั้น ห้ามใส่คำแนะนำเพิ่มเติมอื่นใด"
     )
     
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         for attempt in range(2):
             if not API_ENABLED:
                 break

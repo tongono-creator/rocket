@@ -173,7 +173,7 @@ def format_thai_price(price_val):
 GOOGLE_API_KEY    = os.environ.get("GOOGLE_API_KEY",    "")
 PAGE_ACCESS_TOKEN = os.environ.get("PAGE_ACCESS_TOKEN", "")
 PAGE_ID           = os.environ.get("PAGE_ID", "111830598532037")
-TEXT_MODELS       = ["gemini-2.5-flash", "gemini-3.5-flash"]
+TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
 OUTPUT_DIR        = "output"
 EXCEL_PATH        = os.path.join(os.path.dirname(__file__), "review_products.xlsx")
 AFFILIATE_DIR     = os.path.join(os.path.dirname(__file__), "affiliate_data")
@@ -408,7 +408,9 @@ def segment_thai_text(text, client_obj=None):
         "3. Ensure words like 'หวยออก', 'เงินเก็บ', 'แสนแรก', 'ทำงาน' are segmented at their natural boundaries (e.g., 'หวย\\u200bออก' or left as 'หวยออก', but never break syllables awkwardly).\n\n"
         f"Text to segment:\n{text}"
     )
-    for model in TEXT_MODELS:
+    for model_idx, model in enumerate(TEXT_MODELS):
+        if model_idx > 0:
+            import time; time.sleep(2)
         try:
             resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -770,7 +772,9 @@ def extract_highlights(detail, promo):
             f"เน้นประโยชน์ที่คนซื้อสนใจและใช้งานจริง ห้ามใส่ข้อมูลราคาหรือโปรโมชั่น "
             f"ตอบเฉพาะส่วนรายละเอียดเนื้อความเท่านั้น"
         )
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
                 highlights = resp.text.strip()
@@ -846,7 +850,9 @@ def generate_hook(detail, highlights):
             f"สินค้า:\n{detail}\n"
             f"จุดเด่น:\n{highlights}"
         )
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             try:
                 resp = active_client.models.generate_content(model=model, contents=prompt)
                 result = resp.text.strip()
@@ -984,7 +990,9 @@ def parse_detail_to_json(detail, promo=None, client=None):
             f"สินค้า:\n{detail}\n"
             f"โปร:\n{promo or ''}"
         )
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
                 res_text = resp.text.strip()
@@ -1094,7 +1102,9 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
                 f"ตอบกลับเฉพาะเนื้อความโพสต์เท่านั้น ไม่ต้องมีข้อความนำ/อธิบายใดๆ"
             )
             
-        for model in TEXT_MODELS:
+        for model_idx, model in enumerate(TEXT_MODELS):
+            if model_idx > 0:
+                import time; time.sleep(2)
             try:
                 resp = active_client.models.generate_content(model=model, contents=prompt)
                 caption_text = resp.text.strip()
@@ -1385,7 +1395,7 @@ if __name__ == "__main__":
             affiliate_mode = True
             if not product:
                 print("ไม่มีสินค้าเหลือ หยุด")
-                break
+                sys.exit(1)
 
         if product.get("shopee") in posted_this_run:
             print(f"[Skip] ซ้ำใน run นี้: {str(product.get('shopee',''))[:60]}")
