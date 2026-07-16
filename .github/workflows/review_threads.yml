@@ -1,9 +1,9 @@
 name: Product Review to Threads
 
 on:
-  # schedule:
-  #   # 04:50 Bangkok (21:50 UTC) Tue, Thu, Sat
-  #   - cron: '50 21 * * 2,4,6'
+  schedule:
+    # รีวิวสินค้าสัปดาห์ละ 2 ครั้ง (พุธ, เสาร์ เวลา 18:40 น. ตามเวลาไทย)
+    - cron: '40 11 * * 3,6'
   workflow_dispatch:
 
 jobs:

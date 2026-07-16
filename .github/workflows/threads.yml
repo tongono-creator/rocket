@@ -1,10 +1,9 @@
 name: Threads Post
 
 on:
-  # schedule:
-  #   - cron: '0 2 * * *'   # 09:00 BKK
-  #   - cron: '0 8 * * *'   # 15:00 BKK
-  #   - cron: '0 14 * * *'  # 21:00 BKK
+  schedule:
+    # โพสต์คอนเทนต์ Threads วันละ 1 ครั้ง เวลา 12:00 น. ตามเวลาไทย (ลดความถี่)
+    - cron: '0 5 * * *'
   workflow_dispatch:
 
 jobs:
