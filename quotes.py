@@ -44,7 +44,7 @@ else:
         print(f"[Warning] Failed to initialize genai.Client: {e}. Disabling API calls.")
         API_ENABLED = False
 
-TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
+TEXT_MODELS       = ["gemini-flash-latest", "gemini-flash-latest"]
 GOLD        = (255, 215, 0)
 WHITE       = (255, 255, 255)
 SILVER      = (200, 200, 200)

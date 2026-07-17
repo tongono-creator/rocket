@@ -128,7 +128,7 @@ if GEMINI_API_KEY:
     os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
 
 PAGE_ID = cfg["page_id"]
-TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
+TEXT_MODELS       = ["gemini-flash-latest", "gemini-flash-latest"]
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "replied_fb_comments.txt")
 
 if not PAGE_ACCESS_TOKEN:

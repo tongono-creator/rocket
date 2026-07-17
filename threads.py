@@ -107,7 +107,7 @@ GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
 THREADS_ACCESS_TOKEN = get_threads_token()
 THREADS_USER_ID      = get_threads_user_id()
 IMAGE_MODEL          = "gemini-2.0-flash-preview-image-generation"  # unused (PIL renders)
-TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
+TEXT_MODELS       = ["gemini-flash-latest", "gemini-flash-latest"]
 OUTPUT_DIR           = "output"
 
 API_ENABLED = True

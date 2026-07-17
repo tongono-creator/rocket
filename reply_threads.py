@@ -10,7 +10,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 THREADS_ACCESS_TOKEN = os.environ.get("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID      = os.environ.get("THREADS_USER_ID",      "")
 GOOGLE_API_KEY       = os.environ.get("GOOGLE_API_KEY",       "")
-TEXT_MODELS       = ["gemini-1.5-flash", "gemini-1.5-flash"]
+TEXT_MODELS       = ["gemini-flash-latest", "gemini-flash-latest"]
 HISTORY_FILE         = os.path.join(os.path.dirname(__file__), "replied_comments.txt")
 
 # fallback รันบน local ใช้ config.py

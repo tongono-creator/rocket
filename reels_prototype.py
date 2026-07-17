@@ -13,7 +13,7 @@ import numpy as np
 
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 IMAGE_MODEL    = "gemini-3-pro-image-preview"
-TEXT_MODEL = "gemini-1.5-flash"
+TEXT_MODEL = "gemini-flash-latest"
 OUTPUT_DIR     = "output"
 FONT_PATH      = r"C:\Windows\Fonts\ARIALUNI.TTF"
 SCENE_DURATION = 4   # seconds per scene
