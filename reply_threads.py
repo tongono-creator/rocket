@@ -120,7 +120,7 @@ def generate_reply(post_text, username, comment_text):
         ]
 
     prompt = (
-        "คุณคือแอดมินเพจ Rocket21 (เพจบันทึกชีวิตคนทำงาน การเงิน และสัจธรรมชีวิตสู้ชีวิตตลกๆ เป็นกันเองมาก)\n"
+        "คุณคือแอดมินเพจ Rocket21 (เพจวิดีโอเล่าเรื่องจริง ประวัติศาสตร์ สงคราม บุคคลสำคัญ และเรื่องน่าทึ่งรอบโลก)\n"
         f"บุคลิกภาพเฉพาะกิจในรอบนี้: {gender_instruction}\n"
         f"โพสต์หลักมีข้อความดังนี้:\n\"\"\"\n{post_text}\n\"\"\"\n\n"
         f"มีลูกเพจชื่อ @{username} เข้ามาคอมเมนต์ใต้โพสต์นี้ว่า:\n\"\"\"\n{comment_text}\n\"\"\"\n\n"
@@ -128,9 +128,11 @@ def generate_reply(post_text, username, comment_text):
         "กฎในการตอบ:\n"
         "1. อ่านและตอบกลับให้ตรงบริบทและประเด็นที่ลูกเพจคอมเมนต์มาโดยเฉพาะ (เช่น ถ้าเขาคุยเรื่องเงิน/หนี้/การลงทุน ให้พูดถึงประเด็นนั้นอย่างจริงใจหรือแซวขำๆ ห้ามเฉไฉไปพูดเรื่องอื่น)\n"
         "2. ห้ามทึกทักเอาเองว่าลูกเพจทุกคนเป็น 'พนักงานออฟฟิศ' หรือใช้คำว่า 'มนุษย์ออฟฟิศอย่างพวกเรา' เว้นแต่เนื้อหาคอมเมนต์ของเขาจะกล่าวถึงการทำงานออฟฟิศโดยตรง\n"
-        "3. ตอบสั้นและเป็นกันเอง 1-2 ประโยคสั้นๆ เท่านั้น (ห้ามยาว ยืดเยื้อ หรือเป็นทางการเด็ดขาด)\n"
-        "4. ห้ามใช้ markdown ** ตัวหนา หรือเครื่องหมายอัญประกาศครอบข้อความ\n"
-        "5. สามารถใส่อีโมจิตลกๆ สู้ชีวิต ที่เข้ากับเรื่องได้ 1-2 ตัวอย่างเป็นธรรมชาติ"
+        "3. ตอบสั้นที่สุด 1 ประโยค (เกิน 2 ประโยคห้ามเด็ดขาด ห้ามเป็นทางการ)\n"
+        "4. ถ้าลูกเพจให้ข้อมูล/ความรู้เพิ่มเติม ให้ขอบคุณหรือตอบรับเนื้อหานั้นตรงๆ ห้ามมโนข้อมูลเสริม\n"
+        "5. ห้ามใช้ markdown ** ตัวหนา หรือเครื่องหมายอัญประกาศครอบข้อความ\n"
+        "6. อีโมจิใส่ได้ไม่เกิน 1 ตัวและต้องเข้ากับเรื่อง\n"
+        "7. ถ้าไม่มีอะไรจะตอบที่ตรงประเด็นจริงๆ ให้ตอบว่า SKIP คำเดียว"
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
@@ -139,12 +141,16 @@ def generate_reply(post_text, username, comment_text):
             resp = client.models.generate_content(model=model, contents=prompt)
             result = resp.text.strip()
             result = result.strip('"\'“”‘’')
+            if result.upper().startswith("SKIP"):
+                print("[Reply] AI chose to skip this comment")
+                return None
             if result:
                 return result
         except Exception as e:
             print(f"[{model}] reply generation failed: {e}")
-            
-    return random.choice(fallbacks)
+
+    # AI ล้มเหลว: ไม่ตอบดีกว่าตอบ canned มั่วๆ ไม่ตรงประเด็น
+    return None
 
 def post_reply_comment(text, reply_to_id):
     """ส่งโพสต์ตอบกลับคอมเมนต์"""
@@ -250,6 +256,11 @@ if __name__ == "__main__":
             # 5. เจนคำตอบด้วย AI
             print("    Generating AI reply...")
             reply_msg = generate_reply(post_text, commenter, comment_text)
+            if not reply_msg:
+                print("    [Skip] No AI reply available — better silent than off-topic.")
+                if not args.dry_run:
+                    history.add(reply_id)
+                continue
             print(f"    AI Reply message: \"{reply_msg}\"")
             
             # 6. ตอบกลับคอมเมนต์

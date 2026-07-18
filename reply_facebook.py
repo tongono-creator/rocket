@@ -54,9 +54,9 @@ PAGE_CONFIGS = {
         "name": "Rocket21",
         "page_id": "111830598532037",
         "token_env": "PAGE_ACCESS_TOKEN",
-        "system_instruction": "คุณคือแอดมินเพจ Rocket21 (เพจบันทึกชีวิตคนทำงาน การเงิน และสัจธรรมชีวิตสู้ชีวิตตลกๆ เป็นกันเองมาก)\n"
-                              "ตอบกลับโดยสุ่มบุคลิกเป็นกันเอง (ใช้ 'ผม'/'ครับ' หรือ 'พี่'/'ค่ะ' ตามความเหมาะสม)\n"
-                              "คุยสั้นๆ ง่ายๆ เกี่ยวกับประเด็นชีวิตคนทำงาน การสู้ชีวิต และเรื่องเงินๆ ทองๆ แบบตลกขบขันสู้ชีวิต",
+        "system_instruction": "คุณคือแอดมินเพจ Rocket21 (เพจวิดีโอเล่าเรื่องจริง ประวัติศาสตร์ สงคราม บุคคลสำคัญ และเรื่องน่าทึ่งรอบโลก)\n"
+                              "ตอบกลับแบบเป็นกันเอง ใช้ 'ผม'/'ครับ'\n"
+                              "ตอบตามเนื้อหาที่ลูกเพจคอมเมนต์เท่านั้น ห้ามลากเข้าเรื่องสู้ชีวิต/การเงิน/คำคม ถ้าคอมเมนต์ไม่ได้พูดถึง",
         "fallbacks": [
             "จริงครับพี่ เรื่องสู้ชีวิตนี่พูดอีกก็ถูกอีก 😂",
             "สู้ๆ ครับผม ค่อยๆ ปรับตัวกันไปเนอะ ✌️",
@@ -208,9 +208,10 @@ def is_valid_comment(text):
     return True
 
 def generate_reply(post_text, commenter_name, comment_text, is_asking_link=False):
-    """ใช้ Gemini สร้างคำตอบตาม Persona"""
+    """ใช้ Gemini สร้างคำตอบตาม Persona — คืน None ถ้า AI ใช้ไม่ได้ (ห้ามตอบ canned มั่วๆ)"""
     if not client:
-        return random.choice(cfg["fallbacks"])
+        # ถ้าลูกเพจขอลิงก์ ตอบ canned ได้ (ปลอดภัย เพราะลิงก์จะตามมาในคอมเมนต์ถัดไป)
+        return random.choice(cfg["fallbacks"]) if is_asking_link else None
 
     prompt = (
         f"{cfg['system_instruction']}\n\n"
@@ -230,11 +231,13 @@ def generate_reply(post_text, commenter_name, comment_text, is_asking_link=False
         
     prompt += (
         "กฎในการตอบ:\n"
-        "1. อ่านและตอบกลับให้ตรงบริบทและประเด็นที่ลูกเพจคอมเมนต์มาโดยเฉพาะ (ห้ามเฉไฉ)\n"
-        "2. ตอบสั้นและเป็นกันเอง 1-2 ประโยคสั้นๆ เท่านั้น (ห้ามยาว ยืดเยื้อ หรือเป็นทางการเด็ดขาด)\n"
-        "3. ห้ามใช้ markdown ** ตัวหนา หรือเครื่องหมายอัญประกาศครอบข้อความ\n"
-        "4. ห้ามใส่ลิงก์ URL หรือลิงก์เว็บใดๆ ลงในข้อความตอบกลับนี้เด็ดขาด\n"
-        "5. สามารถใส่อีโมจิตลกๆ สู้ชีวิต ที่เข้ากับเรื่องได้ 1-2 ตัวอย่างเป็นธรรมชาติ"
+        "1. อ่านและตอบกลับให้ตรงบริบทและประเด็นที่ลูกเพจคอมเมนต์มาโดยเฉพาะ (ห้ามเฉไฉ ห้ามตอบ generic)\n"
+        "2. ถ้าลูกเพจให้ข้อมูล/ความรู้เพิ่มเติม ให้ขอบคุณหรือตอบรับเนื้อหานั้นตรงๆ เสริมได้นิดเดียวถ้ารู้จริง ห้ามมโนข้อมูล\n"
+        "3. ตอบสั้นที่สุด 1 ประโยค (เกิน 2 ประโยคห้ามเด็ดขาด ห้ามเป็นทางการ)\n"
+        "4. ห้ามใช้ markdown ** ตัวหนา หรือเครื่องหมายอัญประกาศครอบข้อความ\n"
+        "5. ห้ามใส่ลิงก์ URL ใดๆ เด็ดขาด\n"
+        "6. อีโมจิใส่ได้ไม่เกิน 1 ตัวและต้องเข้ากับเรื่อง\n"
+        "7. ถ้าไม่มีอะไรจะตอบที่ตรงประเด็นจริงๆ ให้ตอบว่า SKIP คำเดียว"
     )
     
     for model_idx, model in enumerate(TEXT_MODELS):
@@ -244,12 +247,16 @@ def generate_reply(post_text, commenter_name, comment_text, is_asking_link=False
             resp = client.models.generate_content(model=model, contents=prompt)
             result = resp.text.strip()
             result = result.strip('"\'“”‘’')
+            if result.upper().startswith("SKIP"):
+                print("[Reply] AI chose to skip this comment")
+                return None
             if result:
                 return result
         except Exception as e:
             print(f"[{model}] reply generation failed: {e}")
-            
-    return random.choice(cfg["fallbacks"])
+
+    # AI ล้มเหลว: ตอบ canned เฉพาะกรณีขอลิงก์ นอกนั้นไม่ตอบดีกว่าตอบมั่ว
+    return random.choice(cfg["fallbacks"]) if is_asking_link else None
 
 def post_reply_comment(comment_id, text, attachment_url=None):
     """ส่งโพสต์ตอบกลับคอมเมนต์"""
@@ -498,6 +505,11 @@ if __name__ == "__main__":
             # 6. เจนคำตอบด้วย AI
             print("    Generating AI reply...")
             reply_msg = generate_reply(post_text, commenter_name, comment_text, is_asking_link=is_asking_link)
+            if not reply_msg:
+                print("    [Skip] No AI reply available — better silent than off-topic.")
+                if not args.dry_run:
+                    history.add(comment_id)
+                continue
             print(f"    AI Reply message: \"{reply_msg}\"")
             
             # 7. ตอบกลับคอมเมนต์ (Human reply)
