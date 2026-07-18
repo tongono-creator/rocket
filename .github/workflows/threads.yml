@@ -30,10 +30,13 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
           IMGBB_API_KEY:        ${{ secrets.IMGBB_API_KEY }}
-        run: python threads.py
+        run: mkdir -p output && python threads.py > output/threads_run.log 2>&1
 
       - name: Commit and push if history updated
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           python merge_history.py
+          git add output/threads_run.log || true
+          git commit -m "Update Threads logs [skip ci]" || true
+          git push || true
