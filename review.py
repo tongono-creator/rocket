@@ -656,7 +656,7 @@ def get_allowed_xlsx_files():
     elif "somtam" in path:
         return ["อาหารและเครื่องดื่ม.xlsx"]
     elif "rocket" in path:
-        return ["เครื่องใช้ไฟฟ้าภายในบ้าน.xlsx"]
+        return ["rocket_curated.xlsx"]
     elif "x-bot" in path:
         return ["สินค้าขายดี.xlsx"]
     else:  # kram-facebook-page
