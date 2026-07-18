@@ -137,6 +137,8 @@ def _load_excel():
                     "shopee": str(shopee or "").strip(),
                     "lazada": str(lazada or "").strip(),
                     "desc":   str(desc or "").strip(),
+                    "price":  "",
+                    "category": "main",
                     "image":  "",
                 })
 
@@ -196,19 +198,20 @@ def _load_excel():
                                     lazada_str = str(lazada).strip() if lazada else ""
                                     if not lazada_str.startswith("http"):
                                         lazada_str = ""
+                                    p_str = ""
                                     if price:
                                         p_str = str(price).strip()
                                         if p_str.endswith(".00"):
                                             p_str = p_str[:-3]
-                                        desc = f"ราคาพิเศษเพียง {p_str} บาท ขายดี ยอดนิยม"
-                                    else:
-                                        desc = "ราคาพิเศษสุดคุ้ม ขายดี ยอดนิยม"
+                                    desc = str(name).strip()
 
                                     products.append({
                                         "name":   str(name).strip(),
                                         "shopee": shopee_str,
                                         "lazada": lazada_str,
                                         "desc":   desc,
+                                        "price":  p_str,
+                                        "category": file_name,
                                         "image":  str(image).strip() if image else "",
                                     })
                     except Exception as extra_err:
@@ -261,12 +264,11 @@ def _parse_food(raw):
 
 # ─── Website comment variations ──────────────────────────────────
 WEBSITE_VARS = [
-    f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee เข้าไปดูอันดับได้เลยนะ → {WEBSITE_URL}",
-    f"📊 แนะนำเช็คของขายดีก่อนซื้อเพื่อประหยัดได้เยอะเลยครับ → {WEBSITE_URL}",
-    f"🏆 ของขายดีอันดับ 1 บน Shopee วันนี้คืออะไร ลองเข้ามาเช็คกันได้เลย → {WEBSITE_URL}",
-    f"💡 ก่อนซื้อของออนไลน์แนะนำเข้ามาดูอันดับความนิยมกันก่อนนะ → {WEBSITE_URL}",
-    f"🛒 อยากรู้ว่าช่วงนี้คนไทยกำลังซื้ออะไรกันเยอะที่สุด เข้ามาดูกันได้เลยครับ → {WEBSITE_URL}",
-    f"✅ เปรียบเทียบราคาและเช็คอันดับขายดีก่อนตัดสินใจช่วยให้คุ้มค่าสุดๆ → {WEBSITE_URL}",
+    f"📍 เผื่อใครหาอันดับสินค้าประเภทต่างๆ บน Shopee เข้าไปดูเพิ่มเติมได้ที่นี่เลยครับ → {WEBSITE_URL}",
+    f"📊 เช็คอันดับและสถิติของใช้ยอดฮิตบน Shopee ก่อนช้อปได้ที่นี่เลย → {WEBSITE_URL}",
+    f"🏆 สถิติของใช้ยอดฮิตวันนี้บน Shopee เข้าไปเช็คข้อมูลกันได้เลยครับ → {WEBSITE_URL}",
+    f"💡 ใครอยากได้ลิสต์ของใช้แต่ละหมวดหมู่เทียบกัน ลองดูข้อมูลที่นี่ได้ครับ → {WEBSITE_URL}",
+    f"🛒 ข้อมูลของใช้แต่ละหมวดหมู่บน Shopee สรุปไว้ให้ดูเปรียบเทียบตรงนี้ครับ → {WEBSITE_URL}",
 ]
 
 # ─── Food comment variations ─────────────────────────────────────
@@ -274,39 +276,34 @@ WEBSITE_VARS = [
 
 # ─── Shopee / Lazada fallback comment templates (3-Step: Hook -> Story -> CTA) ───────────────────────────
 SHOPEE_INTROS = [
-    "🛒 {hook} ตัวนี้เป็น {desc} บอกเลยว่ามีโปรเด็ดลดราคาพิเศษอยู่นะ สนใจจิ้มลิงก์ตะกร้าสั่งซื้อได้เลย{ending} → {url}",
-    "🔥 {hook} แนะนำตัวนี้เลย {desc} ของมันต้องมีจริงๆ คุ้มค่าราคาขนาดนี้ต้องรีบจิ้มตะกร้าแล้ว{ending} → {url}",
-    "💡 {hook} ชี้เป้าตัวช่วยดีๆ {desc} ตอนนี้กำลังจัดโปรลดหนักอยู่ เข้าไปจัดในลิงก์ได้เลย{ending} → {url}",
+    "📍 เผื่อใครถามพิกัดของ {name} ราคา {price} บาท วางลิงก์ Shopee ไว้ให้ตรงนี้นะครับ → {url}",
+    "💬 มีคนถามถึง {name} ราคา {price} บาท บ่อยๆ วางพิกัด Shopee ไว้ให้ทางนี้นะครับ → {url}",
+    "💡 {name} ราคา {price} บาท ตัวที่เล่าไป ใครสนใจพิกัด Shopee ดูได้ตรงนี้ครับ → {url}",
 ]
 
 LAZADA_INTROS = [
-    "🛍️ {hook} ตัวนี้เป็น {desc} บอกเลยว่ามีโปรเด็ดลดราคาพิเศษอยู่นะ สนใจจิ้มลิงก์ตะกร้าสั่งซื้อได้เลย{ending} → {url}",
-    "🔥 {hook} แนะนำตัวนี้เลย {desc} ของมันต้องมีจริงๆ คุ้มค่าราคาขนาดนี้ต้องรีบจิ้มตะกร้าแล้ว{ending} → {url}",
-    "💡 {hook} ชี้เป้าตัวช่วยดีๆ {desc} ตอนนี้กำลังจัดโปรลดหนักอยู่ เข้าไปจัดในลิงก์ได้เลย{ending} → {url}",
+    "📍 เผื่อใครถามพิกัดของ {name} ราคา {price} บาท วางลิงก์ Lazada ไว้ให้ตรงนี้นะครับ → {url}",
+    "💬 มีคนถามถึง {name} ราคา {price} บาท บ่อยๆ วางพิกัด Lazada ไว้ให้ทางนี้นะครับ → {url}",
+    "💡 {name} ราคา {price} บาท ตัวที่เล่าไป ใครสนใจพิกัด Lazada ดูได้ตรงนี้ครับ → {url}",
 ]
 
 PRODUCT_HOOKS = [
-    "แอดมินเจอของดีตัวนี้มา น่าใช้มากๆ",
-    "อันนี้เป็นตัวช่วยที่ดีและสะดวกมากเลย",
-    "ชิ้นนี้ดีงามมาก ถือว่าตอบโจทย์สุดๆ",
-    "รีวิวค่อนข้างดีเลย เห็นแล้วอยากแนะนำต่อ",
-    "ใครกำลังมองหาตัวช่วยดีๆ แนะนำตัวนี้เลย",
-    "คุ้มค่าราคามาก ใช้งานได้หลากหลายด้วย",
+    "ชี้เป้าของใช้",
+    "พิกัดของชิ้นนี้",
+    "รายละเอียดสินค้า",
 ]
 
 PROMO_INTROS = [
-    "🔥 โปรโมชั่นพิเศษสุดคุ้มกับ {name} รีบคว้าก่อนหมดได้เลยนะ → {url}",
-    "⚡ Flash Deal ดีลเด็ดวันนี้เท่านั้นกับ {name} สนใจกดซื้อเลยครับ → {url}",
-    "🎯 ดีลเด็ด {name} ราคาพิเศษจำกัดเวลาเฉพาะตอนนี้เท่านั้นนะ → {url}",
-    "💥 โปรแรงโดนใจสำหรับ {name} รีบจัดด่วนห้ามพลาดเลย → {url}",
-    "🛒 ส่วนลดพิเศษสุดๆ ของ {name} แนะนำช้อปด่วนก่อนหมดโปร → {url}",
+    "📍 ส่วนลดพิเศษสำหรับ {name} ราคาพิเศษ {price} บาท ดูพิกัดตรงนี้ได้เลยครับ → {url}",
+    "⚡ ราคาพิเศษช่วงนี้กับ {name} ดูรายละเอียดเพิ่มเติมในลิงก์ได้เลยครับ → {url}",
+    "🎯 พิกัดราคาพิเศษของ {name} สนใจสั่งซื้อดูตรงนี้ได้เลยครับ → {url}",
 ]
 
 def get_website_with_product_comment():
     """ดึงข้อความแนะนำเว็บ shopee-ranking และสุ่มต่อท้ายด้วยสินค้าแนะนำที่กำลังแอคทีฟ 1 ชิ้นเพื่อเพิ่มโอกาสขาย"""
     web_base = _rotate(WEBSITE_VARS)
     if not web_base:
-        web_base = f"🔥 อยากรู้ว่าสินค้าไหนขายดีที่สุดบน Shopee เข้าไปดูอันดับได้เลยนะ → {WEBSITE_URL}"
+        web_base = f"📍 เผื่อใครหาอันดับสินค้าประเภทต่างๆ บน Shopee เข้าไปดูเพิ่มเติมได้ที่นี่เลยครับ → {WEBSITE_URL}"
         
     try:
         products, _, _ = _load_excel()
@@ -574,12 +571,20 @@ def get_product_comments(caption=None, img_path=None):
         msg = ai_comment
     else:
         # 2. หาก AI ล้มเหลว ให้ใช้ Fallback Template
-        hook = random.choice(PRODUCT_HOOKS)
-        desc = p.get("desc", "").strip()
-        if not desc:
-            desc = f"ตัวนี้เป็น {p.get('name', 'สินค้าแนะนำ')} ที่ช่วยให้ชีวิตสะดวกสบายและตอบโจทย์มากๆ"
-        
-        msg = f"🛒 {hook} ตัวนี้เป็น {desc} แอดมินแนะนำเลย{ending}"
+        price_str = p.get("price", "")
+        price_val = f" ราคา {price_str} บาท" if price_str else ""
+        templates = [
+            f"📍 เผื่อใครถามพิกัดของ {p['name']}{price_val} ที่เห็นในโพสต์นะครับ",
+            f"💬 มีคนถามถึง {p['name']}{price_val} บ่อยๆ วางพิกัดไว้ให้ทางนี้เลยครับ",
+            f"💡 {p['name']}{price_val} ตัวที่เล่าไป ใครสนใจดูรายละเอียดและสั่งซื้อได้ตรงนี้ครับ",
+            f"🛒 ใครหา {p['name']}{price_val} อยู่ แปะลิงก์ร้านค้าไว้ให้เรียบร้อยครับ"
+        ]
+        msg = random.choice(templates)
+        # ปรับสรรพนามและลงท้ายตามเพจ
+        if persona == "somtam":
+            msg = msg.replace("ครับ", "ค่ะ").replace("นะครับ", "นะคะ")
+        elif persona == "chowchow":
+            msg = msg.replace("ครับ", "ฮะ โฮ่ง!").replace("นะครับ", "นะฮะ โฮ่ง!")"
 
     # รวมลิงก์
     links = []
@@ -593,27 +598,44 @@ def get_product_comments(caption=None, img_path=None):
     
     return [combined_comment]
 
+def get_website_comment():
+    web = _rotate(WEBSITE_VARS)
+    if not web:
+        return ""
+    persona = get_persona()
+    if persona == "somtam":
+        web = web.replace("ครับ", "ค่ะ")
+    elif persona == "chowchow":
+        web = web.replace("ครับ", "ฮะ โฮ่ง!")
+    return web
+
 def get_all_comments(caption=None, img_path=None):
     """
-    คืนค่าคอมเมนต์สูงสุดเพียง 1 คอมเมนต์เท่านั้น เพื่อไม่ให้ดูเป็นสแปม/สแกม
-    โดยจะเลือกลงตามลำดับความสำคัญ: Promo -> Product (ถ้าจับคู่ได้ หรือสุ่มเลือก) -> Food (ถ้าไม่มีสินค้าเลย)
+    คืนค่าคอมเมนต์สูงสุด 2 คอมเมนต์ต่อโพสต์เพื่อไม่ให้สแปม:
+    1. คอมเมนต์โปรโมทหลัก (Promo -> Product -> Food)
+    2. คอมเมนต์แนะนำเว็บไซต์ (Website shopee-ranking)
     """
-    # 1. ถ้ามีโปรโมชั่นพิเศษ (Promo) ที่ยังไม่หมดอายุและระบุใน Excel
+    comments = []
+    
+    # 1. คอมเมนต์หลัก (สูงสุด 1 ชิ้น)
     promo = get_promo_comment()
     if promo:
-        return [promo]
-
-    # 2. พยายามจับคู่สินค้าด้วย AI หรือสุ่มเลือกสินค้าที่กำลังแอคทีฟ (Product)
-    prod_comments = get_product_comments(caption=caption, img_path=img_path)
-    if prod_comments:
-        return prod_comments
-
-    # 3. ถ้าไม่มีสินค้าในระบบเหลือเลย ให้ใช้ลิงก์อาหารเดลิเวอรี่ (Food)
-    food = get_food_comment()
-    if food:
-        return [food]
+        comments.append(promo)
+    else:
+        prod_comments = get_product_comments(caption=caption, img_path=img_path)
+        if prod_comments:
+            comments.extend(prod_comments)
+        else:
+            food = get_food_comment()
+            if food:
+                comments.append(food)
+                
+    # 2. คอมเมนต์แนะนำเว็บ (สูงสุด 1 ชิ้น)
+    web = get_website_comment()
+    if web:
+        comments.append(web)
         
-    return []
+    return comments
 
 def get_next_scheduled_time(slots):
     """
