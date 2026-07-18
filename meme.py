@@ -246,7 +246,7 @@ def analyze_meme_to_scenario(img_path, reddit_title, recent_topics=None):
 
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,

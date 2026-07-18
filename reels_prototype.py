@@ -1,3 +1,4 @@
+import time
 # -*- coding: utf-8 -*-
 """reels_prototype.py — สร้าง Reel นิทานคุณธรรม: รูปการ์ตูน + text overlay"""
 

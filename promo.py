@@ -1,3 +1,4 @@
+import time
 # -*- coding: utf-8 -*-
 """promo.py — โพส promo เว็บ shopee-ranking สัปดาห์ละ 3 ครั้ง"""
 

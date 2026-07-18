@@ -158,7 +158,7 @@ def segment_thai_text(text, client=client):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -185,7 +185,7 @@ def verify_image_title_match(img_bytes, reddit_title):
     part = types.Part.from_bytes(data=img_bytes, mime_type="image/jpeg")
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,
@@ -209,7 +209,7 @@ def translate_to_thai(text):
     prompt = f"Translate the following technology/science news text to natural Thai. Only output the translation, no explanation:\n\n{text}"
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             translated = resp.text.strip()
@@ -336,7 +336,7 @@ def select_best_news_candidate(candidates):
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,
@@ -381,7 +381,7 @@ def generate_news_content(img_bytes, reddit_title, sub, original_link):
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(3):
             try:
                 resp = client.models.generate_content(

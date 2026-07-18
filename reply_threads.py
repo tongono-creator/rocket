@@ -1,3 +1,4 @@
+import time
 # -*- coding: utf-8 -*-
 """reply_threads.py — ตรวจสอบและตอบกลับคอมเมนต์บน Threads ด้วย Gemini อัจฉริยะ"""
 
@@ -136,7 +137,7 @@ def generate_reply(post_text, username, comment_text):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = resp.text.strip()

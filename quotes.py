@@ -169,7 +169,7 @@ def segment_thai_text(text, client_obj=None):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -366,7 +366,7 @@ def generate_engaging_quote():
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(3):
             try:
                 resp = client.models.generate_content(
@@ -419,7 +419,7 @@ def translate_quote(content, author):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = clean_text(resp.text.strip())
@@ -454,7 +454,7 @@ def split_quote_lines(quote_thai):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             lines = [l.strip() for l in clean_text(resp.text).split("\n") if l.strip()]
@@ -488,7 +488,7 @@ def transliterate_author(author):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             result = clean_text(resp.text.strip())
@@ -519,7 +519,7 @@ def make_caption(quote_thai, author):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             return clean_text(resp.text.strip())

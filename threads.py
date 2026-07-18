@@ -1,3 +1,4 @@
+import time
 # -*- coding: utf-8 -*-
 """threads.py — โพสรูปคำคม + caption ลง Threads อัตโนมัติ"""
 
@@ -31,6 +32,32 @@ def get_threads_token():
     except ImportError:
         pass
     return ""
+
+def robust_json_loads(text):
+    if not text:
+        return {}
+    import json, re
+    text_clean = text.strip()
+    # Strip markdown block formatting
+    text_clean = re.sub(r'^```(?:json)?\s*', '', text_clean, flags=re.IGNORECASE)
+    text_clean = re.sub(r'\s*```$', '', text_clean)
+    text_clean = text_clean.strip()
+    
+    try:
+        return json.loads(text_clean)
+    except Exception:
+        pass
+        
+    start = text_clean.find('{')
+    end = text_clean.rfind('}')
+    if start != -1 and end != -1 and end > start:
+        try:
+            return json.loads(text_clean[start:end+1])
+        except Exception:
+            pass
+            
+    return json.loads(text_clean)
+
 
 def get_threads_user_id():
     uid = os.environ.get("THREADS_USER_ID", "")
@@ -339,7 +366,7 @@ def generate_dynamic_topic(slot, history_list):
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
@@ -488,7 +515,7 @@ def generate_quote(topic, slot="morning"):
         print(f"Topic: {topic} | Slot: {slot} | Style: {style_idx}")
         for model_idx, model in enumerate(TEXT_MODELS):
             if model_idx > 0:
-                import time; time.sleep(2)
+                time.sleep(2)
             for attempt in range(2):
                 try:
                     resp = client.models.generate_content(model=model, contents=prompt)
@@ -568,7 +595,7 @@ def generate_threads_content(topic, slot):
 
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(3):
             try:
                 resp = client.models.generate_content(
@@ -579,7 +606,7 @@ def generate_threads_content(topic, slot):
                     )
                 )
                 import json
-                data = json.loads(resp.text.strip())
+                data = robust_json_loads(resp.text)
                 image_line1 = data.get("image_line1", "").strip()
                 image_line2 = data.get("image_line2", "").strip()
                 caption = data.get("caption", "").strip()
@@ -745,7 +772,7 @@ def segment_thai_text(text, client):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -880,7 +907,7 @@ def analyze_reddit_image_for_threads(img_path, reddit_title):
 
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(
@@ -894,7 +921,7 @@ def analyze_reddit_image_for_threads(img_path, reddit_title):
                     )
                 )
                 import json
-                data = json.loads(resp.text.strip())
+                data = robust_json_loads(resp.text)
                 if data.get("status") == "invalid":
                     print(f"[{model}] Vision filter: post marked as invalid for Rocket21 persona.")
                     return None
@@ -1196,7 +1223,7 @@ def generate_seed_comment(caption):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             comment = clean_text(resp.text)
@@ -1338,7 +1365,7 @@ def analyze_meme(img_path):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(
                 model=model,
@@ -1366,7 +1393,7 @@ def generate_funny_caption(image_desc, subreddit):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = client.models.generate_content(model=model, contents=prompt)
             return clean_text(resp.text.strip())

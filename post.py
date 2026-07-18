@@ -1,3 +1,4 @@
+import time
 # -*- coding: utf-8 -*-
 """post.py — สร้างรูปคำคม + โพส Facebook อัตโนมัติ"""
 
@@ -159,7 +160,7 @@ def segment_thai_text(text, client_obj=None):
     )
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         try:
             resp = active_client.models.generate_content(model=model, contents=prompt)
             segmented = resp.text.strip().replace('\\u200b', '\u200b')
@@ -392,7 +393,7 @@ def generate_dynamic_topic(slot, history_list):
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(2):
             try:
                 resp = client.models.generate_content(model=model, contents=prompt)
@@ -617,7 +618,7 @@ def generate_quote(topic, slot="morning"):
         
         for model_idx, model in enumerate(TEXT_MODELS):
             if model_idx > 0:
-                import time; time.sleep(2)
+                time.sleep(2)
             # We will attempt up to 5 validation retries per model
             for attempt in range(5):
                 if not API_ENABLED:
@@ -712,7 +713,7 @@ def generate_story(topic, slot="morning"):
     
     for model_idx, model in enumerate(TEXT_MODELS):
         if model_idx > 0:
-            import time; time.sleep(2)
+            time.sleep(2)
         for attempt in range(2):
             if not API_ENABLED:
                 break
