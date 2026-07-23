@@ -1,9 +1,9 @@
-﻿name: Product Review Post (CatDumb Style)
+name: Product Review Post (CatDumb Style)
 
 on:
-  # schedule:
-  #   # à¸­à¸±à¸‡à¸„à¸²à¸£, à¸žà¸¤à¸«à¸±à¸ªà¸šà¸”à¸µ, à¹€à¸ªà¸²à¸£à¹Œ 04:45 Bangkok (21:45 UTC)
-  #   - cron: '45 21 * * 2,4,6'
+  schedule:
+    # Daily at 18:40 Bangkok time (11:40 UTC)
+    - cron: '40 11 * * *'
   workflow_dispatch:
 
 jobs:
@@ -14,7 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # Request write permissions or use default token to allow push
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python

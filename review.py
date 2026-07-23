@@ -1361,13 +1361,12 @@ if __name__ == "__main__":
     bkk = timezone(timedelta(hours=7))
     now_bkk = datetime.now(bkk)
 
-    # Pre-calculate 5 timestamps: 08:00/10:00/12:00/14:00/16:00 BKK
-    # IMMEDIATE=true (workflow_dispatch) -> schedule 2 hours apart starting from current time + 15 mins
-    slot_times = ["08:00", "10:00", "12:00", "14:00", "16:00"]
+    # Pre-calculate 1 timestamp: 18:40 BKK (1 post per day)
+    slot_times = ["18:40"]
     slot_timestamps = []
     for idx, slot_str in enumerate(slot_times):
         if IMMEDIATE:
-            dt = now_bkk + timedelta(minutes=15 + idx * 120)
+            dt = now_bkk + timedelta(minutes=15)
             slot_timestamps.append(int(dt.timestamp()))
         else:
             h, m = map(int, slot_str.split(":"))
@@ -1385,7 +1384,7 @@ if __name__ == "__main__":
     posted_this_run = set()
 
     for i, scheduled_ts in enumerate(slot_timestamps):
-        print(f"\n--- Post {i+1}/5 (slot {slot_times[i]}) ---")
+        print(f"\n--- Post {i+1}/1 (slot {slot_times[i]}) ---")
         API_ENABLED = True
 
         product, wb, ws = load_next_product()
