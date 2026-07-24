@@ -708,27 +708,27 @@ def download_image(url):
     raise RuntimeError(f"Image download failed: {resp.status_code}")
 
 def generate_hook(detail, highlights):
-    """สร้างหัวข้อสั้นพาดหัวรูปภาพ 2 บรรทัด คั่นด้วย '|'"""
+    """สร้างพาดหัวการ์ดรีวิวสไตล์ CatDumb ภาษาพูดคนไทยธรรมชาติ 2 บรรทัด คั่นด้วย '|'"""
     global API_ENABLED
-    if API_ENABLED:
+    active_client = globals().get('client')
+    if API_ENABLED and active_client is not None:
         prompt = (
-            f"จากรายละเอียดสินค้าต่อไปนี้:\n{detail}\n\n"
-            f"จุดเด่นสินค้าที่สกัดแล้ว:\n{highlights}\n\n"
-            "กรุณาสร้างคำพาดหัวโฆษณารีวิวสินค้านี้ภาษาไทยสั้นๆ 2 บรรทัด คั่นด้วยเครื่องหมาย pipe '|' (บรรทัด 1 | บรรทัด 2)\n"
-            "กฎในการร่าง:\n"
-            "- บรรทัด 1: คำโปรย/ชื่อเล่นสุดปังสไตล์วัยรุ่นหรือคนทำงานขำขัน (3-5 คำ)\n"
-            "- บรรทัด 2: เหตุผลโดนใจ/จุดเด่นในการแก้ปัญหา (4-7 คำ)\n"
-            "- ห้ามใช้เครื่องหมายคำพูด อัญประกาศ หรือข้อความนำหน้า/ตามหลังใดๆ\n"
-            "- ห้ามมี Emoji ปนในหัวข้อนี้เด็ดขาด\n"
-            "- ห้ามใช้คำขายของหรือคำโฆษณาซ้ำๆ ซากๆ เช่น 'คุ้มมาก', 'คุ้มสุดๆ', 'คุ้มค่า', 'ดีงาม', 'ของดี', 'ห้ามพลาด', 'ต้องจัด', 'ดีจริง'\n"
-            "- ให้พาดหัวเหมือนเพื่อนมาบอกกัน ด้วยคำธรรมดาแต่สะท้อนความรู้สึก/การแก้ปัญหา\n"
-            "ตัวอย่าง: เบาะรองนั่งสู้ชีวิต | นั่งทำงาน 10 ชม. ไม่ปวดหลัง"
+            "คุณคือ Copywriter มืออาชีพสไตล์ CatDumb (แคทดัมบ์) ภาษาพูดคนไทยธรรมดา ธรรมชาติ สนุก เป็นกันเอง ชี้เป้าของน่าซื้อ\n"
+            "จงสร้างพาดหัวรีวิวสินค้าภาษาไทย 2 บรรทัด คั่นด้วย '|' (บรรทัด 1 | บรรทัด 2)\n\n"
+            "กฎเหล็ก:\n"
+            "1. บรรทัดที่ 1 (ฉายาเด็ด/ชื่อโปรย): ตั้งชื่อเล่นสั้นๆ สไตล์พูดปากต่อปาก (2-4 คำ) สะดุดตา ไม่เอาชื่อรุ่น/ยี่ห้อ/สเปกแข็งๆ เด็ดขาด เช่น 'ธัญพืช 9 เซียนสายคลีน', 'แว่นกันแดดทรงในตำนาน', 'แก้วเก็บเย็นข้ามวัน', 'เบาะรองนั่งสู้ชีวิต'\n"
+            "2. บรรทัดที่ 2 (จุดเด่นภาษาพูด): สรุปจุดเด่นหรือประโยชน์ที่ได้รับเป็นภาษาพูดธรรมดา (3-6 คำ) ไม่ใช้ภาษาสเปกทางการ ไม่ยาวเกินไป เช่น 'ไม่ใส่เนยน้ำตาล อบใหม่รสธรรมชาติ', 'นั่งทำงาน 10 ชม. ไม่ปวดเอว', 'ฟังเพลง 8 ชม. เบสแน่นตึ้บ'\n"
+            "3. ห้ามใส่เครื่องหมายคำพูด (\"\") ห้ามมี Emoji ห้ามมีคำว่า คุ้มค่า, คุ้มสุดๆ, ห้ามพลาด, ดีงาม, ต้องจัด, ของดี\n"
+            "4. เว้นวรรคเฉพาะจังหวะภาษาไทยปกติ ห้ามเว้นวรรคแตกคำย่อย\n\n"
+            f"ข้อมูลสินค้า:\n{detail}\n\n"
+            f"จุดเด่นสินค้า:\n{highlights}\n\n"
+            "ผลลัพธ์ (บรรทัด 1 | บรรทัด 2):"
         )
         for model_idx, model in enumerate(TEXT_MODELS):
             if model_idx > 0:
                 time.sleep(2)
             try:
-                resp = client.models.generate_content(model=model, contents=prompt)
+                resp = active_client.models.generate_content(model=model, contents=prompt)
                 result = resp.text.strip()
                 label_pattern = r'^(ข้อความในโพสต์\s*Facebook|Facebook\s*Caption|Facebook\s*caption|Caption|caption|ข้อความบนรูป|ข้อความในรูป|ข้อความ|คำบรรยาย|คำอธิบาย|บรรทัดที่\s*\d+|บรรทัด\s*\d+|ประโยคที่\s*\d+|ประโยค\s*\d+|Hook\s*text|Hook|Line\s*\d+|[L|l]ine\s*\d+|\d+)\s*[:\-\.\s]\s*'
                 result = re.sub(label_pattern, '', result, flags=re.IGNORECASE).strip()
@@ -744,7 +744,6 @@ def generate_hook(detail, highlights):
                 print(f"[{model}] hook generation failed: {e}")
         print("[Warning] Hook generation failed on all models. Disabling API calls for this run.")
         API_ENABLED = False
-        
     # Local fallback for hook
     title = re.sub(r'^[•\-\*\d\.\s\u2013\(\[\{\)\|\}]+', '', detail).strip()
     first_line = title.split('\n')[0].split('|')[0].split(' - ')[0].split(' – ')[0].strip()
