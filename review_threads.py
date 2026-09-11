@@ -418,36 +418,35 @@ def get_role_context(role_name, prod_type):
     return phrases.get(role_name, "ส่วนตัวลองใช้แล้วประทับใจมาก")
 
 PERSONAS = [
-    {"id": "A", "name": "เพื่อนบอกต่อ", "desc": "เพื่อนบอกต่อ แนะนำของดีให้เพื่อนด้วยความเป็นกันเอง"},
-    {"id": "B", "name": "คนซื้อมาใช้แล้ว", "desc": "คนที่ชอบซื้อของออนไลน์และมารีวิวสั้นๆ หลังใช้งานจริงมาระยะหนึ่ง บอกเล่าตามจริง"},
-    {"id": "C", "name": "คนเจอโปรมาแชร์", "desc": "คนที่บังเอิญเจอราคาโปรโมชั่นหรือส่วนลดพิเศษแล้วอยากเอามาแชร์ต่อด้วยความตื่นเต้นเบาๆ"},
-    {"id": "D", "name": "คนเคยมีปัญหาแล้วสินค้าช่วยแก้", "desc": "คนที่มีปัญหาชีวิตประจำวันแล้วสินค้าตัวนี้เข้ามาช่วยแก้ปัญหาได้ตรงจุด"},
-    {"id": "E", "name": "คนเล่าเรื่องชีวิตประจำวัน", "desc": "คนเล่าเรื่องราวชีวิตประจำวัน/อุปสรรคชีวิตทั่วไปก่อน แล้วโยงเข้าหาตัวสินค้าที่เข้ามาช่วยชีวิต"},
-    {"id": "F", "name": "คนรีวิวสั้นๆแบบขำๆ", "desc": "คนรีวิวสั้นๆ แบบขำๆ ตลกๆ สอดแทรกความตลกหรือมุกแซวตัวเอง"},
-    {"id": "G", "name": "คนสงสัยก่อนซื้อแล้วมาลอง", "desc": "คนที่เคยสงสัย/ไม่แน่ใจในคุณภาพของสินค้าตัวนี้มาก่อน แล้วตัดสินใจซื้อมาลองและมาแชร์ความจริง"},
-    {"id": "H", "name": "คนแนะนำของให้ครอบครัว", "desc": "คนที่ห่วงใยครอบครัวหรือคนใกล้ตัว แนะนำของดีให้คนในบ้าน/ครอบครัวได้ใช้"}
+    {"id": "A", "name": "แอดมินคัดของ", "desc": "แอดมินที่ไปเจอสินค้ามาและหยิบข้อมูลจริงมาเล่าต่อ ไม่อ้างว่าเคยซื้อหรือใช้"},
+    {"id": "B", "name": "คนหาข้อมูลก่อนซื้อ", "desc": "คนที่กำลังเปรียบเทียบข้อมูลสินค้าและชวนคนเคยใช้จริงมาช่วยตอบ"},
+    {"id": "C", "name": "เพื่อนชี้พิกัด", "desc": "เพื่อนที่ชี้พิกัดแบบไม่เร่งขาย บอกเฉพาะประเภท จุดเด่น และราคาที่ตรวจได้"},
+    {"id": "D", "name": "คนเทียบตัวเลือก", "desc": "วางข้อมูลให้คนอ่านเทียบราคา ฟังก์ชัน หรือขนาด แล้วตัดสินใจเอง"}
 ]
 
 HOOKS = [
-    "เมื่อวานเพิ่งเจอ...",
-    "ไม่คิดว่าจะ...",
-    "อันนี้เกินคาดจริงๆ",
-    "มีใครเป็นเหมือนผมไหม",
-    "ตอนแรกไม่ได้จะซื้อ",
-    "กำลังหาของแบบนี้อยู่พอดี",
-    "เห็นคนพูดถึงเยอะเลยลอง",
-    "โดนป้ายยามาอีกที",
-    "ลองแล้วเข้าใจเลยว่าทำไมขายดี",
-    "แชร์เผื่อมีคนกำลังหาอยู่"
+    "เปิดด้วยจุดเด่นจริงหนึ่งข้อจากข้อมูล",
+    "เปิดด้วยราคาเทียบกับฟังก์ชันที่ได้",
+    "เปิดด้วยคำถามเฉพาะถึงคนที่เคยใช้จริง",
+    "เปิดด้วยข้อที่ควรตรวจสอบก่อนซื้อ"
 ]
 
 STYLES = [
-    {"name": "มุกตลก", "desc": "มีมุกตลกหรือการแซวตัวเอง ขำขัน"},
-    {"name": "ประสบการณ์ส่วนตัว", "desc": "มีประสบการณ์ส่วนตัวจากการใช้งานจริง เล่าเหตุการณ์จริง"},
-    {"name": "คำถาม", "desc": "เปิดประเด็นด้วยคำถาม ชวนคุยหรือชวนคิด"},
-    {"name": "การเปรียบเทียบ", "desc": "มีการเปรียบเทียบกับแบบเดิม/สินค้าแบบอื่น หรือชีวิตก่อนและหลังใช้"},
-    {"name": "การบอกต่อเฉยๆ", "desc": "เป็นการบอกต่อเฉยๆ แบบป้ายยาเพื่อนธรรมดา เป็นกันเอง"}
+    {"name": "สรุปสั้น", "desc": "สรุปประเภท จุดเด่น และราคาให้จบในข้อความสั้น"},
+    {"name": "คำถามเฉพาะ", "desc": "ถามเรื่องสเปก ราคา หรือการใช้งานของสินค้านี้โดยตรง"},
+    {"name": "เทียบข้อมูล", "desc": "เปรียบเทียบราคา ฟังก์ชัน หรือขนาดจากข้อมูลที่มีเท่านั้น"}
 ]
+
+UNVERIFIABLE_REVIEW_PHRASES = (
+    "ลองใช้", "ใช้จริง", "ซื้อมา", "กดสั่ง", "จัดมา", "พอลอง",
+    "ใช้มาแล้ว", "ใช้ได้สักพัก", "ส่วนตัวประทับใจ", "โดนป้ายยา",
+    "อันนี้เกินคาดจริงๆ", "ตอนแรกไม่ได้จะซื้อ", "เห็นคนพูดถึงเยอะเลยลอง",
+)
+
+def has_unverifiable_review_claim(text):
+    normalized = re.sub(r"\s+", "", str(text or "")).lower()
+    return any(re.sub(r"\s+", "", phrase).lower() in normalized
+               for phrase in UNVERIFIABLE_REVIEW_PHRASES)
 
 def load_state(wb):
     state = {
@@ -899,21 +898,12 @@ def generate_local_fallback_caption(product_json, selected_persona, selected_hoo
         ending = "ครับ"
         closing = "แปะพิกัดลิงก์ร้านค้าไว้ในโพสต์แล้วครับ 👇" if in_post_body else "ดูลิ้งในคอมเมนต์แรกเลยครับ 👇"
         
-    price_str = f" ราคาแค่ {price} บาท" if price else ""
+    price_str = f" ราคา {price} บาท" if price else ""
     
     role_name = selected_role["name"]
     role_phrase = get_role_context(role_name, prod_type)
-    style_name = selected_style["name"]
-    if style_name == "มุกตลก":
-        body = f"{selected_hook} {prod_type}ตัวนี้เลย{ending} {role_phrase} ตอนแรกกังวลว่าจะไม่โอเค แต่พอลองแล้วชอบเลย รอดตายแล้วเรา 555 จุดเด่นคือ {highlights}{price_str}"
-    elif style_name == "ประสบการณ์ส่วนตัว":
-        body = f"{selected_hook} {role_phrase} ลองซื้อ {prod_type} ตัวนี้มาใช้ได้สักพักแล้ว{ending} รู้สึกสะดวกสบายขึ้นเยอะ โดยเฉพาะเรื่อง {highlights}{price_str} ดีจริง"
-    elif style_name == "คำถาม":
-        body = f"{selected_hook} {role_phrase} มีใครเคยลอง {prod_type} ตัวนี้รึยัง{ending} ส่วนตัวประทับใจจุดเด่น {highlights}{price_str} คิดว่าไงกันบ้าง"
-    elif style_name == "การเปรียบเทียบ":
-        body = f"{selected_hook} {role_phrase} เทียบกับ {prod_type} แบบเดิมๆ ที่เคยใช้ ตัวนี้คือจุดเด่น {highlights}{price_str} ดีกว่าเห็นๆ เลย{ending}"
-    else:
-        body = f"{selected_hook} {role_phrase} แวะมาแชร์ {prod_type} ดีๆ{ending} ตัวนี้มีจุดเด่นคือ {highlights}{price_str} เผื่อใครกำลังสนใจอยู่"
+    question = f"คนเคยใช้ {prod_type} จริง จุดไหนควรเช็กก่อนซื้อครับ?"
+    body = f"{prod_type} ตัวนี้มีจุดเด่นคือ {highlights}{price_str}{ending} {question}"
         
     if is_x:
         return body[:200]
@@ -945,19 +935,20 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
     active_client = globals().get("client")
     if API_ENABLED and active_client:
         prompt = (
-            "คุณคือคนธรรมดาเขียนรีวิวสินค้าที่เป็นธรรมชาติและเป็นกันเอง\n"
+            "เขียนในฐานะแอดมินคัดของที่ยังไม่ได้ซื้อหรือทดลองสินค้า เป็นกันเองและตรงไปตรงมา\n"
             f"ในโพสต์นี้ คุณจะสวมบทบาท (Persona): \"{selected_persona['desc']}\"\n"
             f"และเขียนในสไตล์ (Style): \"{selected_style['desc']}\"\n\n"
-            f"คุณต้องเริ่มประโยคแรกของโพสต์ด้วย Hook นี้เป๊ะๆ ห้ามดัดแปลง: \"{selected_hook}\"\n\n"
+            f"แนวทางเปิดเรื่อง: {selected_hook} ใช้เป็นมุมคิดเท่านั้น ห้ามคัดลอกข้อความนี้ตรงๆ\n\n"
             f"ข้อมูลสินค้าที่คุณมีในรูป JSON (ห้ามคิดรายละเอียดที่ไม่มีใน JSON นี้ขึ้นมาเองเด็ดขาด และห้ามโชว์ชื่อสินค้าหรือแบรนด์เต็ม):\n"
             f"{json.dumps(product_json, ensure_ascii=False, indent=2)}\n\n"
             f"กฎเหล็กข้อห้าม:\n- ต้องใส่ราคาของสินค้าที่ระบุใน JSON เสมอ (ห้ามแก้ไขหรือแต่งราคาขึ้นมาเอง)\n"
-            f"- ห้ามเปิดโพสต์ด้วยชื่อสินค้า หรือชื่อแบรนด์ (ต้องเริ่มด้วย Hook: \"{selected_hook}\")\n"
+            f"- ห้ามเปิดโพสต์ด้วยชื่อสินค้า หรือชื่อแบรนด์\n"
             f"- ห้ามพูดถึงสเปกยาวๆ\n"
             f"- ห้ามใช้คำโฆษณา/คำขายของซ้ำซาก เช่น 'คุ้มมาก', 'คุ้มสุดๆ', 'คุ้มค่า', 'คุ้ม', 'ดีงาม', 'ห้ามพลาด', 'ของดี', 'ดีจริง', 'แนะนำเลย'\n"
+            f"- สำคัญที่สุด: แอดมินยังไม่ได้ซื้อหรือใช้สินค้า ห้ามเขียนว่า ลองใช้, ใช้จริง, ซื้อมา, กดสั่ง, จัดมา, ใช้มาแล้ว, ส่วนตัวประทับใจ หรือสร้างเหตุการณ์ในชีวิตสมมติ\n"
             f"- น้ำเสียงและสำเนียงการเขียน: {gender_rule}\n"
-            "- เน้นทำ Social SEO: ค้นหาและใส่คำค้นหา (keywords) ยอดฮิตที่คนมักจะพิมพ์ค้นหาเกี่ยวกับสินค้านี้ลงในเนื้อหาแบบเนียนๆ เป็นธรรมชาติ\n"
-            "- กระตุ้นการแชร์และเซฟโพสต์เก็บไว้ (เช่น 'เซฟเก็บไว้ดูตอนช้อป', 'แชร์ต่อให้เพื่อนที่เจอปัญหานี้') ตามความเหมาะสมกับบริบท\n\n"
+            "- ใช้คำค้นหาที่อยู่ใน JSON อย่างเป็นธรรมชาติเท่านั้น ห้ามยัด SEO\n"
+            "- ใช้ CTA เพียงหนึ่งอย่าง และต้องเป็นคำถามเฉพาะจากสเปก/ราคา ห้ามสั่งทั้งแชร์และเซฟ\n\n"
         )
         
         if is_x:
@@ -971,8 +962,8 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
         else:
             prompt += (
                 f"รูปแบบโพสต์สำหรับ Facebook:\n"
-                f"1. ความยาวประมาณ 2-5 ประโยค\n"
-                f"2. เล่าเรื่องราวหรือให้ความเห็นส่วนตัวสั้นๆ สอดรับกับ Persona และ Style\n"
+                f"1. ความยาว 2-3 ประโยคเท่านั้น\n"
+                f"2. เล่าข้อมูลจริงหนึ่งประเด็น แล้วถามคำถามเฉพาะหนึ่งคำถาม ห้ามสร้างเรื่องราวประสบการณ์ส่วนตัว\n"
                 f"3. ปิดท้ายด้วยประโยคนี้เป๊ะๆ: \"{closing}\"\n"
                 f"ตอบกลับเฉพาะเนื้อความโพสต์เท่านั้น ไม่ต้องมีข้อความนำ/อธิบายใดๆ"
             )
@@ -1007,13 +998,6 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
     if not caption:
         print("[Warning] Falling back to local heuristic caption.")
         caption = generate_local_fallback_caption(product_json, selected_persona, selected_hook, selected_style, path_norm, is_x, selected_role, in_post_body=in_post_body)
-        
-    promo_line = f"\n🔥 โปรโมชั่น: {promo}" if promo else ""
-    if is_x:
-        promo_line = f" 🔥 {promo}" if promo else ""
-        
-    if promo and promo_line not in caption:
-        caption += promo_line
         
     return caption
 
@@ -1231,9 +1215,9 @@ if __name__ == "__main__":
     bkk = timezone(timedelta(hours=7))
     now_bkk = datetime.now(bkk)
 
-    # Pre-calculate 1 timestamp: 18:40 BKK (1 post per run)
+    # One Threads review per run at 19:20 BKK, staggered from Facebook review.
     # IMMEDIATE=true (workflow_dispatch) -> schedule starting from current time + 15 mins
-    slot_times = ["18:40"]
+    slot_times = ["19:20"]
     slot_timestamps = []
     for idx, slot_str in enumerate(slot_times):
         if IMMEDIATE:
@@ -1299,6 +1283,10 @@ if __name__ == "__main__":
                 selected_role
             )
 
+            if has_unverifiable_review_claim(candidate_caption):
+                print(f"[Attempt {attempt+1}] Caption rejected: unverifiable usage claim or formula hook")
+                continue
+
             recent_caps = state.get("recent_captions", [])[-20:]
             is_similar = False
             for old_cap in recent_caps:
@@ -1318,8 +1306,11 @@ if __name__ == "__main__":
                 break
 
         if not caption:
-            print("[Warning] Could not generate unique caption in 10 attempts. Using the last candidate.")
-            caption = candidate_caption
+            print("[Warning] No safe unique AI caption after 10 attempts. Using grounded local fallback.")
+            caption = generate_local_fallback_caption(
+                product_json, selected_persona, selected_hook, selected_style,
+                __file__.replace("\\", "/").lower(), False, selected_role
+            )
             chosen_p = selected_persona
             chosen_h = selected_hook
             chosen_s = selected_style

@@ -7,3 +7,4 @@ save_threads_token.py
 get_threads_token.py
 fb_insights_export.csv
 *.bak
+.env.instagram.local

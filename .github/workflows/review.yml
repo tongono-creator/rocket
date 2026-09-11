@@ -2,8 +2,9 @@ name: Product Review Post (CatDumb Style)
 
 on:
   schedule:
-    # Daily at 18:40 Bangkok time (11:40 UTC)
-    - cron: '40 11 * * *'
+    # Wednesday and Saturday at 18:50 Bangkok time (11:50 UTC).
+    # The script prepares the post for the 19:10 slot, staggered from other bots.
+    - cron: '50 11 * * 3,6'
   workflow_dispatch:
 
 jobs:
