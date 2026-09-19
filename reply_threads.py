@@ -246,10 +246,19 @@ if __name__ == "__main__":
                 
             print(f"  - New valid comment from @{commenter}: \"{comment_text}\"")
             
-            # 4. สุ่มตามสัดส่วนความน่าจะเป็น (เช่น 40%)
-            if random.random() > reply_probability:
+            # 4. ตรวจสอบว่าคอมเมนต์นี้ขอพิกัด ลิงก์ หรือสินค้าหรือไม่
+            is_asking_link = False
+            link_keywords = ["ขอพิกัด", "พิกัด", "ลิงก์", "ลิงค์", "มีลิงก์", "ซื้อที่ไหน", "ซื้อได้ที่ไหน", 
+                             "ราคา", "เท่าไหร่", "กี่บาท", "shopee", "lazada", "link", "price", "where to buy", 
+                             "สนใจ", "iphone", "ไอโฟน", "โทรศัพท์", "มือถือ", "apple"]
+            for kw in link_keywords:
+                if kw in comment_text.lower():
+                    is_asking_link = True
+                    break
+
+            # สุ่มตามสัดส่วนความน่าจะเป็น (เช่น 40%) - แต่ถ้าขอลิงก์พิกัด ให้ตอบเสมอ
+            if not is_asking_link and random.random() > reply_probability:
                 print("    [Chance skipped] Random selection decided not to reply to this one.")
-                # เพื่อป้องกันไม่ให้มาสุ่มซ้ำคอมเมนต์เดิมรอบถัดไปและดูเหมือนแช่แข็ง ให้ถือว่าประมวลผลแล้ว
                 if not args.dry_run:
                     history.add(reply_id)
                 continue
@@ -273,6 +282,20 @@ if __name__ == "__main__":
                     print(f"    Reply posted successfully! ID: {sent_id}")
                     history.add(reply_id)
                     reply_count += 1
+
+                    # ถ้าขอพิกัด ให้แอดมินส่งคอมเมนต์พิกัดสินค้าตามไปด้วย
+                    if is_asking_link:
+                        try:
+                            from affiliate_utils import get_all_comments
+                            aff_comments = get_all_comments(caption=comment_text)
+                            if aff_comments:
+                                aff_msg = aff_comments[0]
+                                aff_text = aff_msg["message"] if isinstance(aff_msg, dict) else aff_msg
+                                time.sleep(random.uniform(3, 7))
+                                post_reply_comment(aff_text, reply_to_id=reply_id)
+                                print(f"    Posted affiliate link reply on Threads")
+                        except Exception as aff_err:
+                            print(f"    Affiliate link reply error: {aff_err}")
                 else:
                     print("    Failed to post reply.")
             
