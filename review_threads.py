@@ -748,6 +748,14 @@ def generate_hook(detail, highlights):
     global API_ENABLED
     active_client = globals().get('client')
     if API_ENABLED and active_client is not None:
+        is_iphone = "iphone" in detail.lower() or "apple" in detail.lower()
+        iphone_hook_guide = ""
+        if is_iphone:
+            iphone_hook_guide = (
+                "\n*** กฎพิเศษสำหรับ iPhone / Apple (โดยเฉพาะ iPhone 18) ***:\n"
+                "- ให้เน้นพาดหัวไปที่ประเด็น 'ของแท้ศูนย์ไทย มั่นใจร้านค้า Mall ไม่เสี่ยงเครื่องย้อมแมว' เช่น 'iPhone 18 เครื่องศูนย์แท้ | สั่งร้าน Mall อุ่นใจไม่เสี่ยงย้อมแมว' หรือ 'เครื่องศูนย์ไทยประกันเต็ม | ซื้อร้าน Mall มั่นใจของแท้ 100%'\n"
+            )
+
         prompt = (
             "คุณคือ Copywriter มืออาชีพสไตล์ CatDumb (แคทดัมบ์) ภาษาพูดคนไทยธรรมดา ธรรมชาติ สนุก เป็นกันเอง ชี้เป้าของน่าซื้อ\n"
             "จงสร้างพาดหัวรีวิวสินค้าภาษาไทย 2 บรรทัด คั่นด้วย '|' (บรรทัด 1 | บรรทัด 2)\n\n"
@@ -758,6 +766,7 @@ def generate_hook(detail, highlights):
             "4. เว้นวรรคเฉพาะจังหวะภาษาไทยปกติ ห้ามเว้นวรรคแตกคำย่อย\n\n"
             f"ข้อมูลสินค้า:\n{detail}\n\n"
             f"จุดเด่นสินค้า:\n{highlights}\n\n"
+            f"{iphone_hook_guide}\n"
             "ผลลัพธ์ (บรรทัด 1 | บรรทัด 2):"
         )
         for model_idx, model in enumerate(TEXT_MODELS):
@@ -781,6 +790,9 @@ def generate_hook(detail, highlights):
         print("[Warning] Hook generation failed on all models. Disabling API calls for this run.")
         API_ENABLED = False
     # Local fallback for hook
+    if "iphone" in detail.lower() or "apple" in detail.lower():
+        return "iPhone 18 เครื่องศูนย์แท้", "ร้าน Mall มั่นใจของแท้ 100%"
+
     title = re.sub(r'^[•\-\*\d\.\s\u2013\(\[\{\)\|\}]+', '', detail).strip()
     first_line = title.split('\n')[0].split('|')[0].split(' - ')[0].split(' – ')[0].strip()
     # line1: ตัดชื่อสั้นก่อน spec keyword แล้วเอา 3 คำแรก
@@ -937,6 +949,21 @@ def generate_local_fallback_caption(product_json, selected_persona, selected_hoo
         
     price_str = f" ราคา {price} บาท" if price else ""
     
+    is_iphone = "iphone" in prod_type.lower() or "iphone" in str(product_json).lower() or "apple" in str(product_json).lower()
+    if is_iphone:
+        if "somtam" in path_norm:
+            body = f"Apple iPhone 18 Pro Max เครื่องศูนย์ไทย ประกันศูนย์ 1 ปีเต็ม สั่งซื้อผ่านร้านค้าทางการ Shopee Mall มั่นใจได้ของแท้ 100% ไม่ต้องเสี่ยงกับเครื่องย้อมแมวหรือเครื่องหิ้วค่ะ พี่ๆ คิดว่าการสั่งมือถือราคาสูงกับร้าน Mall ทางการช่วยให้สบายใจเรื่องประกันที่สุดจริงไหมคะ?"
+        elif "chowchow" in path_norm:
+            body = f"Apple iPhone 18 Pro Max เครื่องศูนย์ไทย ประกันศูนย์ 1 ปีเต็ม สั่งซื้อผ่านร้านทางการ Shopee Mall อุ่นใจได้ของแท้ 100% ไม่ต้องกลัวเครื่องย้อมแมวฮะ พี่ๆ คิดว่าสั่งมือถือกับร้าน Mall สบายใจกว่าร้านทั่วไปจริงไหมฮะ โฮ่ง!"
+        elif is_x:
+            body = f"Apple iPhone 18 Pro Max เครื่องศูนย์ไทย ประกันศูนย์ 1 ปี สั่งผ่านร้านค้าทางการ Shopee Mall มั่นใจของแท้ 100% ไม่เสี่ยงเครื่องย้อมแมว ซื้อของราคาสูงเลือกร้าน Mall อุ่นใจที่สุดครับ"
+        else:
+            body = f"Apple iPhone 18 Pro Max เครื่องศูนย์ไทย ประกันศูนย์ 1 ปีเต็ม สั่งซื้อผ่านร้านค้าทางการ Shopee Mall มั่นใจได้ของแท้ 100% ไม่ต้องเสี่ยงกับเครื่องย้อมแมวหรือเครื่องหิ้วครับ พี่ๆ คิดว่าการซื้อสมาร์ตโฟนรุ่นท็อปกับร้าน Mall โดยตรง สบายใจเรื่องประกันที่สุดจริงไหมครับ?"
+        if is_x:
+            return body[:200]
+        else:
+            return f"{body}\n\n{closing}"
+
     role_name = selected_role["name"]
     role_phrase = get_role_context(role_name, prod_type)
     question = f"คนเคยใช้ {prod_type} จริง จุดไหนควรเช็กก่อนซื้อครับ?"
@@ -971,6 +998,16 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
     
     active_client = globals().get("client")
     if API_ENABLED and active_client:
+        is_iphone = "iphone" in str(product_json).lower() or "apple" in str(product_json).lower()
+        iphone_caption_guide = ""
+        if is_iphone:
+            iphone_caption_guide = (
+                "\n*** กฎพิเศษสำหรับ iPhone / Apple (โดยเฉพาะ iPhone 18) ***:\n"
+                "- ต้องเขียนไปในแนวทาง 'ไว้ใจร้านค้าได้ 100% เพราะเป็นร้านค้าทางการ Shopee Mall / Apple Flagship Store'\n"
+                "- เน้นย้ำว่าเป็นเครื่องศูนย์ไทยแท้ มีประกันศูนย์ 1 ปีเต็ม ไม่ต้องเสี่ยงกับเครื่องย้อมแมว เครื่องหิ้ว หรือกลัวโดนโกง\n"
+                "- การซื้อสมาร์ตโฟนราคาสูง เลือกร้าน Mall ทางการอุ่นใจเรื่องของแท้และบริการหลังการขายที่สุด\n"
+            )
+
         prompt = (
             "เขียนในฐานะแอดมินคัดของที่ยังไม่ได้ซื้อหรือทดลองสินค้า เป็นกันเองและตรงไปตรงมา\n"
             f"ในโพสต์นี้ คุณจะสวมบทบาท (Persona): \"{selected_persona['desc']}\"\n"
@@ -978,6 +1015,7 @@ def generate_caption(product_json, selected_persona, selected_hook, selected_sty
             f"แนวทางเปิดเรื่อง: {selected_hook} ใช้เป็นมุมคิดเท่านั้น ห้ามคัดลอกข้อความนี้ตรงๆ\n\n"
             f"ข้อมูลสินค้าที่คุณมีในรูป JSON (ห้ามคิดรายละเอียดที่ไม่มีใน JSON นี้ขึ้นมาเองเด็ดขาด และห้ามโชว์ชื่อสินค้าหรือแบรนด์เต็ม):\n"
             f"{json.dumps(product_json, ensure_ascii=False, indent=2)}\n\n"
+            f"{iphone_caption_guide}\n"
             f"กฎเหล็กข้อห้าม:\n- ต้องใส่ราคาของสินค้าที่ระบุใน JSON เสมอ (ห้ามแก้ไขหรือแต่งราคาขึ้นมาเอง)\n"
             f"- ห้ามเปิดโพสต์ด้วยชื่อสินค้า หรือชื่อแบรนด์\n"
             f"- ห้ามพูดถึงสเปกยาวๆ\n"
