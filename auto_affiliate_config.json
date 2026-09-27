@@ -1,0 +1,57 @@
+{
+  "threads": {
+    "account_id": "26888368977456536",
+    "expected_username": "tongono21",
+    "rollout_since": "2026-09-27T02:40:00Z",
+    "approved_fallback": {
+      "name": "ไมค์ไร้สาย BOYA mini 2",
+      "url": "https://s.shopee.co.th/9AOkJG7XeU"
+    },
+    "post_products": {
+      "17934053061405206": {
+        "name": "ไมค์ไร้สาย BOYA mini 2",
+        "url": "https://s.shopee.co.th/9AOkJG7XeU"
+      }
+    },
+    "post_products_file": "affiliate_post_products.json",
+    "catalog": [
+      {
+        "name": "ไมค์ไร้สาย BOYA mini 2",
+        "url": "https://s.shopee.co.th/9AOkJG7XeU",
+        "keywords": [
+          "BOYA",
+          "ไมค์ไร้สาย"
+        ]
+      }
+    ],
+    "lookback_hours": 72
+  },
+  "facebook": {
+    "account_id": "111830598532037",
+    "expected_username": "",
+    "rollout_since": "2026-09-27T02:40:00Z",
+    "approved_fallback": {
+      "name": "จักรยาน ANCHI",
+      "url": "https://s.shopee.co.th/4B04MAcB1P"
+    },
+    "post_products": {
+      "111830598532037_1026107003782893": {
+        "name": "จักรยาน ANCHI",
+        "url": "https://s.shopee.co.th/4B04MAcB1P"
+      }
+    },
+    "post_products_file": "affiliate_post_products.json",
+    "catalog": [
+      {
+        "name": "จักรยาน ANCHI",
+        "url": "https://s.shopee.co.th/4B04MAcB1P",
+        "keywords": [
+          "ANCHI",
+          "จักรยาน"
+        ]
+      }
+    ],
+    "token_env": "PAGE_ACCESS_TOKEN",
+    "lookback_hours": 72
+  }
+}

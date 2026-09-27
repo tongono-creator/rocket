@@ -1233,8 +1233,12 @@ def _post_one_comment(post_id, text):
     except Exception as e:
         print(f"Comment error: {e}")
 
-def post_link_comment(post_id, shopee, lazada, promo):
+def post_link_comment(post_id, shopee, lazada, promo, **kwargs):
     """โพส comment ลิ้งใต้โพส แยก Shopee / Lazada คนละคอมเม้น"""
+    from affiliate_post_products import remember_product
+    remember_product("facebook", post_id, shopee)
+    print("[affiliate] Deferred to auto_affiliate.py reconciler")
+    return None
     promo_line = f"\n🔥 โปร: {promo}" if promo else ""
     if shopee and "xxx" not in shopee:
         _post_one_comment(post_id, f"👉 ซื้อได้ที่ Shopee → {shopee}{promo_line}")
@@ -1255,16 +1259,6 @@ def post_to_page(img_path, caption, shopee=None, lazada=None, promo=None, schedu
     is_rocket = "rocket" in path_norm or PAGE_ID == "111830598532037"
 
     if scheduled_time and not is_rocket:
-        comment_texts = []
-        promo_line = f"\n🔥 โปร: {promo}" if promo else ""
-        if shopee and "xxx" not in shopee:
-            comment_texts.append(f"👉 ซื้อได้ที่ Shopee → {shopee}{promo_line}")
-        if lazada and "xxx" not in lazada:
-            comment_texts.append(f"🛍️ หรือสั่งทาง Lazada → {lazada}")
-            
-        if comment_texts:
-            caption += "\n\n📌 ชี้เป้าของดีน่าสนใจ:\n" + "\n".join(comment_texts)
-            
         print(f"Scheduling to Facebook for timestamp {scheduled_time}...")
         with open(img_path, "rb") as f:
             resp = requests.post(
@@ -1283,6 +1277,8 @@ def post_to_page(img_path, caption, shopee=None, lazada=None, promo=None, schedu
         if "id" in result:
             photo_id = result.get("post_id") or result["id"]
             print(f"Scheduled successfully! Photo ID: {photo_id}")
+            from affiliate_post_products import remember_product
+            remember_product("facebook", photo_id, shopee)
             return photo_id, True
         else:
             print(f"FB Error: {result}")
@@ -1299,6 +1295,8 @@ def post_to_page(img_path, caption, shopee=None, lazada=None, promo=None, schedu
     if "id" in result:
         post_id = result.get("post_id") or result["id"]
         print(f"Page Posted! ID: {post_id}")
+        from affiliate_post_products import remember_product
+        remember_product("facebook", post_id, shopee)
         print(f"https://www.facebook.com/{post_id}")
         return post_id, False
     else:
@@ -1373,37 +1371,10 @@ def post_to_threads(image_url, caption, shopee, lazada, promo):
             return
         post_id = result2["id"]
         print(f"[Threads] Published successfully! Post ID: {post_id}")
-        
-        # Post the links as a reply comment
-        comments = []
-        promo_line = f" 🔥 โปร: {promo}" if promo else ""
-        if shopee and "xxx" not in shopee:
-            comments.append(f"👉 ซื้อได้ที่ Shopee → {shopee}{promo_line}")
-        if lazada and "xxx" not in lazada:
-            comments.append(f"🛍️ หรือสั่งทาง Lazada → {lazada}")
-            
-        for idx, comment_text in enumerate(comments, 1):
-            time.sleep(5)
-            print(f"[Threads] Posting reply comment {idx}...")
-            resp_c = requests.post(
-                f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads",
-                data={
-                    "media_type": "TEXT",
-                    "text": comment_text,
-                    "reply_to_id": post_id,
-                    "access_token": THREADS_ACCESS_TOKEN,
-                },
-                timeout=60
-            )
-            c_container_id = resp_c.json().get("id")
-            if c_container_id:
-                time.sleep(3)
-                requests.post(
-                    f"https://graph.threads.net/v1.0/{THREADS_USER_ID}/threads_publish",
-                    data={"creation_id": c_container_id, "access_token": THREADS_ACCESS_TOKEN},
-                    timeout=60
-                )
-                print(f"[Threads] Reply comment {idx} published.")
+        from affiliate_post_products import remember_product
+        remember_product("threads", post_id, shopee)
+        print("[affiliate] Threads reply deferred to auto_affiliate.py reconciler")
+        return post_id
     except Exception as e:
         print(f"[Threads] Exception during Threads post: {e}")
 
