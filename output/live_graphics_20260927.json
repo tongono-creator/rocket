@@ -1,0 +1,46 @@
+{
+  "posts": [
+    {
+      "channel": "rocket",
+      "post_id": "111830598532037_1026107003782893",
+      "url": "https://www.facebook.com/999860183074242/posts/1026107003782893",
+      "state": "live_image_verified",
+      "published_at": "2026-09-27T02:45:53.574601+00:00",
+      "verified_at": "2026-09-27T02:45:54.482666+00:00",
+      "image_sha256": "a06cbc8154f2d8f1c1b43c24822543c95645198b11577ed0481fd28c98833fc8"
+    },
+    {
+      "channel": "threads",
+      "post_id": "17934053061405206",
+      "url": "https://www.threads.com/@tongono21/post/DdxkR1amf_1",
+      "state": "live_image_verified",
+      "published_at": "2026-09-27T02:45:06.814842+00:00",
+      "verified_at": "2026-09-27T02:45:07.679353+00:00",
+      "image_sha256": "39d9aa2ed7c702e2cfd35245e5320946301f7311babde71820afeeba60640289",
+      "affiliate_reply": {
+        "state": "verified",
+        "text": "พิกัดไมค์ BOYA mini 2 ในภาพครับ ตรวจรุ่นหัวต่อและจำนวนไมค์ในชุดก่อนสั่งซื้อ\nhttps://s.shopee.co.th/9AOkJG7XeU\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้",
+        "started_at": "2026-09-27T02:50:38.650253+00:00",
+        "container_id": "17955229017254625",
+        "id": "17918112846448581",
+        "url": "https://www.threads.com/@tongono21/post/Ddxk8DmGeFq",
+        "verified_at": "2026-09-27T02:50:57.901319+00:00"
+      }
+    }
+  ],
+  "queue_updates": [
+    {
+      "row": 64,
+      "before": null,
+      "after": "done 2026-09-27T02:45:53.574601+00:00 live-graphics 111830598532037_1026107003782893",
+      "channel": "rocket"
+    },
+    {
+      "row": 59,
+      "before": null,
+      "after": "done 2026-09-27T02:45:06.814842+00:00 live-graphics 17934053061405206",
+      "channel": "threads"
+    }
+  ],
+  "scope": "Image publishing only; no affiliate comments"
+}
