@@ -52,6 +52,7 @@
       }
     ],
     "token_env": "PAGE_ACCESS_TOKEN",
-    "lookback_hours": 72
+    "lookback_hours": 72,
+    "require_explicit_mapping": true
   }
 }

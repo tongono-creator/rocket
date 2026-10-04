@@ -87,7 +87,17 @@ def validate_product(product: Mapping[str, Any]) -> dict[str, str]:
     name, url = str(product.get("name", "")).strip(), str(product.get("url", "")).strip()
     if not name or not _is_shopee_url(url):
         raise ValueError("product requires a name and Shopee HTTPS URL")
-    return {"name": name, "url": url}
+    result = {"name": name, "url": url}
+    # Root-reviewed explicit mappings may supply their final contextual comment.
+    if "comment" in product:
+        comment = product["comment"]
+        if not isinstance(comment, str) or not comment.strip():
+            raise ValueError("mapped comment must be nonempty text")
+        links = URL_RE.findall(comment)
+        if links != [url] or DISCLOSURE not in comment:
+            raise ValueError("mapped comment needs its sole approved URL and disclosure")
+        result["comment"] = comment
+    return result
 
 
 @dataclass(frozen=True)
@@ -149,6 +159,8 @@ def select_product(post: Mapping[str, Any], config: Mapping[str, Any]) -> Select
 
 def build_comment(selection: Selection) -> str:
     product = selection.product
+    if selection.reason == "explicit" and "comment" in product:
+        return validate_product(product)["comment"]
     if selection.reason == "fallback":
         lead = f"พิกัดสินค้าสำหรับผู้ติดตาม: {product['name']} — {product['url']}"
     else:
@@ -533,6 +545,11 @@ class AffiliateReconciler:
                     self.state.set(self.platform, account, post_id, "existing")
                 continue
             selection = select_product(post, self.config)
+            if self.config.get("require_explicit_mapping") and selection.reason != "explicit":
+                # A pending product is not permission to advertise an unrelated fallback.
+                # Do not mark it published/existing: a reviewed mapping may arrive later.
+                counts["pending_product_missing"] += 1
+                continue
             if not self.publish:
                 counts["dry_run"] += 1
                 planned.append({"post_id": post_id, "selection": selection.reason, "product": selection.product["name"]})
