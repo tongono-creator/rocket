@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "channel": "rocket_fb",
+    "page_id": "111830598532037",
+    "page_name": "Rocket21",
+    "about_before": {
+      "present": true,
+      "value": "อยากดูคลิปยาวฉบับเต็ม 👇\nhttps://youtube.com/@rocket_21-t5x"
+    },
+    "about_after": "เล่าเรื่องสมรภูมิและประวัติศาสตร์ทหาร ชำแหละกลไกยุทโธปกรณ์จากหลักฐาน พร้อมจุดเด่นและข้อจำกัดที่ภาพเดียวอาจไม่เล่า\nคลิปเต็ม: https://youtube.com/@rocket_21-t5x"
+  },
+  "payload_sha256": "0643ab23033cac2ed8bb98e31139c37f05c907dee9e05d6128c072dee5436059",
+  "root_signature": "i1ZTCgh8VRAAZF7IKkL1aBT59JXEUFDxh5qcPWDBxBOIJVZMdNc0D8PAPBaiEFUkta9E3QjlJKjbkIGcfAoWDQ=="
+}
