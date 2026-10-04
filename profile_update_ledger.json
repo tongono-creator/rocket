@@ -1,8 +1,8 @@
 {
   "0643ab23033cac2ed8bb98e31139c37f05c907dee9e05d6128c072dee5436059": {
-    "state": "reserved",
+    "state": "written_pending_readback",
     "channel": "rocket_fb",
     "page_id": "111830598532037",
-    "updated_at": "2026-10-04T18:55:52.432390+00:00"
+    "updated_at": "2026-10-04T18:55:57.894254+00:00"
   }
 }
