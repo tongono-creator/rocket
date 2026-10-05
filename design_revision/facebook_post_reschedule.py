@@ -50,7 +50,7 @@ def verify_plan(plan,key,channel,root,now=None,allow_elapsed=False):
         raise shared.UpdateError('after_schedule_outside_local_review_window_10min_to_60days')
     # This window is a local safety policy, not a claim about Meta's API maximum.
     inventory=Path(root)/'design_revision/inventory.json'
-    if not inventory.exists() or shared.sha(inventory.read_bytes())!=payload['inventory_sha256']:
+    if not inventory.exists() or shared.sha(shared.canonical(shared.read(inventory)))!=payload['inventory_sha256']:
         raise shared.UpdateError('reviewed_known_photo_inventory_changed')
     if not any(r.get('post_id')==payload['post_id'] and r.get('channel')==key and
                r.get('kind') in ['root_signed_native_release','existing_rocket_morning_card'] for r in shared.read(inventory)):

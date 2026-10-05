@@ -35,7 +35,7 @@ class Reschedule(unittest.TestCase):
   inventory=self.root/'design_revision/inventory.json';shared.atomic(inventory,[{'post_id':'111_222','channel':'kram_fb','kind':'root_signed_native_release'}])
   self.payload={'action':'reschedule_unpublished_same_photo_post','channel':'kram_fb','page_id':'111','page_name':'Fixture','post_id':'111_222',
    'reviewed_at':self.now.isoformat(),'before':shared.snapshot(self.post,'111'),'after_schedule':{'present':True,'value':int((self.now+timedelta(days=30)).timestamp())},
-   'inventory_sha256':shared.sha(inventory.read_bytes()),'root_monthly_plan_confirmed':True}
+   'inventory_sha256':shared.sha(shared.canonical(shared.read(inventory))),'root_monthly_plan_confirmed':True}
   self.digest=shared.sha(shared.canonical(self.payload));self.api=Fake(self.root,self.post)
  def signed(self):
   digest=shared.sha(shared.canonical(self.payload))
@@ -50,6 +50,12 @@ class Reschedule(unittest.TestCase):
  def test_dry_run_is_get_only_and_no_ledger(self):
   self.assertEqual(self.run_plan('audit')['external_writes_this_run'],0)
   self.assertEqual(self.api.calls,[]);self.assertFalse((self.root/'design_revision/reschedule_ledger.json').exists())
+ def test_git_newline_conversion_preserves_reviewed_inventory_but_content_change_rejects(self):
+  inventory=self.root/'design_revision/inventory.json'
+  inventory.write_bytes(inventory.read_bytes().replace(b'\n',b'\r\n'))
+  scheduler.verify_plan(self.signed(),'kram_fb',self.channel,self.root,self.now)
+  data=shared.read(inventory);data[0]['post_id']='111_999';shared.atomic(inventory,data)
+  with self.assertRaises(shared.UpdateError):scheduler.verify_plan(self.signed(),'kram_fb',self.channel,self.root,self.now)
  def test_schedule_only_post_preserves_caption_photo_and_same_id(self):
   synced=[]
   def sync(root,paths):synced.append(shared.read(paths[0])['111_222']['state'])
