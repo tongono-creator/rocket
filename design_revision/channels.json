@@ -1,0 +1,10 @@
+{
+  "rocket_fb": {
+    "platform": "facebook",
+    "name": "Rocket21",
+    "page_id": "111830598532037",
+    "editor_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAXpGllY0WdysBzqTWBJ7evbAz13J/DUuGnlrfhzgr4Kg=\n-----END PUBLIC KEY-----\n",
+    "repository_slug": "tongono-creator/rocket",
+    "token_env": "PAGE_ACCESS_TOKEN"
+  }
+}

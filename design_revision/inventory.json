@@ -1,0 +1,254 @@
+[
+  {
+    "id": "2026-10-04_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032124859847774",
+    "caption_sha256": "f08bb28108833e8590e6df975b20c09e3d1a819bb33cccce25091fa0c4d9fdbe",
+    "scheduled_at": "2026-10-04T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-05_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032125096514417",
+    "caption_sha256": "313c90c4b36bf3e11c96007f8d78a18e3436ba8c4a68aec433232a9f007000e2",
+    "scheduled_at": "2026-10-05T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-06_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032125253181068",
+    "caption_sha256": "8c0e75455167e1ee569144bbbb0ff3c21cf5c95706b0b804b60e6867696f9933",
+    "scheduled_at": "2026-10-06T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-07_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032121279848132",
+    "caption_sha256": "9ae66fb8a0068472762e4281ae17a397fc053779e04b02ce69698fb9f13196de",
+    "scheduled_at": "2026-10-07T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-08_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032121326514794",
+    "caption_sha256": "abf5f0a7cdc9984b4ab34fcabf7611f60429156d5cf3874e8f68eddb4762e996",
+    "scheduled_at": "2026-10-08T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-09_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032125809847679",
+    "caption_sha256": "2f0143cbcee1081cde171f95ed83ddb6da3e9a8b4c3992bcdd0e9d9ba2af3fee",
+    "scheduled_at": "2026-10-09T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-10_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032125909847669",
+    "caption_sha256": "5fac42bb1a038bb732490f5ceae1d6f0df4fb908f8985783be5dc553c4fb963c",
+    "scheduled_at": "2026-10-10T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-11_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032125966514330",
+    "caption_sha256": "01cd9ce4933542e6416c0320e1a7899b6993f20764c8162c0c4c085b4cc46325",
+    "scheduled_at": "2026-10-11T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-12_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032126029847657",
+    "caption_sha256": "7bfa52e9aae1c270630a3486d173f457bdc67e9d2da584acd88581a0aa7bdc68",
+    "scheduled_at": "2026-10-12T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-13_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032126209847639",
+    "caption_sha256": "6128d7a2d53a9b6f1bf8ab1416bda5c2ecdbf205c508baae42083aee3a62af2d",
+    "scheduled_at": "2026-10-13T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-14_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032126573180936",
+    "caption_sha256": "94454e92eff94b9039d661d28eccb59c06e4f51cf82cc97b7ee69acb78769cec",
+    "scheduled_at": "2026-10-14T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-15_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032126823180911",
+    "caption_sha256": "acebeafb243d30746b8604c5b04bbef23b82f63a7f7ffff51c71bf32f13a7e37",
+    "scheduled_at": "2026-10-15T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-16_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127019847558",
+    "caption_sha256": "507d2cc1b4dd54c145c76f649524e67cc530371d991028568a11d945dfef76fc",
+    "scheduled_at": "2026-10-16T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-17_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127133180880",
+    "caption_sha256": "b3bb9703ac4a8230a60cd721a1ffb0e3806ca0d7edba8a9064356450781f78ef",
+    "scheduled_at": "2026-10-17T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-18_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127213180872",
+    "caption_sha256": "7fdbba37aa54fbf53cae92407e7a0df5f87edf52041760e7c73b5af8434c3990",
+    "scheduled_at": "2026-10-18T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-19_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127313180862",
+    "caption_sha256": "4b9658babc59d016416f90ac1e476481c3d30d088b4bea1fb269fd8da6b2091f",
+    "scheduled_at": "2026-10-19T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-20_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127466514180",
+    "caption_sha256": "78d66341911d6b0039a800d55b2ffe50916a912bb803366882d71a2c16659fd1",
+    "scheduled_at": "2026-10-20T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-21_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127593180834",
+    "caption_sha256": "ce1c30027f5ea2f3716ece0866eaa38ad53a8d5b77f6948ab23367a7af43449f",
+    "scheduled_at": "2026-10-21T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-22_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127876514139",
+    "caption_sha256": "2e471b5de3317a474d758cbde8e1e74b1a6cf717341d30095d3eb0b144bcdd05",
+    "scheduled_at": "2026-10-22T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-23_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032127946514132",
+    "caption_sha256": "7d2976bd7d9fd3de83530aafbb105b71075414c34da0bca9aebec0f19c97e7c4",
+    "scheduled_at": "2026-10-23T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-24_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032128183180775",
+    "caption_sha256": "3fc013692391d0a249c4edfee43e45f7f011d0eeac825bd3fedb50b696a1aef8",
+    "scheduled_at": "2026-10-24T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-25_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032128446514082",
+    "caption_sha256": "1c7964e354a188fc1176eeef9cb1fbae42b8364086eefddfec5f25412ee30f86",
+    "scheduled_at": "2026-10-25T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-26_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032128513180742",
+    "caption_sha256": "23a699ee38f0a1c329fd18ae39f31eeaf0d999a3d8fb571405dc8a82e1e26734",
+    "scheduled_at": "2026-10-26T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-27_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032128733180720",
+    "caption_sha256": "cc8f1e0795a4dd54d0ac7920cbab4c0cdf7741a9291eb2eaadae1131ad5a7739",
+    "scheduled_at": "2026-10-27T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-28_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032129143180679",
+    "caption_sha256": "184b67199f6a8b33a3d7fd15188c2f88dfe2866223c474d9dfe3374d402267e5",
+    "scheduled_at": "2026-10-28T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-29_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032129349847325",
+    "caption_sha256": "227d16f9e5c04bf6d9a0a613e650b882a954f46287621c69be9c392c292afb30",
+    "scheduled_at": "2026-10-29T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-30_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032129553180638",
+    "caption_sha256": "0d2074f9e1ab539611707237ef4c3d344e54410840f062026a5da42bb175b01a",
+    "scheduled_at": "2026-10-30T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  },
+  {
+    "id": "2026-10-31_rocket_fb",
+    "channel": "rocket_fb",
+    "post_id": "111830598532037_1032129659847294",
+    "caption_sha256": "0d948c1db79de7f60a8f08d7da34b57b192d34f1ab905caf7a7c6709f41eddb0",
+    "scheduled_at": "2026-10-31T07:30:00+07:00",
+    "known_release_proof": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\schedule_results.json",
+    "kind": "existing_rocket_morning_card"
+  }
+]
