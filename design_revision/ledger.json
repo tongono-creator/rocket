@@ -1,9 +1,14 @@
 {
   "111830598532037_1032125096514417": {
-    "state": "reserved_update",
+    "state": "failed_update",
     "plan_sha256": "a4a3203523d4164e1b9a49bbebdb2a03f6a44344d996d5eaf9da1811eed95301",
     "post_id": "111830598532037_1032125096514417",
-    "updated_at": "2026-10-05T13:35:17.007106+00:00",
-    "photo_id": "1034290152964578"
+    "updated_at": "2026-10-05T13:35:18.608674+00:00",
+    "photo_id": "1034290152964578",
+    "error": {
+      "reason": "graph_request_rejected",
+      "http_status": 400,
+      "api_error_code": 100
+    }
   }
 }
