@@ -1,0 +1,30 @@
+{
+  "payload": {
+    "action": "reschedule_unpublished_same_photo_post",
+    "channel": "rocket_fb",
+    "page_id": "111830598532037",
+    "page_name": "Rocket21",
+    "post_id": "111830598532037_1032125253181068",
+    "reviewed_at": "2026-10-05T13:55:04.782996+00:00",
+    "before": {
+      "post_id": "111830598532037_1032125253181068",
+      "is_published": false,
+      "schedule": {
+        "present": true,
+        "value": 1791246600
+      },
+      "message_sha256": "8c0e75455167e1ee569144bbbb0ff3c21cf5c95706b0b804b60e6867696f9933",
+      "attachment_ids": [
+        "1032125253181068"
+      ]
+    },
+    "after_schedule": {
+      "present": true,
+      "value": 1793925000
+    },
+    "inventory_sha256": "5231e062400264c727a0b816b2ccb41113e4166babbbc301bda7c6ac9b20f475",
+    "root_monthly_plan_confirmed": true
+  },
+  "payload_sha256": "b1f51477e7eaecd272daef932538708829dc98e1b32532a7ac428d01118e2f41",
+  "root_signature": "cGq3ThBA140T/ofeQCvzvZq5Nf1KG2SuwjOfmG6Dn9ncDkbWVeNajFOxCaPDJ+QRoOXaO44zVyMUHJCf/zSpDg=="
+}
