@@ -1,10 +1,10 @@
 {
   "oct07_newcommercial_rocket_wk03_20261016": {
-    "state": "enabling_verified_exact_mapping",
+    "state": "verified",
     "plan_sha256": "b33e9117b01554f3e10a61518cdebc9ced4d5a959bc2d9e0aed8b32d5ca9e1f9",
     "package_id": "oct07_newcommercial_rocket_wk03_20261016",
     "page_id": "111830598532037",
-    "updated_at": "2026-10-07T14:22:51.817016+00:00",
+    "updated_at": "2026-10-07T14:22:59.275422+00:00",
     "slot": 1792117800,
     "caption_sha256": "7ca97e2de9d12867b50d0e680e2b8f08cb8ef0739389eb01e82778451d17d145",
     "canonical_sku": "713673689/19828088602",
