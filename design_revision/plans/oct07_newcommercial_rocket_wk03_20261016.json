@@ -1,0 +1,32 @@
+{
+  "payload": {
+    "action": "schedule_new_commercial_product_photo",
+    "channel": "rocket_fb",
+    "page_id": "111830598532037",
+    "page_name": "Rocket21",
+    "reviewed_at": "2026-10-07T14:17:35.145373+00:00",
+    "package_id": "oct07_newcommercial_rocket_wk03_20261016",
+    "package_path": "design_revision/revisions/oct07_newcommercial_rocket_wk03_20261016",
+    "package_sha256": "2186d255b669206da851ece862a9f57287e299f173f1b1ef6d5012e02f14f8f9",
+    "mobile_path": "design_revision/revisions/oct07_newcommercial_rocket_wk03_20261016/mobile.png",
+    "mobile_sha256": "4838ae5ad4b50396ad680f6c65574d75ba809a3879bd15dfeacaa16dc7197dd1",
+    "actual_product_photo_path": "design_revision/revisions/oct07_newcommercial_rocket_wk03_20261016/actual-product.webp",
+    "actual_product_photo_sha256": "21a6e515ec6140283e42c2fd803f54b6262cda7eb9dba1b4807894bb27095742",
+    "canonical_sku": "713673689/19828088602",
+    "tracking_variant_proof_path": "design_revision/revisions/oct07_newcommercial_rocket_wk03_20261016/tracking.json",
+    "tracking_variant_proof_sha256": "3435b531a4c010b3ffa3e6e9d0b6be510d478cda0116c273e3fed5a8f81eddbc",
+    "monthly_plan_path": "design_revision/monthly_commercial_operations_oct07.json",
+    "monthly_plan_sha256": "f8c8effb9388f4700fe5523b1340106475a4863c672eee944adaa9168f020722",
+    "worker_before_sha256": "30c94538d3dcebbf7df051a8355ba8ac17cfc00afbaa2baa18d50f782ba1d5d0",
+    "mapping_before_sha256": "59bdf1a69cef68e68b2cf60a4944a64140b378f6fc7b5e65ba01003f69bc1b3f",
+    "monthly_sales_limit_after": 2,
+    "root_actual_product_photo_confirmed": true,
+    "root_variant_destination_subids_confirmed": true,
+    "root_existing_single_writer_confirmed": true,
+    "root_whole_page_7day_cooldown_confirmed": true,
+    "root_monthly_sales_plan_confirmed": true,
+    "root_enable_exact_selected_comment_after_native_verified": true
+  },
+  "payload_sha256": "b33e9117b01554f3e10a61518cdebc9ced4d5a959bc2d9e0aed8b32d5ca9e1f9",
+  "root_signature": "dXRar3W3ayPmqW/awdjZutDEjiYIfvK6rD6mYEUQlXuB/rNKv8JtJ9r5ycMR4AdQZ1dVL0m1DmKHA6cM8BTtDw=="
+}

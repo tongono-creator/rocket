@@ -1,0 +1,388 @@
+Browser tab: 3, Title: "Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR | Shopee Thailand", URL: "https://shopee.co.th/product/713673689/19828088602".
+0 AXWebArea Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR | Shopee Thailand, URL: shopee.co.th/product/71367368…
+	1 container
+		2 container main
+			3 button ข้ามไปที่เนื้อหาหลัก
+			4 container
+				5 container
+					6 link Description: Shopee Home, Value: shopee.co.th/
+					7 link Description: เปิดร้านค้า, Value: shopee.co.th/seller/signup
+					8 link Description: ดาวน์โหลด, Value: shopee.co.th/web/, ID: temporaryId
+					9 text ติดตามเราบน
+					10 link Description: ติดตามเราบน Facebook, Value: facebook.com/ShopeeTH
+					11 link Description: ติดตามเราบน Instagram!, Value: instagram.com/Shopee_TH
+					12 link Description: ติดตามเราบน Line, Value: line.me/R/ti/p/@shopeeth
+					13 content list
+						14 link Description: 9+ การแจ้งเตือน, Value: shopee.co.th/user/notificatio…
+						15 link Description: ช่วยเหลือ, Value: help.shopee.co.th/th/s
+						16 button ไทย
+							17 image
+							18 text ไทย
+						19 button profile tongono21
+							20 container
+								21 image
+								22 image profile
+							23 text tongono21
+				24 link shopee.co.th/
+				25 link shopee.co.th/mall
+				26 link shopee.co.th/mall
+				27 container
+					28 combo box (collapsed, settable) Description: ค้นหาใน Shopee Mall, Secondary Actions: Expand
+					29 button search
+						30 image
+					31 link Description: Shopping Cart Icon Shopping Cartnumber of items in cart 18, Value: shopee.co.th/cart, ID: cart_drawer_target_id
+				32 container sll2-normal-pdp-main
+					33 container
+						34 link Description: Shopee, Value: shopee.co.th/
+						35 image icon arrow right
+						36 link Description: กีฬาและกิจกรรมกลางแจ้ง, Value: shopee.co.th/%E0%B8%81%E0%B8%…
+						37 image icon arrow right
+						38 link Description: อุปกรณ์ตั้งแคมป์และเดินป่า, Value: shopee.co.th/%E0%B8%AD%E0%B8%…
+						39 image icon arrow right
+						40 link Description: ตะเกียงและไฟฉาย, Value: shopee.co.th/%E0%B8%95%E0%B8%…
+						41 image icon arrow right
+						42 text Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR
+						43 container
+							44 image Product image Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR 
+							45 container
+								46 image
+								47 image icon video play
+							48 button icon arrow left bold
+								49 image icon arrow left bold
+							50 button icon arrow right bold
+								51 image icon arrow right bold
+							52 text แชร์ :
+							53 button Share on Messenger
+							54 button Share on Facebook
+							55 button Share on Pinterest
+							56 button Share on Twitter
+							57 button Favorite (959)
+								58 image
+								59 text Favorite (959)
+						60 container
+							61 image mall inline badge
+							62 heading Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR, Value: 1
+								63 text Wurkkos ไฟ EDC WK03 1800lm SST40 USB C ชาร์จซ้ําได้ 18650 UI พร้อมตัวบ่งชี้พลังงาน ATR
+							64 button 4.9
+								65 text 4.9
+							66 button 3.7k รีวิว
+								67 text 3.7k
+								68 text รีวิว
+							69 container
+								70 text ขายแล้ว 
+								71 text 2k+
+								72 text  ชิ้น
+								73 image icon help
+							74 button รายงานสินค้า
+							75 container
+								76 text ฿650
+								77 image final price indicator icon
+								78 text ราคาหลังโค้ดส่วนลด
+							79 container
+								80 heading โค้ดส่วนลดร้านค้า, Value: 2
+									81 text โค้ดส่วนลดร้านค้า
+								82 text ลด ฿25
+								83 text ลด ฿48
+							84 heading การจัดส่ง, Value: 2
+								85 text การจัดส่ง
+							86 image fast green truck icon
+							87 text 9 ต.ค. - 11 ต.ค.
+							88 text ส่งฟรี
+							89 container
+								90 text รับโค้ดส่วนลด  ฿30  หากได้รับสินค้าล่าช้า
+							91 heading ช้อปปี้การันตี, Value: 2
+								92 text ช้อปปี้การันตี
+							93 container pc-drawer-id-2
+								94 image service entrance icon
+								95 text คืนเงิน/สินค้าฟรีใน 15 วัน • ของแท้ 100% • ดีลพิเศษแบรนด์ชั้นนำ • เก็บเงินปลายทาง • ความคุ้มครองอุปกรณ์อิเล็กทรอนิกส์
+							96 heading สีเปล่งแสง, Value: 2
+								97 text สีเปล่งแสง
+							98 button 5000-5300K 
+								99 image
+								100 text 5000-5300K
+							101 button 6000-6500K 
+								102 image
+								103 text 6000-6500K
+								104 image icon-tick-bold
+							105 heading แบตเตอรี่, Value: 2
+								106 text แบตเตอรี่
+							107 button (disabled) ไม่มีแบตเตอรี่ 
+							108 button พร้อมแบตเตอรี่ 18650 
+								109 text พร้อมแบตเตอรี่ 18650
+								110 image icon-tick-bold
+							111 heading จำนวน, Value: 2
+								112 text จำนวน
+							113 button (disabled) Decrease
+								114 image
+							115 stepper (settable, integer) 1
+							116 button Increase
+								117 image
+							118 text มีสินค้าทั้งหมด 798 ชิ้น
+							119 button icon-add-to-cart เพิ่มไปยังรถเข็น
+								120 image icon-add-to-cart
+								121 text เพิ่มไปยังรถเข็น
+							122 button ซื้อโดยใช้โค้ด ฿650
+								123 text ซื้อโดยใช้โค้ด
+								124 text ฿650
+						125 container
+							126 link Description: icon head shot click here to visit shop mall shop badge, Value: shopee.co.th/wurkkos.th
+							127 text ไฟฉาย Wurkkos Flashlight Shop เข้าสู่ระบบล่าสุดเมื่อ 13 นาที ที่ผ่านมา
+							128 button แชทเลย
+								129 text แชทเลย
+							130 link Description: icon shop ดูร้านค้า, Value: shopee.co.th/wurkkos.th
+							131 text คะแนน
+							132 text 9k
+							133 text อัตราการตอบกลับ
+							134 text 60%
+							135 text เข้าร่วมเมื่อ
+							136 text 5 ปี ที่ผ่านมา
+							137 link Description: รายการสินค้า 190, Value: shopee.co.th/wurkkos.th
+							138 text เวลาในการตอบกลับ
+							139 text ภายในไม่กี่ชั่วโมง
+							140 text ผู้ติดตาม
+							141 text 9k
+						142 heading ข้อมูลจำเพาะของสินค้า, Value: 2
+							143 text ข้อมูลจำเพาะของสินค้า
+						144 heading หมวดหมู่, Value: 3
+							145 text หมวดหมู่
+						146 link Description: Shopee, Value: shopee.co.th/
+						147 image icon arrow right
+						148 link Description: กีฬาและกิจกรรมกลางแจ้ง, Value: shopee.co.th/%E0%B8%81%E0%B8%…
+						149 image icon arrow right
+						150 link Description: อุปกรณ์ตั้งแคมป์และเดินป่า, Value: shopee.co.th/%E0%B8%AD%E0%B8%…
+						151 image icon arrow right
+						152 link Description: ตะเกียงและไฟฉาย, Value: shopee.co.th/%E0%B8%95%E0%B8%…
+						153 heading คลัง, Value: 3
+							154 text คลัง
+						155 text 33
+						156 heading สินค้า, Value: 3
+							157 text สินค้า
+						158 link Description: Wurkkos, Value: shopee.co.th/search
+						159 heading ส่งจาก, Value: 3
+							160 text ส่งจาก
+						161 text จังหวัดสมุทรปราการ
+						162 heading รายละเอียดสินค้า, Value: 2
+							163 text รายละเอียดสินค้า
+						164 text ไฟฉาย WK03 มีเทคโนโลยีควบคุมอุณหภูมิ ATR ตัวเครื่องทำจากอลูมิเนียมเกรดการบิน 6061 รองรับการปรับแสงได้ 6 ระดับตั้งแต่ 3LM ถึง 1800ML และมีฟังก์ชั่นป้องกันแรงดันไฟฟ้าต่ำเพื่อตอบสนองทุกความต้องการประจำวันของคุณ
+						165 text ข้อมูลจำเพาะ
+						166 text ● 1 X ไฟ LED กำลังสูง ลูมินัส SST40
+						167 text ● แรงดันใช้งาน: 2.7V - 4.2V
+						168 text ● ตัวเลือกแบตเตอรี่: แบตเตอรี่ลิเธียมไอออน 1 X 18650
+						169 text ● ขนาด: 101.5 มม. (ยาว) × 24.7 มม. (เส้นผ่านศูนย์กลางหัว)
+						170 text ● น้ำหนัก: 55 กรัม (ไม่รวมแบตเตอรี่)
+						171 text ● ตัวไฟฉาย: อลูมิเนียมเกรดอากาศยานเกรด 6061
+						172 text ● การชาร์จ USB Type-C
+						173 text ● หน่วยความจำโหมด: จดจำระดับความสว่างสุดท้ายที่ใช้ในโหมดทั่วไป (ยกเว้น Moon, Turbo และ Strobe)
+						174 text ● เทคโนโลยีการควบคุมอุณหภูมิขั้นสูง (ATR)
+						175 text ● การป้องกันการกลับขั้ว: ตัดไฟขณะใส่แบตเตอรี่ไม่ถูกต้อง
+						176 text ● LVP: ขณะที่เปิดอยู่ หากแรงดันแบตเตอรี่ต่ำกว่า 2.7V เครื่องจะปิดโดยอัตโนมัติ
+						177 text ● HVP: ขณะที่เปิดอยู่ หากแรงดันไฟฟ้าของแบตเตอรี่สูงกว่า 4.35V เครื่องจะปิดโดยอัตโนมัติ
+						178 text คะแนนของสินค้า
+						179 container
+							180 text 4.9  เต็ม 5
+						181 container
+							182 text ทั้งหมด 5 ดาว (3.4k) 4 ดาว (195) 3 ดาว (53) 2 ดาว (19) 1 ดาว (36) ความคิดเห็น (1.3k) มีรูปภาพ/วิดีโอ (849) รีวิวในประเทศ (1.1k)
+						183 container
+							184 link Description: profile, Value: shopee.co.th/shop/47650675
+							185 link Description: karnmonkeys, Value: shopee.co.th/shop/47650675
+							186 image
+							187 image
+							188 image
+							189 image
+							190 image
+							191 text 2023-07-19 14:19 | ตัวเลือกสินค้า: 6000-6500K,พร้อมแบตเตอรี่ 18650 การใช้งาน :  สว่างมาก แบตอยู่ได้นาน คุณภาพ :  ดี สินค้าคุณภาพดี เบา สว่างแบตใช้ได้นาน พกพาสะดวก เล็ก กะทัดรัด ต้องมีติดตัว
+							192 container
+								193 image
+								194 text 0:22
+							195 image
+							196 text 30
+						197 container
+							198 link Description: profile, Value: shopee.co.th/shop/buyer/78250…
+							199 link Description: egayut, Value: shopee.co.th/shop/buyer/78250…
+							200 image
+							201 image
+							202 image
+							203 image
+							204 image
+							205 text 2025-09-19 21:38 | ตัวเลือกสินค้า: 5000-5300K,พร้อมแบตเตอรี่ 18650 คุณภาพ :  ดีมาก การใช้งาน :  ประสิทธิภาพสูง ได้มาวันแรก ชาร์จเต็มแต่เปิดไม่ติด เพราะหมุนฝาไม่สุด นึกว่าไฟฉายเสียแล้ว😂 ประสิทธิภาพสูงมากครับ สว่างมากๆ มีขนาดเล็กใส่ในกระเป๋ากางเกงได้สบาย มี5โหมด moon light, low, medium ,high, turbo จริงๆ ถ่ายในที่มืดและกว้าง ทำให้เห็นประสิทธิภาพสูงมากแต่ในคลิปถ่ายแค่หลังบ้านพักเอง เพราะระบบไม่อนุญาตให้ลงคลิปที่ความสว่างไม่เพียงพอ ประทับใจยี่ห้อนี้ อยากได้ตัวใหญ่เพิ่มอีก เดี๋ยวค่อยสั่งนะครับ
+							206 container
+								207 image
+								208 text 0:30
+							209 image
+							210 text 7
+						211 container
+							212 link shopee.co.th/shop/buyer/45453…
+							213 link Description: yut548, Value: shopee.co.th/shop/buyer/45453…
+							214 image
+							215 image
+							216 image
+							217 image
+							218 image
+							219 text 2022-11-09 19:37 | ตัวเลือกสินค้า: 6000-6500K,ไม่มีแบตเตอรี่ คุณภาพ :  เยี่ยม,วัสดุดี การใช้งาน :  ดีเยียม Good......วัสดุคุณภาพไฟฉายขนาดเล็กพกพาสะดวกแสงสว่างใช้ได้ในหมวดเทอร์โบเปิดไม่นานจะร้อนแล้วแสงจะด็อปลง
+							220 image
+							221 text 11
+						222 container
+							223 link Description: profile, Value: shopee.co.th/shop/19937088
+							224 link Description: surapan01, Value: shopee.co.th/shop/19937088
+							225 image
+							226 image
+							227 image
+							228 image
+							229 image
+							230 text 2022-12-28 14:50 | ตัวเลือกสินค้า: 6000-6500K,พร้อมแบตเตอรี่ 18650 คุณภาพ :  ดีมาก การใช้งาน :  ดีมาก การประกอบ พัสดุดูดีมาก ราคาไม่แพง ถ้าเทียบกับคุณภาพที่ได้รับ แสงเป็นสีขาว ให้แบ็ตมา 3000mah น่าจะใช้ได้ทนทาน ไว้รอซื้อตัวรุ่นสูงๆ ต่อ
+							231 container
+								232 image
+								233 text 0:09
+							234 image
+							235 text 6
+						236 container
+							237 link Description: profile, Value: shopee.co.th/shop/buyer/17000…
+							238 link Description: puinvent, Value: shopee.co.th/shop/buyer/17000…
+							239 image
+							240 image
+							241 image
+							242 image
+							243 image
+							244 text 2024-08-29 11:35 | ตัวเลือกสินค้า: 6000-6500K,ไม่มีแบตเตอรี่, 5000-5300K,ไม่มีแบตเตอรี่ คุณภาพ :  ดีราคาไม่แพง การใช้งาน :  ดีเยี่ยมเลยครับ เวิร์คคลอสดีแล้วครับคนใช้รู้ดี ท่านใดที่หาไฟฉายคุณภาพดีการจัดจินราคาไม่แพงทนทานใช้งานง่ายราคาประหยัดแสงองศาอุณหภูมิแสงที่ดีการให้แสงที่เหมาะสมสามารถเลือกปรับได้ตามการใช้งานแนะนำนะครับ
+							245 container
+								246 image
+								247 text 0:20
+							248 text การตอบกลับจากผู้ขาย
+							249 text ✨✨ เรียนท่านลูกค้าขอบคุณสำหรับความคิดเห็นของคุณการประเมินของคุณเป็นแรงผลักดันให้เราก้าวไปข้างหน้าเราจะเปิดตัวผลิตภัณฑ์ใหม่เพื่อตอบสนองความต้องการของคุณอย่างต่อเนื่องและหวังว่าจะได้รับความสนใจของคุณ! 💕💕 ﻿
+
+							250 image
+							251 text 3
+						252 container
+							253 link Description: profile, Value: shopee.co.th/shop/89951705
+							254 link Description: aongat10, Value: shopee.co.th/shop/89951705
+							255 image
+							256 image
+							257 image
+							258 image
+							259 image
+							260 text 2026-03-05 13:21 | ตัวเลือกสินค้า: 5000-5300K,พร้อมแบตเตอรี่ 18650 วัสดุ :  วัสดุแข็งแรงดี ความสว่าง :  สว่างมากสว่างเกินตัว ฟังก์ชั่น :  ใช้งานง่ายไม่ซับซ้อน Wurkkos WK03 เป็นไฟฉายขนาดเล็กที่ให้แสงสว่างมากเลือกหลอด 5000k จะให้สีวัสดุตรงตามธรรมชาติเวลาส่องกลางคืนมีหมอกสามารถส่องตัดหมอกได้ด้วยคุ้มค่าราคาถูก ต้อง WK03 ร้านนี้จัดส่งไวสุดๆครับ
+							261 container
+								262 image
+								263 text 0:11
+							264 image
+							265 text 1
+						266 container
+							267 button
+								268 image
+							269 button 1
+							270 button 2
+							271 button 3
+							272 button 4
+							273 button 5
+							274 button ...
+							275 button
+								276 image
+						277 text โค้ดส่วนลดร้านค้า
+						278 container
+							279 text ส่วนลด ฿25
+							280 text ขั้นต่ำ ฿525
+							281 text ใช้ได้ถึง: 30.11.2026
+							282 button เก็บ
+							283 image
+							284 text 3
+						285 container
+							286 text ส่วนลด ฿48
+							287 text ขั้นต่ำ ฿999
+							288 text ใช้ได้ถึง: 30.11.2026
+							289 button เก็บ
+							290 image
+							291 text 3
+				292 text ศูนย์ช่วยเหลือ
+				293 content list
+					294 link Description: Help Centre, Value: help.shopee.co.th/th/s
+					295 link Description: สั่งซื้อสินค้าอย่างไร, Value: help.shopee.co.th/th/s/articl…
+					296 link Description: เริ่มขายสินค้าอย่างไร, Value: seller.shopee.co.th/edu/categ…
+					297 link Description: ช่องทางการชำระเงินใน Shopee, Value: help.shopee.co.th/th/s/articl…
+					298 link Description: Shopee Coins, Value: help.shopee.co.th/th/s/topic/…
+					299 link Description: การจัดส่งสินค้า, Value: help.shopee.co.th/portal/cate…
+					300 link Description: การคืนเงินและคืนสินค้า, Value: help.shopee.co.th/portal/cate…
+					301 link Description: การันตีโดย Shopee คืออะไร?, Value: help.shopee.co.th/th/s/articl…
+					302 link Description: ติดต่อ Shopee, Value: help.shopee.co.th/portal/arti…
+				303 text เกี่ยวกับ SHOPEE
+				304 content list
+					305 link Description: เกี่ยวกับเรา, Value: careers.shopee.com/about
+					306 link Description: โปรแกรม Affiliate, Value: shopee.co.th/m/affiliate-prog…
+					307 link Description: ร่วมงานกับเรา, Value: careers.shopee.com/jobs
+					308 link Description: นโยบาย, Value: help.shopee.co.th/portal/4/ca…
+					309 link Description: นโยบายความเป็นส่วนตัวของ Shopee, Value: help.shopee.co.th/portal/4/ar…
+					310 link Description: Shopee Blog, Value: shopee.co.th/blog
+					311 link Description: Shopee Mall, Value: shopee.co.th/mall/
+					312 link Description: Seller Centre, Value: seller.shopee.co.th/
+					313 link Description: Flash Deals, Value: shopee.co.th/flash_sale/
+					314 link Description: ผู้ติดต่อออนไลน์, Value: mailto:media.th@shopee.com
+				315 text วิธีการชำระเงิน
+				316 content list
+					317 link logo
+						318 image logo
+					319 link logo
+						320 image logo
+					321 link logo
+						322 image logo
+					323 link logo
+						324 image logo
+					325 link logo
+						326 image logo
+					327 link logo
+						328 image logo
+					329 link logo
+						330 image logo
+					331 link logo
+						332 image logo
+					333 link logo
+						334 image logo
+					335 link logo
+						336 image logo
+					337 link logo
+						338 image logo
+					339 link logo
+						340 image logo
+					341 link logo
+						342 image logo
+					343 link logo
+						344 image logo
+					345 link logo
+						346 image logo
+				347 text บริการจัดส่ง
+				348 content list
+					349 link Description: logo, Value: spx.co.th/th
+					350 link logo
+						351 image logo
+					352 link logo
+						353 image logo
+					354 link logo
+						355 image logo
+					356 link logo
+						357 image logo
+					358 link logo
+						359 image logo
+				360 text ติดตามเรา
+				361 content list
+					362 link Description: Facebook, Value: facebook.com/ShopeeTH
+					363 link Description: Instagram, Value: instagram.com/Shopee_TH
+					364 link Description: Line, Value: line.me/R/ti/p/@shopeeth
+					365 link Description: LinkedIn, Value: linkedin.com/company/shopee
+				366 text ดาวน์โหลดแอปพลิเคชั่น
+				367 link Description: download_qr_code, Value: linkedin.com/company/shopee
+				368 link Description: app, Value: linkedin.com/company/shopee
+				369 link Description: app, Value: linkedin.com/company/shopee
+				370 link Description: app, Value: linkedin.com/company/shopee
+				371 text © 2026 Shopee. All Rights Reserved
+				372 text Country & Region:
+				373 link Description: อาร์เจนตินา, Value: shopee.com.ar/
+				374 link Description: สิงคโปร์, Value: shopee.sg/
+				375 link Description: อินโดนีเซีย, Value: shopee.co.id/
+				376 link Description: ไทย, Value: shopee.co.th/
+				377 link Description: มาเลเซีย, Value: shopee.com.my/
+				378 link Description: เวียดนาม, Value: shopee.vn/
+				379 link Description: ฟิลิปปินส์, Value: shopee.ph/
+				380 link Description: บราซิล, Value: shopee.com.br/
+				381 link Description: เม็กซิโก, Value: shopee.com.mx/
+				382 link Description: ไต้หวัน, Value: shopee.tw/
+		383 image
+
+The focused UI element is 108 button พร้อมแบตเตอรี่ 18650 

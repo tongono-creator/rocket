@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-10-07T13:49:40.709313+00:00",
+  "channel_key": "rocket_fb",
+  "canonical_product_id": "713673689:19828088602",
+  "selected_variant": [
+    "6000-6500K",
+    "พร้อมแบตเตอรี่ 18650"
+  ],
+  "source": {
+    "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\product_cards\\rocket_fb_wk03_v1\\source.webp",
+    "sha256": "21a6e515ec6140283e42c2fd803f54b6262cda7eb9dba1b4807894bb27095742",
+    "dimensions": [
+      1000,
+      1000
+    ],
+    "display_rect": {
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 1000
+    },
+    "scale": 0.868,
+    "proof_path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\rocket_wk03_listing_ax.txt",
+    "proof_sha256": "5f342a55c9b3edb618b918df4dda3070d5dbc685fd6a0bc180fd68290852070e",
+    "ai_product_generated": false
+  },
+  "additional_proofs": [
+    {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\rocket_wk03_link_verified.json",
+      "sha256": "0a431b8fd97156d2a15353d1abdff03a8a8625dd237ba6a6ca823b9138645125"
+    }
+  ],
+  "native_html_frame_only": true,
+  "copy": [
+    "ตัวเล็ก มีเทอร์โบ",
+    "แต่แรงได้นานไหม?"
+  ],
+  "product_label": "Wurkkos WK03",
+  "qa": {
+    "headlineFont": 101,
+    "headlineLineCount": 2,
+    "headlineFits": true,
+    "labelFits": true,
+    "photoCount": 1,
+    "fontsLoaded": true,
+    "decoded": true
+  },
+  "root_approved": false,
+  "root_full_mobile_visual_review_pending": true,
+  "live_mutations": false,
+  "price_shown": false,
+  "personal_test_claimed": false,
+  "artifacts": {
+    "card.html": {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\product_cards\\rocket_fb_wk03_v1\\card.html",
+      "sha256": "324b9d50f33e721f3472b52694afecdc69f5d9c2fd30c563cf7db0fcc01362a0"
+    },
+    "card.png": {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\product_cards\\rocket_fb_wk03_v1\\card.png",
+      "sha256": "88032c4c700346ebe21b64d6dfd2bcfd7f59afe6f13ccb212c323c43ef673479"
+    },
+    "mobile.png": {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\product_cards\\rocket_fb_wk03_v1\\mobile.png",
+      "sha256": "4838ae5ad4b50396ad680f6c65574d75ba809a3879bd15dfeacaa16dc7197dd1"
+    }
+  },
+  "original_photo_path": "C:\\Users\\tongo\\Downloads\\cn-11134207-7ras8-mc66200gg4exd2.webp",
+  "original_photo_sha256": "21a6e515ec6140283e42c2fd803f54b6262cda7eb9dba1b4807894bb27095742",
+  "original_photo_byte_unchanged": true,
+  "source_photo_byte_identical": true,
+  "producer_actual_full_mobile_visual_review_completed": true,
+  "producer_visual_notes": "Viewed actual card.png and mobile.png. Exact two Thai hook lines readable at360px. Complete source photo remains intact, including Wurkkos/WK03 logos, full flashlight and source emitter inset. No price, episode or AI banner. Dark/yellow Rocket treatment; question does not claim a tested runtime.",
+  "producer_review_path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\product_cards\\rocket_fb_wk03_v1\\producer_review.json",
+  "producer_review_sha256": "f4f479b0d8eae1c5a0fc099083fa1f129b41eb7b69b74bf19eb241c0094b4bff"
+}

@@ -1,0 +1,18 @@
+{
+  "entries": [
+    {
+      "url": "https://shopee.co.th/product/713673689/19828088602",
+      "claim": "Selected variant [\"6000-6500K\", \"พร้อมแบตเตอรี่ 18650\"]. Caption claim review: {\"buyer_review_claim\": \"Buyer describes Turbo heating then dimming; individual historical review, not current selected-kit test or generalfrequency.\", \"buyer_review_date\": \"2022-11-09\", \"buyer_review_variant\": \"6000-6500K,ไม่มีแบตเตอรี่\", \"listing_rating\": \"4.9\", \"listing_reviews_label\": \"3.7k\", \"listing_sold_label\": \"2k+\", \"scope\": \"Listing header checkedOct7; not selected-kit demand/trend or page conversions.\", \"stock_issue\": \"Root liveview reported19; saved AX says798. Stock omitted fromcaption; freshcapture needed if recording exactstock.\"}",
+      "checked_at": "2026-10-07T14:15:00+00:00",
+      "source_file": "source-listing-ax.txt",
+      "source_sha256": "5f342a55c9b3edb618b918df4dda3070d5dbc685fd6a0bc180fd68290852070e"
+    }
+  ],
+  "source_caption_audit_file": "source-caption-audit.json",
+  "source_caption_audit_sha256": "45f8f4c54f5bee56a116db2b66e0416bcae2506ba40e1a4769b652cfec4a1ccd",
+  "source_tracking_proof_file": "source-tracking-proof.json",
+  "source_tracking_proof_sha256": "0a431b8fd97156d2a15353d1abdff03a8a8625dd237ba6a6ca823b9138645125",
+  "actual_product_photo_file": "actual-product.webp",
+  "actual_product_photo_sha256": "21a6e515ec6140283e42c2fd803f54b6262cda7eb9dba1b4807894bb27095742",
+  "source_review_scope": "Root actual current listing/caption audit, not hands-on product testing; upstream audit flags are preserved as historical source."
+}

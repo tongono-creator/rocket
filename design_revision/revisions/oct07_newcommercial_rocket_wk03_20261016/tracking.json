@@ -1,0 +1,24 @@
+{
+  "canonical_sku": "713673689/19828088602",
+  "affiliate_url": "https://s.shopee.co.th/7VGzIFjtdx",
+  "destination_url": "https://shopee.co.th/product/713673689/19828088602",
+  "subids": [
+    "rocket21",
+    "20261016",
+    "wk03",
+    "facebook",
+    "reviewA"
+  ],
+  "observed_utm_content": "rocket21-20261016-wk03-facebook-reviewA",
+  "variants": [
+    "6000-6500K",
+    "พร้อมแบตเตอรี่ 18650"
+  ],
+  "actual_product_photo_path": "actual-product.webp",
+  "root_actual_destination_variant_subids_verified": true,
+  "verified_at": "2026-10-07T13:46:19.047Z",
+  "observed_destination_url": "https://shopee.co.th/opaanlp/713673689/19828088602",
+  "actual_product_photo_sha256": "21a6e515ec6140283e42c2fd803f54b6262cda7eb9dba1b4807894bb27095742",
+  "source_tracking_proof_file": "source-tracking-proof.json",
+  "source_tracking_proof_sha256": "0a431b8fd97156d2a15353d1abdff03a8a8625dd237ba6a6ca823b9138645125"
+}
