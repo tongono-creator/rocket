@@ -57,7 +57,9 @@
     "affiliate_mode": "selected_only",
     "monthly_sales_limit": 2,
     "selected_affiliate_posts": {
-      "2026-10": [],
+      "2026-10": [
+        "111830598532037_1036126462780947"
+      ],
       "2026-11": []
     }
   }

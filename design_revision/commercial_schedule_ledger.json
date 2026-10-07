@@ -1,10 +1,10 @@
 {
   "oct07_newcommercial_rocket_wk03_20261016": {
-    "state": "native_verified_pending_mapping",
+    "state": "enabling_verified_exact_mapping",
     "plan_sha256": "b33e9117b01554f3e10a61518cdebc9ced4d5a959bc2d9e0aed8b32d5ca9e1f9",
     "package_id": "oct07_newcommercial_rocket_wk03_20261016",
     "page_id": "111830598532037",
-    "updated_at": "2026-10-07T14:22:50.359177+00:00",
+    "updated_at": "2026-10-07T14:22:51.817016+00:00",
     "slot": 1792117800,
     "caption_sha256": "7ca97e2de9d12867b50d0e680e2b8f08cb8ef0739389eb01e82778451d17d145",
     "canonical_sku": "713673689/19828088602",
@@ -42,6 +42,12 @@
       "attachment_ids": [
         "1036126462780947"
       ]
-    }
+    },
+    "aliases": [
+      "1036126462780947",
+      "111830598532037_1036126462780947"
+    ],
+    "worker_after_sha256": "f4d3f53d8600d6ec45b886be69d7e1d80268bc84bda133558e78058b69ec8bbd",
+    "mapping_after_sha256": "505c30c1a880811054b57185f84cebeace07b6e075974e4a4cb5a463dca7151c"
   }
 }
