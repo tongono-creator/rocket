@@ -1,10 +1,10 @@
 {
   "oct07_newcommercial_rocket_wk03_20261016": {
-    "state": "created_pending_readback",
+    "state": "native_verified_pending_mapping",
     "plan_sha256": "b33e9117b01554f3e10a61518cdebc9ced4d5a959bc2d9e0aed8b32d5ca9e1f9",
     "package_id": "oct07_newcommercial_rocket_wk03_20261016",
     "page_id": "111830598532037",
-    "updated_at": "2026-10-07T14:22:41.912026+00:00",
+    "updated_at": "2026-10-07T14:22:50.359177+00:00",
     "slot": 1792117800,
     "caption_sha256": "7ca97e2de9d12867b50d0e680e2b8f08cb8ef0739389eb01e82778451d17d145",
     "canonical_sku": "713673689/19828088602",
@@ -30,6 +30,18 @@
     "package_sha256": "2186d255b669206da851ece862a9f57287e299f173f1b1ef6d5012e02f14f8f9",
     "month": "2026-10",
     "photo_id": "1036126462780947",
-    "new_post_id": null
+    "new_post_id": "111830598532037_1036126462780947",
+    "after": {
+      "post_id": "111830598532037_1036126462780947",
+      "is_published": false,
+      "schedule": {
+        "present": true,
+        "value": 1792117800
+      },
+      "message_sha256": "7ca97e2de9d12867b50d0e680e2b8f08cb8ef0739389eb01e82778451d17d145",
+      "attachment_ids": [
+        "1036126462780947"
+      ]
+    }
   }
 }
