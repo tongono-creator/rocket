@@ -24,13 +24,15 @@
     }
   },
   "oct07_newimg_2026-10-11_cca": {
-    "state": "reserved_create",
+    "state": "created_pending_readback",
     "package_id": "oct07_newimg_2026-10-11_cca",
     "page_id": "111830598532037",
     "plan_sha256": "1bb4a6d6034cfab0d02c537769ffb7b6c92718f9ff9d74f6cd3cd4b8d2e7a916",
-    "updated_at": "2026-10-07T13:45:49.565719+00:00",
+    "updated_at": "2026-10-07T13:46:00.070859+00:00",
     "slot": 1793154600,
     "caption_sha256": "30cd2788c70a15367a048befba39843fbb5f7af636194ea5c91c5463c0e61ea1",
-    "package_sha256": "9c5558548ee6464f1f96f1c53de6da806848c4702a9d82813cfc913d49fb5991"
+    "package_sha256": "9c5558548ee6464f1f96f1c53de6da806848c4702a9d82813cfc913d49fb5991",
+    "photo_id": "1036097809450479",
+    "new_post_id": null
   }
 }
