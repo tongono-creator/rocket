@@ -1,0 +1,12 @@
+{
+  "oct07_newimg_2026-10-14_taskforce_x": {
+    "state": "reserved_create",
+    "package_id": "oct07_newimg_2026-10-14_taskforce_x",
+    "page_id": "111830598532037",
+    "plan_sha256": "46a5ef65bbc7683e266f2fc31290024da1cea3678191f09e0e9d9380dd33f651",
+    "updated_at": "2026-10-07T13:40:05.105314+00:00",
+    "slot": 1791945000,
+    "caption_sha256": "7c887b02471ac8e163bc1eb062bfcdc0e8e57abf74c03e6f058d55434710d80e",
+    "package_sha256": "848f37ad04d8875d7e0aeba3fd30b4d8cd22330839da2905bbb766f1bf4e65e9"
+  }
+}
