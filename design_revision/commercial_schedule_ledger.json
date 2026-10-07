@@ -1,0 +1,33 @@
+{
+  "oct07_newcommercial_rocket_wk03_20261016": {
+    "state": "reserved_create",
+    "plan_sha256": "b33e9117b01554f3e10a61518cdebc9ced4d5a959bc2d9e0aed8b32d5ca9e1f9",
+    "package_id": "oct07_newcommercial_rocket_wk03_20261016",
+    "page_id": "111830598532037",
+    "updated_at": "2026-10-07T14:22:31.795435+00:00",
+    "slot": 1792117800,
+    "caption_sha256": "7ca97e2de9d12867b50d0e680e2b8f08cb8ef0739389eb01e82778451d17d145",
+    "canonical_sku": "713673689/19828088602",
+    "product_reservation": {
+      "canonical_sku": "713673689/19828088602",
+      "shop_id": "713673689",
+      "product_id": "19828088602",
+      "name": "Wurkkos WK03 6000–6500K พร้อมแบตเตอรี่ 18650",
+      "url": "https://s.shopee.co.th/7VGzIFjtdx",
+      "comment": "ตัวเลือกที่คัดคือ 6000–6500K พร้อมแบตเตอรี่ 18650 ก่อนซื้อเช็กชุดแบตเตอรี่และสิ่งที่ได้ในกล่องอีกครั้งครับ\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้\nhttps://s.shopee.co.th/7VGzIFjtdx",
+      "subids": [
+        "rocket21",
+        "20261016",
+        "wk03",
+        "facebook",
+        "reviewA"
+      ],
+      "variants": [
+        "6000-6500K",
+        "พร้อมแบตเตอรี่ 18650"
+      ]
+    },
+    "package_sha256": "2186d255b669206da851ece862a9f57287e299f173f1b1ef6d5012e02f14f8f9",
+    "month": "2026-10"
+  }
+}
