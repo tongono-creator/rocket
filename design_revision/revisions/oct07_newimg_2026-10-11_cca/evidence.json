@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "url": "https://www.af.mil/News/Article-Display/Article/4600199/air-force-dubs-collaborative-combat-aircraft-fq-42-vengeance-fq-44-fury/",
+      "claim": "USAF Sep14 2026 names FQ-42 Vengeance/FQ-44 Fury; Jun17 2026 official report distinguishes Increment1 aircraft and mission autonomy software contracts.",
+      "checked_at": "2026-10-07T13:34:35.773093+00:00",
+      "access_method": "indexed_official_primary_passages; direct URLs403; no combat/range/cost claims",
+      "limits": "Original URLs returned403; fresh indexed official article/mirror passages support scope. Names/contracts do not establish deployed combat capability, range, cost or autonomous weapons decisions."
+    },
+    {
+      "url": "https://www.af.mil/News/Article-Display/Article/4520575/air-force-advances-future-of-air-superiority-with-cca-contracts/",
+      "claim": "USAF Sep14 2026 names FQ-42 Vengeance/FQ-44 Fury; Jun17 2026 official report distinguishes Increment1 aircraft and mission autonomy software contracts.",
+      "checked_at": "2026-10-07T13:34:35.773093+00:00",
+      "access_method": "indexed_official_primary_passages; direct URLs403; no combat/range/cost claims",
+      "limits": "Original URLs returned403; fresh indexed official article/mirror passages support scope. Names/contracts do not establish deployed combat capability, range, cost or autonomous weapons decisions."
+    }
+  ],
+  "pending_root_primary_sources": false,
+  "oct07_caption_source_check": {
+    "package_id": "oct07_newimg_2026-10-11_cca",
+    "source_draft_id": "2026-10-11_cca",
+    "channel_key": "rocket_fb",
+    "caption": {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\new_image_packages\\oct07_newimg_2026-10-11_cca\\caption.txt",
+      "exists": true,
+      "sha256": "e3629fa6ba0ec97f9ce38e69c35f8749fa7abb62058b023082efc3d9f63e06bc"
+    },
+    "checked_on": "2026-10-07",
+    "primary_source_access_method": "indexed_primary_and_official_mirror",
+    "claim_checked": "USAF Sep14 2026 names FQ-42 Vengeance/FQ-44 Fury; Jun17 2026 official report distinguishes Increment1 aircraft and mission autonomy software contracts.",
+    "limits": "Original URLs returned403; fresh indexed official article/mirror passages support scope. Names/contracts do not establish deployed combat capability, range, cost or autonomous weapons decisions.",
+    "caption_source_urls": [
+      "https://www.af.mil/News/Article-Display/Article/4600199/air-force-dubs-collaborative-combat-aircraft-fq-42-vengeance-fq-44-fury/",
+      "https://www.af.mil/News/Article-Display/Article/4520575/air-force-advances-future-of-air-superiority-with-cca-contracts/"
+    ],
+    "all_caption_sources_primary_except_named_participant_interview": true,
+    "original_caption_path": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\2026-10-11_cca\\post_draft.txt",
+    "original_signed_package_modified": false,
+    "new_lead_reframing": true,
+    "root_visual_and_final_caption_approval": false
+  },
+  "source_evidence_wrapper_file": "source-evidence-wrapper.json",
+  "source_evidence_wrapper_sha256": "ffa2b6e42679ea54179dc48552d08684e0c9cc798b9ceef5ad37036b73facdc1"
+}

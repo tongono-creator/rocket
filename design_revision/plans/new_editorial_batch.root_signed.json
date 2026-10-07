@@ -1,0 +1,22 @@
+{
+  "payload": {
+    "action": "schedule_new_editorial_batch",
+    "channel": "rocket_fb",
+    "page_id": "111830598532037",
+    "page_name": "Rocket21",
+    "reviewed_at": "2026-10-07T13:34:35.773093+00:00",
+    "plans": [
+      {
+        "path": "design_revision/plans/2026-10-14_taskforce_x-new-unsigned.json",
+        "plan_sha256": "125c505a1d973cc7f6940228ef23e7fc49416b048fd5f9842015d374277e7d9f"
+      },
+      {
+        "path": "design_revision/plans/2026-10-11_cca-new-unsigned.json",
+        "plan_sha256": "262b62e870404fae95fdda49ab2598fbf9184602abf1ebd647563a2e7402bf87"
+      }
+    ],
+    "root_batch_new_posts_only_confirmed": true
+  },
+  "payload_sha256": "6cc2609ae2ad3ae30a79eeb62e3681f5767f5ab3dfed65489f4bc3f80759de8c",
+  "root_signature": "FlRI6agnw1kc0ENtEzFC1YZxqQCrwMcfDDsvwWwhsdDPhMAoek5PROZskbEmum/MRJwWxqG+iZHGh/rxWMgxBw=="
+}

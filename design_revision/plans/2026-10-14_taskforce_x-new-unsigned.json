@@ -1,0 +1,22 @@
+{
+  "payload": {
+    "action": "schedule_new_editorial_image",
+    "channel": "rocket_fb",
+    "page_id": "111830598532037",
+    "page_name": "Rocket21",
+    "reviewed_at": "2026-10-07T13:34:35.773093+00:00",
+    "package_id": "oct07_newimg_2026-10-14_taskforce_x",
+    "package_path": "design_revision/revisions/oct07_newimg_2026-10-14_taskforce_x",
+    "package_sha256": "848f37ad04d8875d7e0aeba3fd30b4d8cd22330839da2905bbb766f1bf4e65e9",
+    "mobile_path": "design_revision/revisions/oct07_newimg_2026-10-14_taskforce_x/mobile.png",
+    "mobile_sha256": "2973c4c25593b3309149bdbcfeb9d31fc92e4f5166001b78d80deb2caea40f88",
+    "monthly_plan_path": "design_revision/monthly_operations_oct07.json",
+    "monthly_plan_sha256": "f88eb86ae1c944810e25c846fab7d796110936452d0bec6aae824f64f72f56b3",
+    "root_full_mobile_confirmed": true,
+    "root_monthly_plan_confirmed": true,
+    "root_new_slot_confirmed": true,
+    "root_optional_affiliate_policy_confirmed": true
+  },
+  "payload_sha256": "46a5ef65bbc7683e266f2fc31290024da1cea3678191f09e0e9d9380dd33f651",
+  "root_signature": "TDhxNLwBq8ms5ASvHGdVZ20aRdMn9EET409gpXdscxr1nnHXyIzGuNjS1R05p7nrwPdEGYvfNlUBmfsvnsKCAA=="
+}

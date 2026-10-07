@@ -1,10 +1,21 @@
 {
   "rocket_fb": {
-    "platform": "facebook",
+    "channel_key": "rocket_fb",
     "name": "Rocket21",
     "page_id": "111830598532037",
+    "repository": "rocket-facebook-page",
+    "platform": "facebook",
+    "timezone": "Asia/Bangkok",
+    "token_env": "PAGE_ACCESS_TOKEN",
+    "allowed_categories": [
+      "tools",
+      "camping",
+      "collectibles",
+      "electronics"
+    ],
+    "enabled": false,
+    "require_signature": true,
     "editor_public_key": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAXpGllY0WdysBzqTWBJ7evbAz13J/DUuGnlrfhzgr4Kg=\n-----END PUBLIC KEY-----\n",
-    "repository_slug": "tongono-creator/rocket",
-    "token_env": "PAGE_ACCESS_TOKEN"
+    "repository_slug": "tongono-creator/rocket"
   }
 }

@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "url": "https://www.act.nato.int/article/tfx-arctic-repmus/",
+      "claim": "NATO ACT Sep24 2026 reports REPMUS shared data, command and mission engineering trials; Navy Sep29 2026 describes planned procurement of 30 MUSVs after Phase I testing.",
+      "checked_at": "2026-10-07T13:34:35.773093+00:00",
+      "access_method": "full_primary_body",
+      "limits": "Trial/procurement does not prove all systems fielded or performance in every operational environment; explicit Sep2026 source dates remain in caption."
+    },
+    {
+      "url": "https://drpmras.navy.mil/press-release/navy-to-procure-30-medium-unmanned-surface-vessels-following-completion-of-phase-i-at-sea-testing",
+      "claim": "NATO ACT Sep24 2026 reports REPMUS shared data, command and mission engineering trials; Navy Sep29 2026 describes planned procurement of 30 MUSVs after Phase I testing.",
+      "checked_at": "2026-10-07T13:34:35.773093+00:00",
+      "access_method": "full_primary_body",
+      "limits": "Trial/procurement does not prove all systems fielded or performance in every operational environment; explicit Sep2026 source dates remain in caption."
+    }
+  ],
+  "pending_root_primary_sources": false,
+  "oct07_caption_source_check": {
+    "package_id": "oct07_newimg_2026-10-14_taskforce_x",
+    "source_draft_id": "2026-10-14_taskforce_x",
+    "channel_key": "rocket_fb",
+    "caption": {
+      "path": "D:\\Projects\\page-content-studio\\design_revision_oct07\\new_image_packages\\oct07_newimg_2026-10-14_taskforce_x\\caption.txt",
+      "exists": true,
+      "sha256": "2dcc4ed375e0fc99a06adcb9b785acdc2ef71f4aa4b29ff4d57614d730e673b7"
+    },
+    "checked_on": "2026-10-07",
+    "primary_source_access_method": "full_primary_body",
+    "claim_checked": "NATO ACT Sep24 2026 reports REPMUS shared data, command and mission engineering trials; Navy Sep29 2026 describes planned procurement of 30 MUSVs after Phase I testing.",
+    "limits": "Trial/procurement does not prove all systems fielded or performance in every operational environment; explicit Sep2026 source dates remain in caption.",
+    "caption_source_urls": [
+      "https://www.act.nato.int/article/tfx-arctic-repmus/",
+      "https://drpmras.navy.mil/press-release/navy-to-procure-30-medium-unmanned-surface-vessels-following-completion-of-phase-i-at-sea-testing"
+    ],
+    "all_caption_sources_primary_except_named_participant_interview": true,
+    "original_caption_path": "D:\\Projects\\rocket-facebook-page\\content\\morning_2026_10\\2026-10-14_taskforce_x\\post_draft.txt",
+    "original_signed_package_modified": false,
+    "new_lead_reframing": true,
+    "root_visual_and_final_caption_approval": false
+  },
+  "source_evidence_wrapper_file": "source-evidence-wrapper.json",
+  "source_evidence_wrapper_sha256": "47d62071066c1849a4138107467dad2a71087084cd5c42c455b8ded80faf6f45"
+}
