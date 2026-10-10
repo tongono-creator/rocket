@@ -115,6 +115,11 @@
         "status": "existing",
         "updated_at": "2026-09-27T03:22:48.280343+00:00"
       },
+      "17948049375303271": {
+        "selection": "fallback",
+        "status": "publishing",
+        "updated_at": "2026-10-10T11:06:38.486382+00:00"
+      },
       "18000930872809183": {
         "reply_id": "18086759663284785",
         "selection": "fallback",
