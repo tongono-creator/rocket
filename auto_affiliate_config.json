@@ -31,8 +31,8 @@
     "expected_username": "",
     "rollout_since": "2026-09-27T02:40:00Z",
     "approved_fallback": {
-      "name": "จักรยาน ANCHI",
-      "url": "https://s.shopee.co.th/4B04MAcB1P"
+      "name": "ไฟฉาย Wurkkos WK03 6000–6500K พร้อมแบตเตอรี่ 18650",
+      "url": "https://s.shopee.co.th/7VGzIFjtdx"
     },
     "post_products": {
       "111830598532037_1026107003782893": {
@@ -42,6 +42,27 @@
     },
     "post_products_file": "affiliate_post_products.json",
     "catalog": [
+      {
+        "name": "ไฟฉาย Wurkkos WK03 6000–6500K พร้อมแบตเตอรี่ 18650",
+        "url": "https://s.shopee.co.th/7VGzIFjtdx",
+        "keywords": [
+          "ไฟฉาย",
+          "Wurkkos",
+          "WK03",
+          "แคมป์",
+          "อุปกรณ์"
+        ]
+      },
+      {
+        "name": "ไมค์ไร้สาย BOYA mini 2",
+        "url": "https://s.shopee.co.th/9AOkJG7XeU",
+        "keywords": [
+          "BOYA",
+          "ไมค์",
+          "ไมค์ไร้สาย",
+          "เสียง"
+        ]
+      },
       {
         "name": "จักรยาน ANCHI",
         "url": "https://s.shopee.co.th/4B04MAcB1P",
@@ -53,14 +74,6 @@
     ],
     "token_env": "PAGE_ACCESS_TOKEN",
     "lookback_hours": 72,
-    "require_explicit_mapping": true,
-    "affiliate_mode": "selected_only",
-    "monthly_sales_limit": 2,
-    "selected_affiliate_posts": {
-      "2026-10": [
-        "111830598532037_1036126462780947"
-      ],
-      "2026-11": []
-    }
+    "affiliate_mode": "legacy"
   }
 }
