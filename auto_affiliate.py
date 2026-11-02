@@ -632,7 +632,11 @@ def main(argv: list[str] | None = None) -> int:
         sync = GitStateSync() if args.git_state or _env_flag("AFFILIATE_GIT_STATE") else None
         state = StateStore(args.state, sync=sync)
         api_class = {"facebook": FacebookApi, "threads": ThreadsApi, "x": XApi}[args.platform]
-        result = AffiliateReconciler(args.platform, config, state, api_class(config), publish=args.publish, since=args.since).run()
+        runner = AffiliateReconciler
+        if args.platform == 'facebook' and config.get('recommendation_count'):
+            from affiliate_recommendations import RecommendationReconciler
+            runner = RecommendationReconciler
+        result = runner(args.platform, config, state, api_class(config), publish=args.publish, since=args.since).run()
         print(json.dumps(result, ensure_ascii=False, sort_keys=True))
         return 0
     except (ApiError, StateSyncError, ReconciliationRequired, ValueError, KeyError, OSError, RuntimeError) as exc:
@@ -641,4 +645,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    # The optional recommendation runner shares these exception classes.
+    sys.modules.setdefault('auto_affiliate', sys.modules[__name__])
     raise SystemExit(main())

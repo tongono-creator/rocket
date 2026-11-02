@@ -74,6 +74,37 @@
     ],
     "token_env": "PAGE_ACCESS_TOKEN",
     "lookback_hours": 72,
-    "affiliate_mode": "legacy"
+    "affiliate_mode": "legacy",
+    "recommendation_count": 2,
+    "recommendations_since": "2026-11-02T15:20:53.490264+00:00",
+    "recommendation_pool": [
+      {
+        "id": "rp123",
+        "category": "clothing",
+        "name": "เสื้อโปโล WARRIX PIQUE WA-212PLACL30",
+        "url": "https://s.shopee.co.th/1W0Riaxhet",
+        "shop_id": "32706050",
+        "item_id": "28885358942",
+        "comment": "หาเสื้อโปโลใส่ทำงานหรือวันสบาย ๆ ลองดู WARRIX PIQUE รุ่นนี้ครับ เลือกสีและเทียบตารางไซซ์ในร้านก่อนสั่ง\nhttps://s.shopee.co.th/1W0Riaxhet\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้"
+      },
+      {
+        "id": "rp124",
+        "category": "phone",
+        "name": "เคส iPhone X-GORiLLA แบบใส มีวงแม่เหล็ก",
+        "url": "https://s.shopee.co.th/1Lh1WKIdOe",
+        "shop_id": "1389203618",
+        "item_id": "47707797488",
+        "comment": "พิกัดเคส iPhone แบบใส X-GORiLLA มีวงแม่เหล็กครับ ร้านมีหลายรุ่นและวัสดุ เลือกรุ่นให้ตรงกับเครื่องก่อนสั่ง\nhttps://s.shopee.co.th/1Lh1WKIdOe\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้"
+      },
+      {
+        "id": "rp125",
+        "category": "fragrance",
+        "name": "น้ำหอม LACANA Original Luxury Perfume",
+        "url": "https://s.shopee.co.th/6fiXsBvgSg",
+        "shop_id": "33626030",
+        "item_id": "26370406694",
+        "comment": "ใครกำลังเลือกน้ำหอม ลองดู LACANA Original Luxury Perfume ครับ เช็กชื่อกลิ่นและขนาดที่เลือกในร้านก่อนสั่ง\nhttps://s.shopee.co.th/6fiXsBvgSg\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้"
+      }
+    ]
   }
 }
