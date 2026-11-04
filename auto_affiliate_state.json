@@ -709,6 +709,36 @@
         "status": "published",
         "updated_at": "2026-11-04T01:42:12.208892+00:00"
       },
+      "111830598532037_1057125654014361": {
+        "recommendations": [
+          {
+            "product": {
+              "category": "phone",
+              "comment": "พิกัดเคส iPhone แบบใส X-GORiLLA มีวงแม่เหล็กครับ ร้านมีหลายรุ่นและวัสดุ เลือกรุ่นให้ตรงกับเครื่องก่อนสั่ง\nhttps://s.shopee.co.th/1Lh1WKIdOe\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้",
+              "id": "rp124",
+              "item_id": "47707797488",
+              "name": "เคส iPhone X-GORiLLA แบบใส มีวงแม่เหล็ก",
+              "shop_id": "1389203618",
+              "url": "https://s.shopee.co.th/1Lh1WKIdOe"
+            },
+            "status": "publishing"
+          },
+          {
+            "product": {
+              "category": "fragrance",
+              "comment": "ใครกำลังเลือกน้ำหอม ลองดู LACANA Original Luxury Perfume ครับ เช็กชื่อกลิ่นและขนาดที่เลือกในร้านก่อนสั่ง\nhttps://s.shopee.co.th/6fiXsBvgSg\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้",
+              "id": "rp125",
+              "item_id": "26370406694",
+              "name": "น้ำหอม LACANA Original Luxury Perfume",
+              "shop_id": "33626030",
+              "url": "https://s.shopee.co.th/6fiXsBvgSg"
+            },
+            "status": "pending"
+          }
+        ],
+        "status": "partial",
+        "updated_at": "2026-11-04T08:04:23.412280+00:00"
+      },
       "111830598532037_1061609553565971": {
         "recommendations": [
           {
