@@ -641,6 +641,36 @@
         "status": "published",
         "updated_at": "2026-11-08T09:03:49.133908+00:00"
       },
+      "111830598532037_1057100737350186": {
+        "recommendations": [
+          {
+            "product": {
+              "category": "fragrance",
+              "comment": "ใครกำลังเลือกน้ำหอม ลองดู LACANA Original Luxury Perfume ครับ เช็กชื่อกลิ่นและขนาดที่เลือกในร้านก่อนสั่ง\nhttps://s.shopee.co.th/6fiXsBvgSg\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้",
+              "id": "rp125",
+              "item_id": "26370406694",
+              "name": "น้ำหอม LACANA Original Luxury Perfume",
+              "shop_id": "33626030",
+              "url": "https://s.shopee.co.th/6fiXsBvgSg"
+            },
+            "status": "publishing"
+          },
+          {
+            "product": {
+              "category": "clothing",
+              "comment": "หาเสื้อโปโลใส่ทำงานหรือวันสบาย ๆ ลองดู WARRIX PIQUE รุ่นนี้ครับ เลือกสีและเทียบตารางไซซ์ในร้านก่อนสั่ง\nhttps://s.shopee.co.th/1W0Riaxhet\n\nลิงก์ Affiliate — เพจอาจได้รับค่าคอมมิชชันจากการซื้อผ่านลิงก์นี้",
+              "id": "rp123",
+              "item_id": "28885358942",
+              "name": "เสื้อโปโล WARRIX PIQUE WA-212PLACL30",
+              "shop_id": "32706050",
+              "url": "https://s.shopee.co.th/1W0Riaxhet"
+            },
+            "status": "pending"
+          }
+        ],
+        "status": "partial",
+        "updated_at": "2026-11-09T08:50:03.505461+00:00"
+      },
       "111830598532037_1057114750682118": {
         "reply_id": "1057114750682118_1441187727391826",
         "selection": "fallback",
