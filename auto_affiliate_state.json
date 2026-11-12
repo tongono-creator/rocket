@@ -1173,6 +1173,11 @@
         "status": "published",
         "updated_at": "2026-10-30T11:17:54.941506+00:00"
       },
+      "17919205587534717": {
+        "selection": "fallback",
+        "status": "publishing",
+        "updated_at": "2026-11-12T13:40:15.186460+00:00"
+      },
       "17930195376182830": {
         "reply_id": "18096580181649843",
         "selection": "fallback",
